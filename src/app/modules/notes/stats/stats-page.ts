@@ -7,9 +7,9 @@ import { ResetStats } from '../../../core/ui/stats/reset-stats';
 import { SessionHistory } from '../../../core/ui/stats/session-history';
 import { StatsOverview } from '../../../core/ui/stats/stats-overview';
 import { CardDescription, WeakestCards } from '../../../core/ui/stats/weakest-cards';
-import { cardFromKey, stringLabel } from '../deck';
+import { cardFromKey } from '../deck';
 import { NotesSession } from '../notes-session';
-import { ALL_STRINGS } from '../settings';
+import { STRING_NUMBERS, stringLabel } from '../../../core/fretboard/tuning';
 
 function describeCard(key: string): CardDescription | undefined {
   const card = cardFromKey(key);
@@ -51,7 +51,7 @@ export class StatsPage {
         ),
       ),
     });
-    const rows = ALL_STRINGS.map((string) => row(String(string), stringLabel(string)));
+    const rows = STRING_NUMBERS.map((string) => row(String(string), stringLabel(string)));
     const practisedNeck = Object.keys(stats).some((key) => key.endsWith('|neck'));
     return practisedNeck ? [...rows, row('neck', 'whole neck')] : rows;
   });

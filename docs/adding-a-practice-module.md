@@ -1,6 +1,7 @@
 # Adding a practice module
 
-A **practice module** is one kind of exercise, such as _Triads_ or _Fretboard notes_. Each module
+A **practice module** is one kind of exercise, such as _Triads_, _Fretboard notes_ or
+_Identify notes_. Each module
 lives in its own folder under `src/app/modules/` and shows up on the home screen.
 
 You write only what makes your exercise different:
@@ -20,18 +21,24 @@ Everything else is shared and comes for free:
 | Setup controls: chip toggles, segmented choices, start button     | `core/ui/setup/`                |
 | Stats blocks: overview, accuracy grid, weakest cards, history     | `core/ui/stats/`                |
 | Fretboard diagram you can also answer on (tap or keyboard)        | `core/fretboard/fretboard.ts`   |
+| Multiple-choice answers with number and arrow keys                | `core/ui/answer/`               |
 | Microphone: played notes or a live spectrum                       | `core/audio/mic-listener.ts`    |
 | Music theory: spelling, intervals, chords, voicings               | `core/music/`                   |
 
-**The quickest start is to copy `src/app/modules/notes/`** and rename things. It's the smallest
-complete module. This guide explains each of its files.
+**The quickest start is to copy a module close to yours** and rename things:
+
+- `src/app/modules/identify/` for multiple-choice answers
+- `src/app/modules/notes/` for answering on the fretboard
+- `src/app/modules/triads/` for self-check (reveal, then Got it / Missed)
+
+This guide explains the files using `notes` as the example; `identify` has the same shape.
 
 ## 1. Choose how answers work
 
-| Style       | How it goes                                                                                        | Example         | `selfCheck` |
-| ----------- | -------------------------------------------------------------------------------------------------- | --------------- | ----------- |
-| Self-check  | You play, press **Reveal**, then say **Got it** or **Missed**                                      | Triads          | `true`      |
-| App-checked | You answer in the app (tap the fretboard, pick an option, play into the mic) and the app checks it | Fretboard notes | `false`     |
+| Style       | How it goes                                                                                        | Example                         | `selfCheck` |
+| ----------- | -------------------------------------------------------------------------------------------------- | ------------------------------- | ----------- |
+| Self-check  | You play, press **Reveal**, then say **Got it** or **Missed**                                      | Triads                          | `true`      |
+| App-checked | You answer in the app (tap the fretboard, pick an option, play into the mic) and the app checks it | Fretboard notes, Identify notes | `false`     |
 
 A self-check module provides an **answer** template, shown on reveal. An app-checked module calls
 `run.resolve(correct)` when you answer. The frame then shows "Correct" or "Not quite" and the
@@ -237,8 +244,10 @@ runs. A self-check module also passes an `answer` template, shown after **Reveal
 Rules the frame relies on:
 
 - Give the question an `<h1>`, inside an `aria-live="polite"` region so a new card is announced.
-- If your answer control should get keyboard focus for each new card, mark it with
-  `data-autofocus`. The fretboard does this when given `[takesFocus]="true"`.
+- If your answer control should get focus for each new card, mark it with `data-autofocus`. The
+  fretboard and the choice buttons do this when given `[takesFocus]="true"`. The frame only moves
+  focus there for keyboard users: for a mouse or touch user, a focus ring on an answer would look
+  like a preselected answer.
 - If your control uses keys itself (arrows, Enter, Space), call `event.preventDefault()`. The frame
   then leaves those keys alone.
 
@@ -267,17 +276,41 @@ Build grid cells with `accuracyCell(id, totals(stats, (key) => …))`.
 | Need                                      | Use                                                                                          |
 | ----------------------------------------- | -------------------------------------------------------------------------------------------- |
 | Show or answer on the neck                | `<app-fretboard [selectable] (picked) [cursorStart] [takesFocus]>`                           |
+| Pick one answer from a few or many        | `<app-choice-buttons [options] [checked] [takesFocus] (chosen)>` in `core/ui/answer/`        |
+| Note name where any spelling is right     | `pitchClassNames()` ("C♯/D♭"), `commonNoteName()` ("D♭") in `core/music/notes.ts`            |
+| The note at a string and fret             | `pitchClassAt()` in `core/fretboard/placement.ts`                                            |
 | Where a note or chord tone is on the neck | `findNotePositions()`, `findChordTones()`, `placeVoicing()` in `core/fretboard/placement.ts` |
 | Spell notes, intervals, chords            | `core/music/notes.ts`, `intervals.ts`, `chords.ts`                                           |
 | Listen to the guitar                      | `MicListener.start('notes')`, then `heard()`; `<app-mic-status>`                             |
 | Words                                     | `plural()`, `percentCorrect()`, `capitalize()` in `core/ui/text.ts`                          |
 | Save something                            | `loadJson()` / `saveJson()` in `core/practice/storage.ts`                                    |
 
-**Not built yet: multiple choice.** "Identify notes" and "identify scales" need a row of answer
-buttons. When the first of those modules is built, add it as `core/ui/answer/choice-buttons.ts`,
-using `[options]` and `(chosen)` like the setup controls, plus number keys. The module then calls
-`run.resolve(choice === correct)`. Build it once there, not inside the module, so the next one can
-reuse it.
+### Multiple choice
+
+`<app-choice-buttons>` lays out the options in even rows. Keys 1–9 pick directly when there are
+nine options or fewer, and arrow keys move between options. Pass `checked` once the answer is
+known, and the buttons mark the right option and yours, for sighted and screen-reader users
+alike:
+
+```html
+<app-choice-buttons
+  label="Note names"
+  [options]="options()"
+  [checked]="checked()"
+  [takesFocus]="true"
+  (chosen)="session.answer($event)"
+/>
+```
+
+```ts
+answer(value: number): void {
+  this.picked.set(value); // checked() = { picked, correct } once this is set
+  this.run.resolve(value === this.run.current()?.answer);
+}
+```
+
+`modules/identify/` is the full example, including how to offer the right answer plus random
+others (`answerChoices()` in its `deck.ts`).
 
 ## 9. Before you commit
 

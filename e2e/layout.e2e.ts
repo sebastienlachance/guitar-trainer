@@ -1,6 +1,6 @@
 import { Page, expect, test } from '@playwright/test';
-import { seedSettings, startSession, tapFret } from './support/app';
-import { CSUS4_ONLY, F_SHARP_ON_A } from './support/decks';
+import { correctResult, seedSettings, startSession, tapFret } from './support/app';
+import { CSUS4_ONLY, E_ON_A_STRING, F_SHARP_ON_A } from './support/decks';
 
 /** Fails when the page is wider than the screen, i.e. it scrolls sideways. */
 async function expectFitsWidth(page: Page, where: string): Promise<void> {
@@ -49,6 +49,29 @@ test.describe('Phone width', () => {
     await page.goto('/#/notes/stats');
     await expect(page.getByRole('heading', { name: 'Accuracy by string' })).toBeVisible();
     await expectFitsWidth(page, 'Notes stats');
+  });
+});
+
+test.describe('Phone width, identify notes', () => {
+  test.use({ viewport: { width: 375, height: 812 } });
+
+  test('identify notes pages fit the screen', async ({ page }) => {
+    await seedSettings(page, 'identify', { ...E_ON_A_STRING, choices: 12 });
+
+    await page.goto('/#/identify');
+    await expectFitsWidth(page, 'Identify setup');
+
+    await startSession(page, 'identify');
+    await page
+      .getByRole('group', { name: 'Note names' })
+      .getByRole('button', { name: 'E', exact: true })
+      .click();
+    await expect(correctResult(page)).toBeVisible();
+    await expectFitsWidth(page, 'Identify answer');
+
+    await page.goto('/#/identify/stats');
+    await expect(page.getByRole('heading', { name: 'Accuracy by string' })).toBeVisible();
+    await expectFitsWidth(page, 'Identify stats');
   });
 });
 

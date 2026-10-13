@@ -1,17 +1,16 @@
 import { FretPosition } from '../../core/fretboard/fretboard';
-import { findNotePositions } from '../../core/fretboard/placement';
-import { STANDARD_TUNING, STRING_NAMES } from '../../core/fretboard/tuning';
+import { findNotePositions, pitchClassAt } from '../../core/fretboard/placement';
+import { STRING_NUMBERS, stringLabel } from '../../core/fretboard/tuning';
 import {
   COMMON_NOTE_NAMES,
   SpelledNote,
-  displayNoteName,
-  mod,
+  commonNoteName,
   noteName,
   parseNote,
   pitchClassOf,
 } from '../../core/music/notes';
 import { PracticeCard } from '../../core/practice/practice-run';
-import { ALL_STRINGS, NotesSettings } from './settings';
+import { NotesSettings } from './settings';
 
 export interface NoteCard extends PracticeCard {
   /** Identifies the card in stats: "F#|5" for one string, "G|neck" for the whole neck. */
@@ -80,12 +79,7 @@ export function allFound(targets: readonly FretPosition[], picks: readonly Pick[
 
 /** Display name of the note at a position, e.g. "F♯". */
 export function noteNameAt(position: FretPosition): string {
-  const pitchClass = mod(STANDARD_TUNING[position.string - 1] + position.fret, 12);
-  return displayNoteName(parseNote(COMMON_NOTE_NAMES[pitchClass]));
-}
-
-export function stringLabel(string: number): string {
-  return `string ${string} (${STRING_NAMES[string - 1]})`;
+  return commonNoteName(pitchClassAt(position));
 }
 
 /** Where to look: "on string 5 (A)", "everywhere", or "on strings 4, 5, 6". */
@@ -93,7 +87,7 @@ export function whereLabel(card: NoteCard, settings: NotesSettings): string {
   if (card.string !== null) {
     return `on ${stringLabel(card.string)}`;
   }
-  return settings.strings.length === ALL_STRINGS.length
+  return settings.strings.length === STRING_NUMBERS.length
     ? 'everywhere'
     : `on strings ${settings.strings.join(', ')}`;
 }
@@ -105,7 +99,7 @@ export function cardFromKey(key: string): NoteCard | undefined {
     return undefined;
   }
   const string = where === 'neck' ? null : Number(where);
-  if (string !== null && !ALL_STRINGS.includes(string)) {
+  if (string !== null && !STRING_NUMBERS.includes(string)) {
     return undefined;
   }
   return { key, note: parseNote(name), string };

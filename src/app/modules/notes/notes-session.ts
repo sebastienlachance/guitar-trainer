@@ -1,13 +1,14 @@
 import { Provider, Service, computed, effect, inject, signal, untracked } from '@angular/core';
 import { MicListener } from '../../core/audio/mic-listener';
 import { FretPosition } from '../../core/fretboard/fretboard';
+import { STRING_NUMBERS } from '../../core/fretboard/tuning';
 import { NATURAL_NOTE_NAMES } from '../../core/music/notes';
 import { Drill } from '../../core/practice/drill';
 import { PracticeRun } from '../../core/practice/practice-run';
 import { loadJson, saveJson } from '../../core/practice/storage';
 import { plural } from '../../core/ui/text';
 import { NoteCard, Pick, allFound, buildDeck, isTarget, settingsProblems, targetsOf } from './deck';
-import { ALL_STRINGS, NotesSettings, sanitizeSettings } from './settings';
+import { NotesSettings, sanitizeSettings } from './settings';
 
 /** Tags this module's sessions in the shared practice log. */
 export const NOTES_MODULE = 'notes';
@@ -64,7 +65,7 @@ export class NotesSession implements Drill {
       notes.every((name) => NATURAL_NOTE_NAMES.includes(name));
     return [
       notes.length === 12 ? 'All notes' : naturalsOnly ? 'Naturals' : plural(notes.length, 'note'),
-      strings.length === ALL_STRINGS.length ? 'All strings' : `Strings ${strings.join(', ')}`,
+      strings.length === STRING_NUMBERS.length ? 'All strings' : `Strings ${strings.join(', ')}`,
       `Frets 0–${maxFret}`,
       promptKind === 'string' ? 'One string' : 'Whole neck',
     ];

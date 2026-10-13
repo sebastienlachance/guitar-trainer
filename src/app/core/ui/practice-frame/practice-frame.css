@@ -32,7 +32,15 @@
   font-variant-numeric: tabular-nums;
 }
 
-.accuracy {
+.figure.low {
+  color: var(--danger);
+}
+
+.figure.mid {
+  color: var(--warning);
+}
+
+.figure.high {
   color: var(--success);
 }
 

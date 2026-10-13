@@ -14,6 +14,7 @@ import { RouterLink } from '@angular/router';
 import { Drill } from '../../practice/drill';
 import { PracticeLog } from '../../practice/practice-log';
 import { IDLE_LIMIT_MS, formatClock, formatDuration } from '../../practice/session-log';
+import { accuracyBand } from '../../practice/stats';
 import { Icon } from '../icon';
 import { capitalize, percentCorrect, plural } from '../text';
 
@@ -28,7 +29,10 @@ import { capitalize, percentCorrect, plural } from '../text';
   imports: [NgTemplateOutlet, RouterLink, Icon],
   templateUrl: './practice-frame.html',
   styleUrl: './practice-frame.css',
-  host: { '(document:keydown)': 'onKeydown($event)' },
+  host: {
+    '(document:keydown)': 'onKeydown($event)',
+    '(document:pointerdown)': 'usingKeyboard = false',
+  },
 })
 export class PracticeFrame implements OnDestroy {
   protected readonly drill = inject(Drill);
@@ -57,6 +61,7 @@ export class PracticeFrame implements OnDestroy {
       clock: formatClock(this.log.activeMs()),
       answered: plural(answered, this.drill.unit),
       accuracy: percentCorrect(open?.correct ?? 0, answered),
+      band: accuracyBand({ attempts: answered, correct: open?.correct ?? 0 }),
     };
   });
 
@@ -79,17 +84,23 @@ export class PracticeFrame implements OnDestroy {
 
   private readonly primaryAction = viewChild<ElementRef<HTMLElement>>('primaryAction');
 
+  /**
+   * Whether you last used the keyboard rather than a mouse or finger. Answer controls only take
+   * focus for keyboard users: a focus ring on an answer button would look like a preselected answer.
+   */
+  protected usingKeyboard = false;
+
   constructor() {
-    // The button you used disappears when the step changes: move keyboard focus to the next one,
-    // or to whatever the module marked with data-autofocus (such as a fretboard to answer on).
+    // The button you used disappears when the step changes: move focus to the next one, or, for
+    // keyboard users, to whatever the module marked with data-autofocus (such as answer buttons).
     afterRenderEffect(() => {
       this.view();
       this.phase();
       this.run.current();
-      const target =
-        this.primaryAction()?.nativeElement ??
-        this.host.nativeElement.querySelector<HTMLElement>('[data-autofocus]');
-      target?.focus();
+      const answerControl = this.usingKeyboard
+        ? this.host.nativeElement.querySelector<HTMLElement>('[data-autofocus]')
+        : null;
+      (this.primaryAction()?.nativeElement ?? answerControl)?.focus();
     });
   }
 
@@ -98,6 +109,7 @@ export class PracticeFrame implements OnDestroy {
   }
 
   protected onKeydown(event: KeyboardEvent): void {
+    this.usingKeyboard = true;
     // Leave keys alone while a form control has focus (arrows move between radio options there)
     // and when a module's own control already handled them.
     const inControl =

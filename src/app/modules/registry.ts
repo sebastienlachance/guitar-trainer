@@ -27,4 +27,10 @@ export const MODULES: readonly TrainerModule[] = [
     description: 'Find any note on any string, by tapping the fretboard or playing it.',
     loadRoutes: () => import('./notes/notes.routes').then((m) => m.NOTES_ROUTES),
   },
+  {
+    path: 'identify',
+    title: 'Identify notes',
+    description: 'A dot on the neck: name the note, from four choices or all twelve.',
+    loadRoutes: () => import('./identify/identify.routes').then((m) => m.IDENTIFY_ROUTES),
+  },
 ];

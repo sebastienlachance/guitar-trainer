@@ -1,0 +1,22 @@
+<app-practice-frame [prompt]="prompt" />
+
+<ng-template #prompt>
+  @if (card()) {
+    <div class="question" aria-live="polite">
+      <p class="ask muted">Which note is on</p>
+      <h1>{{ heading() }}</h1>
+    </div>
+
+    <div class="board">
+      <app-fretboard [dots]="dots()" [window]="window()" [description]="description()" />
+    </div>
+
+    <app-choice-buttons
+      label="Note names"
+      [options]="options()"
+      [checked]="checked()"
+      [takesFocus]="true"
+      (chosen)="session.answer($event)"
+    />
+  }
+</ng-template>

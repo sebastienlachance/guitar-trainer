@@ -21,6 +21,17 @@ export async function startSession(page: Page, module: string): Promise<void> {
   await expect(page.getByRole('region', { name: 'Session' })).toBeVisible();
 }
 
+/**
+ * Opens a module's practice page and starts a session from the keyboard. Answer controls only
+ * take focus for keyboard users, so keyboard tests start this way.
+ */
+export async function startSessionWithKeyboard(page: Page, module: string): Promise<void> {
+  await page.goto(`/#/${module}/practice`);
+  await expect(page.getByRole('button', { name: 'Start session' })).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('region', { name: 'Session' })).toBeVisible();
+}
+
 /** Clicks a fretboard position where it really is on screen, as a finger would. */
 export async function tapFret(page: Page, string: number, fret: number): Promise<void> {
   await page.locator(`[data-position="${string}:${fret}"]`).click();

@@ -1,4 +1,4 @@
-import { STRING_COUNT } from '../../core/fretboard/tuning';
+import { STRING_NUMBERS } from '../../core/fretboard/tuning';
 import { COMMON_NOTE_NAMES } from '../../core/music/notes';
 import { pickList, pickOne, savedFields } from '../../core/practice/saved-settings';
 
@@ -18,16 +18,11 @@ export interface NotesSettings {
   readonly micMode: NotesMicMode;
 }
 
-export const ALL_STRINGS: readonly number[] = Array.from(
-  { length: STRING_COUNT },
-  (_, index) => index + 1,
-);
-
 export const MAX_FRET_CHOICES: readonly number[] = [5, 12, 15];
 
 export const DEFAULT_SETTINGS: NotesSettings = {
   notes: COMMON_NOTE_NAMES,
-  strings: ALL_STRINGS,
+  strings: STRING_NUMBERS,
   maxFret: 12,
   promptKind: 'string',
   micMode: 'off',
@@ -39,7 +34,7 @@ export function sanitizeSettings(saved: unknown): NotesSettings {
   const defaults = DEFAULT_SETTINGS;
   return {
     notes: pickList(raw['notes'], COMMON_NOTE_NAMES, defaults.notes),
-    strings: pickList(raw['strings'], ALL_STRINGS, defaults.strings),
+    strings: pickList(raw['strings'], STRING_NUMBERS, defaults.strings),
     maxFret: pickOne(raw['maxFret'], MAX_FRET_CHOICES, defaults.maxFret),
     promptKind: pickOne(raw['promptKind'], ['string', 'neck'], defaults.promptKind),
     micMode: pickOne(raw['micMode'], ['off', 'play'], defaults.micMode),

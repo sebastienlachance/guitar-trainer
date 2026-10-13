@@ -28,11 +28,11 @@ the microphone changed.
   - `ui/`:
     - `practice-frame/`: session bar, start/pause/summary screens, answer buttons, keys, focus
     - `module-shell.ts`
-    - `setup/` and `stats/` building blocks
+    - `setup/`, `stats/` and `answer/` (multiple-choice buttons) building blocks
     - `mic-status.ts`, `icon.ts`, `text.ts`
 - `src/app/modules/<name>/`: one practice module each, registered in `modules/registry.ts`.
-  `notes/` is the reference implementation. `triads/` shows a self-check module with an answer
-  template and mic matching.
+  `notes/` is the reference implementation. `identify/` shows multiple choice. `triads/` shows a
+  self-check module with an answer template and mic matching.
 - `docs/adding-a-practice-module.md`: how to add a module. Follow it.
 - `e2e/`: Playwright smoke tests. `support/` holds the helpers, the one-card decks and the
   generator for the fake microphone's recordings.

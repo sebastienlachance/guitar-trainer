@@ -7,7 +7,7 @@
     }
     <span class="figure" role="timer">{{ progress().clock }}</span>
     <span class="figure">{{ progress().answered }}</span>
-    <span class="figure accuracy">{{ progress().accuracy }}</span>
+    <span [class]="'figure ' + progress().band">{{ progress().accuracy }}</span>
     <span class="session-actions">
       @if (view() === 'running') {
         <button type="button" class="btn small" (click)="log.pause()">

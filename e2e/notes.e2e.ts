@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { correctResult, seedSettings, startSession, tapFret } from './support/app';
+import {
+  correctResult,
+  seedSettings,
+  startSession,
+  startSessionWithKeyboard,
+  tapFret,
+} from './support/app';
 import { F_SHARP_ON_A } from './support/decks';
 
 test.describe('Fretboard notes', () => {
@@ -24,7 +30,7 @@ test.describe('Fretboard notes', () => {
   });
 
   test('answering from the keyboard', async ({ page }) => {
-    await startSession(page, 'notes');
+    await startSessionWithKeyboard(page, 'notes');
     const fretboard = page.getByRole('application');
     await expect(fretboard).toBeFocused();
 

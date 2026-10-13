@@ -86,6 +86,23 @@ export const COMMON_NOTE_NAMES: readonly string[] = [
 
 export const NATURAL_NOTE_NAMES: readonly string[] = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 
+/** Display name of a pitch class in its common spelling, e.g. 1 -> "D♭". */
+export function commonNoteName(pitchClass: number): string {
+  return displayNoteName(parseNote(COMMON_NOTE_NAMES[mod(pitchClass, 12)]));
+}
+
+const SHARP_SPELLINGS = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
+const FLAT_SPELLINGS = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'];
+
+/**
+ * Every name a pitch class goes by, for answers where any spelling is right: "C", "C♯/D♭".
+ */
+export function pitchClassNames(pitchClass: number): string {
+  const sharp = SHARP_SPELLINGS[mod(pitchClass, 12)];
+  const flat = FLAT_SPELLINGS[mod(pitchClass, 12)];
+  return sharp === flat ? sharp : `${sharp}/${flat}`;
+}
+
 const SHARP_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
 /** Name with octave for a MIDI number, e.g. 52 -> "E3". Uses sharps; for the mic readout only. */

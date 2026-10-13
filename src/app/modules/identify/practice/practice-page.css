@@ -1,0 +1,23 @@
+.question {
+  text-align: center;
+  padding: 16px 0 10px;
+}
+
+.ask {
+  font-size: 13px;
+  margin: 0 0 4px;
+}
+
+h1 {
+  font-size: clamp(26px, 7vw, 34px);
+}
+
+/* Keeps the frets readable on a phone; the board scrolls sideways instead. */
+.board {
+  overflow-x: auto;
+  padding: 4px 0;
+}
+
+.board app-fretboard {
+  min-width: 560px;
+}

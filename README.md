@@ -6,8 +6,10 @@ Practise guitar until the fretboard is automatic. Each kind of exercise is a **m
   strings 2-3-4_). You play it, then reveal the answer or let the microphone check you.
 - **Fretboard notes:** "Find **F♯** on string 5" or "Find **every G**". You answer by tapping the
   fretboard or playing the note.
+- **Identify notes:** a dot appears on the neck and you name the note, from four choices or all
+  twelve.
 
-More modules (scales, intervals, identifying notes) are planned. Adding one is documented in
+More modules (scales, intervals) are planned. Adding one is documented in
 [docs/adding-a-practice-module.md](docs/adding-a-practice-module.md).
 
 ## Features
@@ -30,6 +32,12 @@ More modules (scales, intervals, identifying notes) are planned. Adding one is d
 - **One string:** a single tap answers; a wrong one shows where the note really is
 - **Whole neck:** find every place, one tap at a time; **Show me** reveals the rest
 - Answer with a tap, the keyboard (arrows to move, Enter to choose), or by playing the note
+
+**Identify notes**
+
+- Any of the 12 notes (or naturals only), on chosen strings, within frets 0–5, 0–12 or 0–15
+- Four choices (keys 1 to 4) or all twelve names (arrow keys and Enter)
+- A wrong answer shows the right name, on the buttons and on the dot
 
 **Every module**
 
@@ -73,11 +81,13 @@ src/app/
     fretboard/            tuning, note and shape positions, the SVG fretboard (also answers taps)
     practice/             card flow (PracticeRun), the Drill contract, stats, session log, storage
     audio/                microphone, pitch detection, chord matching
-    ui/                   practice frame, module top bar, setup controls, stats blocks, icons
+    ui/                   practice frame, module top bar, setup controls, answer buttons, stats
+                          blocks, icons
   modules/
     registry.ts           the modules on the home screen
     notes/                fretboard notes: the smallest complete module, a template for new ones
     triads/               triads, sus, 6th and 7th chords
+    identify/             identify notes: multiple choice
   home/                   home screen
 docs/
   adding-a-practice-module.md

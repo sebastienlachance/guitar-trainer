@@ -5,6 +5,17 @@ export const STRING_NAMES: readonly string[] = ['e', 'B', 'G', 'D', 'A', 'E'];
 
 export const STRING_COUNT = STANDARD_TUNING.length;
 
+/** String numbers from the high E (1) to the low E (6). */
+export const STRING_NUMBERS: readonly number[] = Array.from(
+  { length: STRING_COUNT },
+  (_, index) => index + 1,
+);
+
+/** "string 5 (A)". */
+export function stringLabel(string: number): string {
+  return `string ${string} (${STRING_NAMES[string - 1]})`;
+}
+
 export interface StringSet {
   /** Label as guitarists write it, e.g. "2-3-4". */
   readonly id: string;

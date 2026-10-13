@@ -78,6 +78,11 @@ export function findChordTones(
   return notes;
 }
 
+/** Pitch class (C = 0) of the note at a string and fret. */
+export function pitchClassAt(position: { string: number; fret: number }): number {
+  return mod(openString(position.string) + position.fret, 12);
+}
+
 /** Every place a pitch class can be played on the given strings, from the nut up to `maxFret`. */
 export function findNotePositions(
   pitchClass: number,

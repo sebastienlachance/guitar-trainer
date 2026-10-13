@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { STRING_NAMES } from '../../../core/fretboard/tuning';
+import { STRING_NAMES, STRING_NUMBERS } from '../../../core/fretboard/tuning';
 import {
   COMMON_NOTE_NAMES,
   NATURAL_NOTE_NAMES,
@@ -10,13 +10,7 @@ import { ChipOption, ChipToggles } from '../../../core/ui/setup/chip-toggles';
 import { Choice, SegmentedChoice } from '../../../core/ui/setup/segmented-choice';
 import { SetupStart } from '../../../core/ui/setup/setup-start';
 import { NotesSession } from '../notes-session';
-import {
-  ALL_STRINGS,
-  MAX_FRET_CHOICES,
-  NotesMicMode,
-  NotesSettings,
-  PromptKind,
-} from '../settings';
+import { MAX_FRET_CHOICES, NotesMicMode, NotesSettings, PromptKind } from '../settings';
 
 @Component({
   selector: 'app-notes-setup-page',
@@ -33,7 +27,7 @@ export class SetupPage {
     label: displayNoteName(parseNote(name)),
   }));
 
-  protected readonly stringChips: ChipOption<number>[] = ALL_STRINGS.map((string) => ({
+  protected readonly stringChips: ChipOption<number>[] = STRING_NUMBERS.map((string) => ({
     value: string,
     label: `${string} (${STRING_NAMES[string - 1]})`,
   }));

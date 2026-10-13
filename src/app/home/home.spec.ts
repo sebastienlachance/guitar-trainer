@@ -8,5 +8,9 @@ describe('Home', () => {
 
     expect(screen.getByRole('link', { name: /Triads/ })).toHaveAttribute('href', '/triads');
     expect(screen.getByRole('link', { name: /Fretboard notes/ })).toHaveAttribute('href', '/notes');
+    expect(screen.getByRole('link', { name: /Identify notes/ })).toHaveAttribute(
+      'href',
+      '/identify',
+    );
   });
 });
