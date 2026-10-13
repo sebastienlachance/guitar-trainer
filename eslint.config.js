@@ -34,6 +34,24 @@ module.exports = defineConfig([
     },
   },
   {
+    // Modules build on core, never the reverse: core stays reusable by every module.
+    files: ['src/app/core/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/modules/**'],
+              message:
+                'core/ is shared by every module and must not import from modules/. Move what you need into core/.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['**/*.html'],
     extends: [angular.configs.templateRecommended, angular.configs.templateAccessibility],
     rules: {},

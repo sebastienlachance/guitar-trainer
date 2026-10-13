@@ -59,6 +59,7 @@ Then open http://localhost:4200. The microphone only works on `localhost` or ove
 | `npm run lint`      | ESLint, including accessibility  |
 | `npm run format`    | Prettier                         |
 | `npm run build`     | Production build in `dist/`      |
+| `npm run e2e`       | End-to-end smoke tests           |
 
 Keyboard: **Space** reveals or moves on, **→** got it, **←** missed. On a fretboard you answer on,
 arrow keys move the cursor and **Enter** chooses.
@@ -84,6 +85,29 @@ docs/
 
 Music, scheduling and answer-checking logic is plain TypeScript with unit tests. Angular components
 and services are thin layers on top of it.
+
+### End-to-end tests
+
+A small [Playwright](https://playwright.dev) suite in `e2e/` checks only what the component tests,
+which run in jsdom, can't:
+
+- phone-width layout
+- real clicks on the fretboard
+- the microphone, through a fake audio device
+- reloads
+- the production build
+
+```bash
+npx playwright install chromium
+```
+
+```bash
+npm run e2e
+```
+
+The first command is needed once per machine. The suite serves a production build on port 4300,
+so it doesn't disturb `npm start`. `npm run e2e:report` opens the last report, with traces of
+failed tests.
 
 ### Add a practice module
 

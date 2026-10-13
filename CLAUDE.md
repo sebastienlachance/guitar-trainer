@@ -11,8 +11,10 @@ modules on top of shared code, with no backend: everything is saved in the brows
 - `npm run lint`: ESLint, including the template accessibility rules
 - `npm run build`: production build; warns above 4 kB of styles per component, fails above 8 kB
 - `npm run format`: Prettier
+- `npm run e2e`: Playwright smoke tests in `e2e/` (first time on a machine: `npx playwright install chromium`)
 
-Run `test:once`, `lint` and `build` before committing.
+Run `test:once`, `lint` and `build` before committing; also `e2e` when layout, routing, storage or
+the microphone changed.
 
 ## Layout
 
@@ -32,6 +34,8 @@ Run `test:once`, `lint` and `build` before committing.
   `notes/` is the reference implementation. `triads/` shows a self-check module with an answer
   template and mic matching.
 - `docs/adding-a-practice-module.md`: how to add a module. Follow it.
+- `e2e/`: Playwright smoke tests. `support/` holds the helpers, the one-card decks and the
+  generator for the fake microphone's recordings.
 
 ## Architecture rules
 
@@ -39,6 +43,8 @@ Run `test:once`, `lint` and `build` before committing.
   `core/fretboard`) with unit tests. Components only wire it to the template.
 - Anything a second module could use (an answer control, a stats block, a setup control) goes in
   `core/`, never inside a module.
+  Lint enforces one direction: nothing in `core/` may import from `modules/`. Modules must not
+  import from each other either; that one isn't enforced.
 - A module service:
   - is `@Service({ autoProvided: false })`, implements `Drill` and owns a `PracticeRun`
   - is provided per route by `provide<Name>()`: `[Session, { provide: Drill, useExisting: Session }]`
@@ -96,6 +102,17 @@ Run `test:once`, `lint` and `build` before committing.
   with `vi.useFakeTimers()` and `vi.setSystemTime()`.
 - Microphone logic (`note-stream.ts`, `matchers.ts`, `chroma.ts`) is pure: test it with synthetic
   input, not audio.
+- End-to-end tests (`e2e/*.e2e.ts`) are only for what jsdom can't check:
+  - real layout and phone width
+  - real clicks on the fretboard
+  - the microphone, through a fake audio device
+  - reloads and saved data
+  - the production build
+
+  Everything else is a component test. Keep the suite small. Seed one-card decks with
+  `seedSettings()` so prompts are known, and use the shared helpers in `e2e/support/` (for
+  example `correctResult()`), so a test expecting something and one expecting its absence can't
+  drift apart. Wait for the content to appear before measuring layout.
 
 ## Pitfalls
 
@@ -110,5 +127,8 @@ Run `test:once`, `lint` and `build` before committing.
   cursor stays where the last answer was.
 - **Keys in module controls:** a control that handles keys itself must call `preventDefault()`, so
   the practice frame ignores them.
+- **Playwright launch options:** `test.use({ launchOptions })` is only allowed at file level. To
+  vary them per test (like the fake-microphone recording), launch a browser in a fixture, as
+  `e2e/microphone.e2e.ts` does.
 - **Line endings:** on Windows, `prettier --check` can flag files that only have CRLF line endings.
   `.gitattributes` stores LF, so check `git diff` before reformatting anything.

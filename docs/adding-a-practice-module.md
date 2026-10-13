@@ -286,4 +286,6 @@ reuse it.
       `modules/notes/practice/practice-page.spec.ts`.
 - [ ] The setup page shows a sensible card count, and the problems when nothing is selected.
 - [ ] No horizontal scrolling at phone width (375 px).
+- [ ] A smoke flow in `e2e/<module>.e2e.ts` (start a session, answer, see the result), and the
+      module's pages added to `e2e/layout.e2e.ts`. Run `npm run e2e`.
 - [ ] `npm run test:once`, `npm run lint` and `npm run build` pass.
