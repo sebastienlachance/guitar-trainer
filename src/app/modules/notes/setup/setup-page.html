@@ -1,0 +1,58 @@
+<h1 class="visually-hidden">Set up fretboard notes practice</h1>
+
+<section class="panel">
+  <div class="heading-row">
+    <h2>Notes</h2>
+    <div>
+      <button type="button" class="link" (click)="selectNotes('all')">All</button>
+      <button type="button" class="link" (click)="selectNotes('naturals')">Naturals</button>
+    </div>
+  </div>
+  <app-chip-toggles
+    label="Notes"
+    [hideLabel]="true"
+    [options]="noteChips"
+    [selected]="settings().notes"
+    (selectedChange)="update({ notes: $event })"
+  />
+</section>
+
+<section class="panel">
+  <h2>Where</h2>
+  <app-chip-toggles
+    label="Strings"
+    [options]="stringChips"
+    [selected]="settings().strings"
+    (selectedChange)="update({ strings: $event })"
+  />
+  <app-segmented-choice
+    label="Frets"
+    [options]="fretChoices"
+    [value]="settings().maxFret"
+    (valueChange)="update({ maxFret: $event })"
+  />
+</section>
+
+<section class="panel">
+  <h2>What to ask for</h2>
+  <app-segmented-choice
+    label="Prompt"
+    [hideLabel]="true"
+    [options]="promptChoices"
+    [value]="settings().promptKind"
+    (valueChange)="update({ promptKind: $event })"
+  />
+</section>
+
+<section class="panel">
+  <h2>Microphone</h2>
+  <app-segmented-choice
+    label="Microphone mode"
+    [hideLabel]="true"
+    [options]="micChoices"
+    [value]="settings().micMode"
+    (valueChange)="update({ micMode: $event })"
+  />
+</section>
+
+<app-setup-start />

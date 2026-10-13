@@ -1,5 +1,6 @@
 import { ChordQuality } from '../../core/music/chords';
 import { IntervalName } from '../../core/music/intervals';
+import { COMMON_NOTE_NAMES, NATURAL_NOTE_NAMES } from '../../core/music/notes';
 
 /** Chord types offered in the triads module; add a line here to offer another one. */
 export const CHORD_QUALITIES: readonly ChordQuality[] = [
@@ -19,23 +20,9 @@ export const CHORD_QUALITIES: readonly ChordQuality[] = [
   { id: '7sus4', symbol: '7sus4', name: 'Dominant 7th sus4', intervals: ['1', '4', '5', 'b7'] },
 ];
 
-/** Roots spelled the way they're most often written. */
-export const ROOTS: readonly string[] = [
-  'C',
-  'Db',
-  'D',
-  'Eb',
-  'E',
-  'F',
-  'F#',
-  'G',
-  'Ab',
-  'A',
-  'Bb',
-  'B',
-];
+export const ROOTS = COMMON_NOTE_NAMES;
 
-export const NATURAL_ROOTS: readonly string[] = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+export const NATURAL_ROOTS = NATURAL_NOTE_NAMES;
 
 export function qualityById(id: string): ChordQuality | undefined {
   return CHORD_QUALITIES.find((quality) => quality.id === id);

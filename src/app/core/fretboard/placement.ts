@@ -77,3 +77,18 @@ export function findChordTones(
   }
   return notes;
 }
+
+/** Every place a pitch class can be played on the given strings, from the nut up to `maxFret`. */
+export function findNotePositions(
+  pitchClass: number,
+  strings: readonly number[],
+  maxFret: number,
+): { string: number; fret: number; midi: number }[] {
+  return strings.flatMap((string) =>
+    Array.from({ length: maxFret + 1 }, (_, fret) => ({
+      string,
+      fret,
+      midi: openString(string) + fret,
+    })).filter((position) => mod(position.midi, 12) === pitchClass),
+  );
+}

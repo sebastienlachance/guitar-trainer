@@ -10,7 +10,7 @@ import {
   shapeLabel,
   shapesFor,
 } from './deck';
-import { DEFAULT_SETTINGS, TriadSettings, sanitizeSettings, toggleIn } from './settings';
+import { DEFAULT_SETTINGS, TriadSettings, sanitizeSettings } from './settings';
 
 const settings = (overrides: Partial<TriadSettings>): TriadSettings => ({
   ...DEFAULT_SETTINGS,
@@ -145,11 +145,6 @@ describe('settings', () => {
     expect(restored.promptDetail).toBe(DEFAULT_SETTINGS.promptDetail);
     expect(restored.strumThreshold).toBe(DEFAULT_SETTINGS.strumThreshold);
     expect(restored.micMode).toBe('arpeggio');
-    expect(sanitizeSettings('garbage')).toBe(DEFAULT_SETTINGS);
-  });
-
-  it('toggles values while keeping canonical order', () => {
-    expect(toggleIn(['C', 'G'], 'D', ['C', 'D', 'E', 'G'])).toEqual(['C', 'D', 'G']);
-    expect(toggleIn(['C', 'G'], 'C', ['C', 'D', 'E', 'G'])).toEqual(['G']);
+    expect(sanitizeSettings('garbage')).toEqual(DEFAULT_SETTINGS);
   });
 });

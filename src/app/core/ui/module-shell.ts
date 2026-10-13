@@ -11,11 +11,14 @@ import { plural } from './text';
   imports: [RouterOutlet, RouterLink, RouterLinkActive, Icon],
   template: `
     <header class="bar">
-      <a routerLink="/" class="brand">
-        <app-icon name="pick" class="pick" />
-        Guitar trainer <span class="separator" aria-hidden="true">/</span>
+      <div class="brand">
+        <a routerLink="/" class="home" aria-label="Guitar trainer home">
+          <app-icon name="pick" class="pick" />
+          <span class="app-name">Guitar trainer</span>
+        </a>
+        <span class="separator" aria-hidden="true">/</span>
         <span class="module">{{ title }}</span>
-      </a>
+      </div>
       <nav [attr.aria-label]="title">
         @if (summary(); as s) {
           <span class="summary muted">{{ s }}</span>
@@ -56,6 +59,13 @@ import { plural } from './text';
       align-items: center;
       gap: 6px;
       color: var(--text-muted);
+    }
+    .home {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 0;
+      color: inherit;
       text-decoration: none;
     }
     .pick {
@@ -66,6 +76,7 @@ import { plural } from './text';
     }
     .module {
       color: var(--text);
+      white-space: nowrap;
     }
     nav {
       display: flex;
@@ -87,7 +98,9 @@ import { plural } from './text';
       background: var(--control);
     }
     @media (max-width: 480px) {
-      .summary {
+      .summary,
+      .app-name,
+      .separator {
         display: none;
       }
     }

@@ -1,171 +1,86 @@
 <h1 class="visually-hidden">Set up triad practice</h1>
 
-<section class="panel" aria-labelledby="chord-types">
-  <h2 id="chord-types">Chord types</h2>
-  <p class="group-label muted" id="three-note">Three notes</p>
-  <div class="chips" role="group" aria-labelledby="three-note">
-    @for (quality of threeNoteQualities; track quality.id) {
-      <button
-        type="button"
-        class="chip"
-        [attr.aria-pressed]="settings().qualities.includes(quality.id)"
-        [attr.title]="quality.name"
-        (click)="toggleQuality(quality.id)"
-      >
-        {{ chordExample(quality) }}
-      </button>
-    }
-  </div>
-  <p class="group-label muted" id="four-note">Four notes</p>
-  <div class="chips" role="group" aria-labelledby="four-note">
-    @for (quality of fourNoteQualities; track quality.id) {
-      <button
-        type="button"
-        class="chip"
-        [attr.aria-pressed]="settings().qualities.includes(quality.id)"
-        [attr.title]="quality.name"
-        (click)="toggleQuality(quality.id)"
-      >
-        {{ chordExample(quality) }}
-      </button>
-    }
-  </div>
-
+<section class="panel">
+  <h2>Chord types</h2>
+  <app-chip-toggles
+    label="Three notes"
+    [options]="threeNoteChips"
+    [selected]="settings().qualities"
+    (selectedChange)="update({ qualities: $event })"
+  />
+  <app-chip-toggles
+    label="Four notes"
+    [options]="fourNoteChips"
+    [selected]="settings().qualities"
+    (selectedChange)="update({ qualities: $event })"
+  />
   @if (hasFourNoteChords()) {
-    <fieldset class="choice">
-      <legend>Four-note shapes</legend>
-      <div class="segmented">
-        @for (choice of voicingChoices; track choice.value) {
-          <label>
-            <input
-              type="radio"
-              name="four-note-voicing"
-              [value]="choice.value"
-              [checked]="settings().fourNoteVoicing === choice.value"
-              (change)="update({ fourNoteVoicing: choice.value })"
-            />
-            <span>{{ choice.label }}</span>
-          </label>
-        }
-      </div>
-      <p class="hint muted">
-        {{ hintFor(voicingChoices, settings().fourNoteVoicing) }} m7♭5 and dim7 always use drop 2.
-      </p>
-    </fieldset>
+    <app-segmented-choice
+      label="Four-note shapes"
+      [options]="voicingChoices"
+      [value]="settings().fourNoteVoicing"
+      (valueChange)="update({ fourNoteVoicing: $event })"
+    >
+      m7♭5 and dim7 always use drop 2.
+    </app-segmented-choice>
   }
 </section>
 
-<section class="panel" aria-labelledby="roots">
+<section class="panel">
   <div class="heading-row">
-    <h2 id="roots">Roots</h2>
-    <div class="quick">
+    <h2>Roots</h2>
+    <div>
       <button type="button" class="link" (click)="selectRoots('all')">All</button>
       <button type="button" class="link" (click)="selectRoots('naturals')">Naturals</button>
     </div>
   </div>
-  <div class="chips" role="group" aria-labelledby="roots">
-    @for (root of roots; track root.name) {
-      <button
-        type="button"
-        class="chip"
-        [attr.aria-pressed]="settings().roots.includes(root.name)"
-        (click)="toggleRoot(root.name)"
-      >
-        {{ root.label }}
-      </button>
-    }
-  </div>
+  <app-chip-toggles
+    label="Roots"
+    [hideLabel]="true"
+    [options]="rootChips"
+    [selected]="settings().roots"
+    (selectedChange)="update({ roots: $event })"
+  />
 </section>
 
-<section class="panel" aria-labelledby="prompt">
-  <h2 id="prompt">What to ask for</h2>
-  <fieldset class="choice">
-    <legend class="visually-hidden">Prompt</legend>
-    <div class="segmented">
-      @for (choice of promptChoices; track choice.value) {
-        <label>
-          <input
-            type="radio"
-            name="prompt-detail"
-            [value]="choice.value"
-            [checked]="settings().promptDetail === choice.value"
-            (change)="update({ promptDetail: choice.value })"
-          />
-          <span>{{ choice.label }}</span>
-        </label>
-      }
-    </div>
-    <p class="hint muted">
-      {{ hintFor(promptChoices, settings().promptDetail) }}
-      @if (settings().promptDetail === 'chord') {
-        The answer shows the shapes picked below.
-      }
-    </p>
-  </fieldset>
-
-  <p class="group-label muted" id="string-sets">String sets</p>
-  <div class="chips" role="group" aria-labelledby="string-sets">
-    @for (set of threeStringSets; track set.id) {
-      <button
-        type="button"
-        class="chip"
-        [attr.aria-pressed]="settings().stringSets.includes(set.id)"
-        (click)="toggleStringSet(set.id)"
-      >
-        {{ set.id }}
-      </button>
+<section class="panel">
+  <h2>What to ask for</h2>
+  <app-segmented-choice
+    label="Prompt"
+    [hideLabel]="true"
+    [options]="promptChoices"
+    [value]="settings().promptDetail"
+    (valueChange)="update({ promptDetail: $event })"
+  >
+    @if (settings().promptDetail === 'chord') {
+      The answer shows the shapes picked below.
     }
-    @for (set of fourStringSets; track set.id) {
-      <button
-        type="button"
-        class="chip"
-        [attr.aria-pressed]="settings().stringSets.includes(set.id)"
-        (click)="toggleStringSet(set.id)"
-      >
-        {{ set.id }}
-      </button>
-    }
-  </div>
-  <p class="hint muted">
-    Triads and shells use three strings; drop 2 uses four. String 1 is the high E.
-  </p>
-
-  <p class="group-label muted" id="inversions">Inversions</p>
-  <div class="chips" role="group" aria-labelledby="inversions">
-    @for (inversion of inversions; track inversion.value) {
-      <button
-        type="button"
-        class="chip"
-        [attr.aria-pressed]="settings().inversions.includes(inversion.value)"
-        (click)="toggleInversion(inversion.value)"
-      >
-        {{ inversion.label }}
-      </button>
-    }
-  </div>
-  <p class="hint muted">The 3rd inversion only exists for four-note shapes.</p>
+  </app-segmented-choice>
+  <app-chip-toggles
+    label="String sets"
+    [options]="stringSetChips"
+    [selected]="settings().stringSets"
+    (selectedChange)="update({ stringSets: $event })"
+  />
+  <p class="hint">Triads and shells use three strings; drop 2 uses four. String 1 is the high E.</p>
+  <app-chip-toggles
+    label="Inversions"
+    [options]="inversionChips"
+    [selected]="settings().inversions"
+    (selectedChange)="update({ inversions: $event })"
+  />
+  <p class="hint">The 3rd inversion only exists for four-note shapes.</p>
 </section>
 
-<section class="panel" aria-labelledby="microphone">
-  <h2 id="microphone">Microphone</h2>
-  <fieldset class="choice">
-    <legend class="visually-hidden">Microphone mode</legend>
-    <div class="segmented">
-      @for (choice of micChoices; track choice.value) {
-        <label>
-          <input
-            type="radio"
-            name="mic-mode"
-            [value]="choice.value"
-            [checked]="settings().micMode === choice.value"
-            (change)="update({ micMode: choice.value })"
-          />
-          <span>{{ choice.label }}</span>
-        </label>
-      }
-    </div>
-    <p class="hint muted">{{ hintFor(micChoices, settings().micMode) }}</p>
-  </fieldset>
+<section class="panel">
+  <h2>Microphone</h2>
+  <app-segmented-choice
+    label="Microphone mode"
+    [hideLabel]="true"
+    [options]="micChoices"
+    [value]="settings().micMode"
+    (valueChange)="update({ micMode: $event })"
+  />
   @if (settings().micMode === 'strum') {
     <label class="slider">
       <span>Strictness</span>
@@ -182,15 +97,4 @@
   }
 </section>
 
-<div class="start">
-  @if (problems().length > 0) {
-    <ul class="problems" role="status">
-      @for (problem of problems(); track problem) {
-        <li>{{ problem }}</li>
-      }
-    </ul>
-  } @else {
-    <p class="muted" role="status">{{ deckSize() }} {{ deckSize() === 1 ? 'card' : 'cards' }}</p>
-  }
-  <button type="button" class="btn btn-primary" (click)="startSession()">Start session</button>
-</div>
+<app-setup-start />

@@ -68,6 +68,24 @@ export function displayNoteName(note: SpelledNote): string {
   return note.letter + DISPLAY_ACCIDENTALS[note.accidental];
 }
 
+/** One name per pitch class, spelled the way it's most often written. */
+export const COMMON_NOTE_NAMES: readonly string[] = [
+  'C',
+  'Db',
+  'D',
+  'Eb',
+  'E',
+  'F',
+  'F#',
+  'G',
+  'Ab',
+  'A',
+  'Bb',
+  'B',
+];
+
+export const NATURAL_NOTE_NAMES: readonly string[] = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+
 const SHARP_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
 /** Name with octave for a MIDI number, e.g. 52 -> "E3". Uses sharps; for the mic readout only. */

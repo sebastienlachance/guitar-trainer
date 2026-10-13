@@ -10,7 +10,7 @@ async function renderFretboard(options: { selectable?: boolean; dots?: Fretboard
       description: 'Fretboard',
       window: { first: 1, last: 5 },
       selectable: options.selectable ?? true,
-      cursorString: 3,
+      cursorStart: { string: 3, fret: 0 },
     },
     on: { picked },
   });

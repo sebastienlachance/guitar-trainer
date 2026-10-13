@@ -1,0 +1,40 @@
+<app-practice-frame [prompt]="prompt" />
+
+<ng-template #prompt>
+  @if (card(); as card) {
+    <div class="question" aria-live="polite">
+      <p class="find muted">Find</p>
+      <h1>
+        <span class="note">{{ noteLabel() }}</span
+        >{{ ' ' }}<span class="where muted">{{ where() }}</span>
+      </h1>
+      @if (progress()) {
+        <p class="progress">{{ progress() }}</p>
+      }
+      @if (correction()) {
+        <p class="correction">{{ correction() }}</p>
+      }
+    </div>
+
+    <div class="board">
+      <app-fretboard
+        [dots]="dots()"
+        [window]="window()"
+        [selectable]="run.phase() === 'prompt'"
+        [cursorStart]="cursorStart()"
+        [takesFocus]="true"
+        [description]="description()"
+        (picked)="session.pick($event)"
+      />
+    </div>
+
+    @if (card.string === null && run.phase() === 'prompt') {
+      <div class="actions">
+        <button type="button" class="btn" (click)="session.showMe()">Show me</button>
+      </div>
+    }
+    @if (micOn()) {
+      <app-mic-status hint="play the note" />
+    }
+  }
+</ng-template>

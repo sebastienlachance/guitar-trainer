@@ -1,9 +1,11 @@
 import { Component, computed, inject } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
 import { FOUR_STRING_SETS, THREE_STRING_SETS } from '../../../core/fretboard/tuning';
-import { ChordQuality, chordSymbol } from '../../../core/music/chords';
+import { chordSymbol } from '../../../core/music/chords';
 import { displayNoteName, parseNote } from '../../../core/music/notes';
 import { inversionName } from '../../../core/music/voicings';
+import { ChipOption, ChipToggles } from '../../../core/ui/setup/chip-toggles';
+import { Choice, SegmentedChoice } from '../../../core/ui/setup/segmented-choice';
+import { SetupStart } from '../../../core/ui/setup/setup-start';
 import { CHORD_QUALITIES, NATURAL_ROOTS, ROOTS, isFourNote } from '../catalog';
 import {
   FourNoteVoicing,
@@ -12,48 +14,48 @@ import {
   PromptDetail,
   STRUM_THRESHOLD_RANGE,
   TriadSettings,
-  toggleIn,
 } from '../settings';
 import { TriadsSession } from '../triads-session';
 
-interface Choice<T> {
-  readonly value: T;
-  readonly label: string;
-  readonly hint: string;
-}
-
 const C = parseNote('C');
+
+function qualityChips(fourNote: boolean): ChipOption<string>[] {
+  return CHORD_QUALITIES.filter((quality) => isFourNote(quality) === fourNote).map((quality) => ({
+    value: quality.id,
+    label: chordSymbol(C, quality),
+    title: quality.name,
+  }));
+}
 
 @Component({
   selector: 'app-setup-page',
+  imports: [ChipToggles, SegmentedChoice, SetupStart],
   templateUrl: './setup-page.html',
   styleUrl: './setup-page.css',
+  host: { class: 'page' },
 })
 export class SetupPage {
   private readonly session = inject(TriadsSession);
-  private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
-
   protected readonly settings = this.session.settings;
-  protected readonly problems = this.session.problems;
-  protected readonly deckSize = computed(() => this.session.deck().length);
 
-  protected readonly threeNoteQualities = CHORD_QUALITIES.filter((quality) => !isFourNote(quality));
-  protected readonly fourNoteQualities = CHORD_QUALITIES.filter(isFourNote);
-  protected readonly roots = ROOTS.map((name) => ({
-    name,
+  protected readonly threeNoteChips = qualityChips(false);
+  protected readonly fourNoteChips = qualityChips(true);
+  protected readonly rootChips: ChipOption<string>[] = ROOTS.map((name) => ({
+    value: name,
     label: displayNoteName(parseNote(name)),
   }));
-  protected readonly threeStringSets = THREE_STRING_SETS;
-  protected readonly fourStringSets = FOUR_STRING_SETS;
-  protected readonly inversions = INVERSIONS.map((value) => ({
+  protected readonly stringSetChips: ChipOption<string>[] = [
+    ...THREE_STRING_SETS,
+    ...FOUR_STRING_SETS,
+  ].map((set) => ({ value: set.id, label: set.id }));
+  protected readonly inversionChips: ChipOption<number>[] = INVERSIONS.map((value) => ({
     value,
     label: inversionName(value),
   }));
   protected readonly strumRange = STRUM_THRESHOLD_RANGE;
 
   protected readonly hasFourNoteChords = computed(() =>
-    this.fourNoteQualities.some((quality) => this.settings().qualities.includes(quality.id)),
+    this.fourNoteChips.some((chip) => this.settings().qualities.includes(chip.value)),
   );
 
   protected readonly promptChoices: Choice<PromptDetail>[] = [
@@ -81,34 +83,8 @@ export class SetupPage {
     },
   ];
 
-  protected chordExample(quality: ChordQuality): string {
-    return chordSymbol(C, quality);
-  }
-
-  protected hintFor<T>(choices: readonly Choice<T>[], value: T): string {
-    return choices.find((choice) => choice.value === value)?.hint ?? '';
-  }
-
-  protected toggleQuality(id: string): void {
-    const all = CHORD_QUALITIES.map((quality) => quality.id);
-    this.update({ qualities: toggleIn(this.settings().qualities, id, all) });
-  }
-
-  protected toggleRoot(name: string): void {
-    this.update({ roots: toggleIn(this.settings().roots, name, ROOTS) });
-  }
-
   protected selectRoots(which: 'all' | 'naturals'): void {
     this.update({ roots: which === 'all' ? ROOTS : NATURAL_ROOTS });
-  }
-
-  protected toggleStringSet(id: string): void {
-    const all = [...THREE_STRING_SETS, ...FOUR_STRING_SETS].map((set) => set.id);
-    this.update({ stringSets: toggleIn(this.settings().stringSets, id, all) });
-  }
-
-  protected toggleInversion(inversion: number): void {
-    this.update({ inversions: toggleIn(this.settings().inversions, inversion, INVERSIONS) });
   }
 
   protected setStrumThreshold(event: Event): void {
@@ -117,11 +93,5 @@ export class SetupPage {
 
   protected update(changes: Partial<TriadSettings>): void {
     this.session.updateSettings(changes);
-  }
-
-  protected startSession(): void {
-    if (this.session.run.start()) {
-      void this.router.navigate(['practice'], { relativeTo: this.route });
-    }
   }
 }

@@ -1,0 +1,55 @@
+.question {
+  text-align: center;
+  padding: 16px 0 10px;
+}
+
+.find {
+  font-size: 13px;
+  margin: 0 0 4px;
+}
+
+h1 {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0 12px;
+}
+
+.note {
+  font-size: clamp(44px, 12vw, 60px);
+  line-height: 1.1;
+}
+
+.where {
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.progress {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--success);
+}
+
+.correction {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--danger);
+}
+
+/* Keeps the frets big enough to tap on a phone; the board scrolls sideways instead. */
+.board {
+  overflow-x: auto;
+  padding: 4px 0;
+}
+
+.board app-fretboard {
+  min-width: 560px;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}

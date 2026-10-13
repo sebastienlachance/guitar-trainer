@@ -27,7 +27,7 @@ function describeCard(key: string): CardDescription | undefined {
   selector: 'app-stats-page',
   imports: [RouterLink, StatsOverview, SessionHistory, AccuracyGrid, WeakestCards, ResetStats],
   templateUrl: './stats-page.html',
-  styleUrl: './stats-page.css',
+  host: { class: 'page' },
 })
 export class StatsPage {
   private readonly session = inject(TriadsSession);

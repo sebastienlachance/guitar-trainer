@@ -1,4 +1,4 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, input, linkedSignal, output } from '@angular/core';
 import { STRING_COUNT, STRING_NAMES } from './tuning';
 
 export interface FretPosition {
@@ -60,8 +60,11 @@ export class Fretboard {
   readonly window = input<FretWindow>();
   /** Lets you pick positions, reported through `picked`. */
   readonly selectable = input(false);
-  /** String the keyboard cursor starts on, e.g. the string a question is about. */
-  readonly cursorString = input(3);
+  /**
+   * Where the keyboard cursor starts, e.g. on the string a question is about. Pass a new object
+   * for each question: the cursor jumps back here whenever it changes.
+   */
+  readonly cursorStart = input<FretPosition | null>(null);
   /** Marks the fretboard for the practice frame to focus when a new prompt appears. */
   readonly takesFocus = input(false);
 
@@ -130,13 +133,10 @@ export class Fretboard {
     );
   });
 
-  /** Where the keyboard cursor is; starts on `cursorString` at the lowest visible fret. */
-  private readonly cursorPosition = signal<FretPosition | null>(null);
+  /** Where the keyboard cursor is: at `cursorStart`, or the middle string at the lowest fret. */
+  private readonly cursorPosition = linkedSignal<FretPosition | null>(() => this.cursorStart());
   protected readonly cursor = computed(() => {
-    const position = this.cursorPosition() ?? {
-      string: this.cursorString(),
-      fret: this.lowestFret(),
-    };
+    const position = this.cursorPosition() ?? { string: 3, fret: this.lowestFret() };
     const where = position.fret === 0 ? 'open' : `fret ${position.fret}`;
     return {
       ...position,

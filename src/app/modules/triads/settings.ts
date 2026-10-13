@@ -1,4 +1,5 @@
 import { STRING_SETS } from '../../core/fretboard/tuning';
+import { pickList, pickNumber, pickOne, savedFields } from '../../core/practice/saved-settings';
 import { CHORD_QUALITIES, ROOTS } from './catalog';
 
 /** Ask for the chord only (any shape you like), or for a specific shape. */
@@ -36,27 +37,13 @@ export const DEFAULT_SETTINGS: TriadSettings = {
   labelMode: 'interval',
 };
 
-/**
- * Rebuilds settings from saved data, keeping only values this version knows. Saved data can come
- * from an older build or be edited by hand, so nothing in it is trusted.
- */
+/** Rebuilds settings from saved data, keeping only the values this version knows. */
 export function sanitizeSettings(saved: unknown): TriadSettings {
-  if (typeof saved !== 'object' || saved === null) {
-    return DEFAULT_SETTINGS;
-  }
-  const raw = saved as Record<string, unknown>;
+  const raw = savedFields(saved);
   const defaults = DEFAULT_SETTINGS;
-  const threshold = raw['strumThreshold'];
-  const thresholdInRange =
-    typeof threshold === 'number' &&
-    threshold >= STRUM_THRESHOLD_RANGE.min &&
-    threshold <= STRUM_THRESHOLD_RANGE.max;
+  const qualityIds = CHORD_QUALITIES.map((quality) => quality.id);
   return {
-    qualities: pickList(
-      raw['qualities'],
-      CHORD_QUALITIES.map((quality) => quality.id),
-      defaults.qualities,
-    ),
+    qualities: pickList(raw['qualities'], qualityIds, defaults.qualities),
     roots: pickList(raw['roots'], ROOTS, defaults.roots),
     promptDetail: pickOne(raw['promptDetail'], ['chord', 'shape'], defaults.promptDetail),
     fourNoteVoicing: pickOne(
@@ -67,22 +54,12 @@ export function sanitizeSettings(saved: unknown): TriadSettings {
     stringSets: pickList(raw['stringSets'], defaults.stringSets, defaults.stringSets),
     inversions: pickList(raw['inversions'], INVERSIONS, defaults.inversions),
     micMode: pickOne(raw['micMode'], ['off', 'arpeggio', 'strum'], defaults.micMode),
-    strumThreshold: thresholdInRange ? threshold : defaults.strumThreshold,
+    strumThreshold: pickNumber(
+      raw['strumThreshold'],
+      STRUM_THRESHOLD_RANGE.min,
+      STRUM_THRESHOLD_RANGE.max,
+      defaults.strumThreshold,
+    ),
     labelMode: pickOne(raw['labelMode'], ['interval', 'note'], defaults.labelMode),
   };
-}
-
-/** Known values from a saved list, in canonical order. */
-function pickList<T>(value: unknown, allowed: readonly T[], fallback: readonly T[]): readonly T[] {
-  return Array.isArray(value) ? allowed.filter((item) => value.includes(item)) : fallback;
-}
-
-function pickOne<T>(value: unknown, allowed: readonly T[], fallback: T): T {
-  return allowed.includes(value as T) ? (value as T) : fallback;
-}
-
-/** Adds the value when absent, removes it when present, keeping the canonical order. */
-export function toggleIn<T>(list: readonly T[], value: T, canonical: readonly T[]): T[] {
-  const next = list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
-  return canonical.filter((item) => next.includes(item));
 }

@@ -17,4 +17,10 @@ export const MODULES: readonly TrainerModule[] = [
       'Name a chord, play it: triads, sus chords, sixths and sevenths on every string set.',
     loadRoutes: () => import('./triads/triads.routes').then((m) => m.TRIADS_ROUTES),
   },
+  {
+    path: 'notes',
+    title: 'Fretboard notes',
+    description: 'Find any note on any string, by tapping the fretboard or playing it.',
+    loadRoutes: () => import('./notes/notes.routes').then((m) => m.NOTES_ROUTES),
+  },
 ];
