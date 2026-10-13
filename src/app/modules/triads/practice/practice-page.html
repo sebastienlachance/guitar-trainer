@@ -1,14 +1,99 @@
-@if (!started()) {
-  <section class="panel empty">
-    <h1>Nothing to practise yet</h1>
-    <ul>
-      @for (problem of session.problems(); track problem) {
-        <li>{{ problem }}</li>
+@if (view() === 'running' || view() === 'paused') {
+  <section class="session-bar" [class.idle]="log.idle()" aria-label="Session">
+    @if (log.idle()) {
+      <span class="idle-label"><app-icon name="pause" /> Paused (idle)</span>
+    } @else {
+      <app-icon name="clock" class="muted" />
+    }
+    <span class="figure" role="timer">{{ progress().clock }}</span>
+    <span
+      ><span class="figure">{{ progress().chords }}</span></span
+    >
+    <span class="figure accuracy">{{ progress().accuracy }}</span>
+    <span class="session-actions">
+      @if (view() === 'running') {
+        <button type="button" class="btn small" (click)="log.pause()">
+          <app-icon name="pause" /> Pause
+        </button>
       }
-    </ul>
-    <a routerLink=".." class="btn">Go to setup</a>
+      <button type="button" class="btn small btn-danger" (click)="session.end()">
+        End session
+      </button>
+    </span>
   </section>
-} @else if (card(); as card) {
+}
+
+@switch (view()) {
+  @case ('blocked') {
+    <section class="panel empty">
+      <h1>Nothing to practise yet</h1>
+      <ul>
+        @for (problem of session.problems(); track problem) {
+          <li>{{ problem }}</li>
+        }
+      </ul>
+      <a routerLink=".." class="btn">Go to setup</a>
+    </section>
+  }
+  @case ('ready') {
+    <section class="panel centered">
+      <div class="tags">
+        @for (tag of practiceTags(); track tag) {
+          <span class="tag">{{ tag }}</span>
+        }
+      </div>
+      <h1 class="state-title">Ready to practise</h1>
+      <p class="muted">
+        {{ session.deck().length }} cards · the clock stops after {{ idleMinutes }} minutes without
+        an answer
+      </p>
+      <button #primaryAction type="button" class="btn btn-primary" (click)="session.start()">
+        <app-icon name="play" /> Start session
+      </button>
+    </section>
+  }
+  @case ('paused') {
+    <section class="panel centered">
+      <h1 class="state-title">Paused</h1>
+      <p class="muted">The clock is stopped. Pick up where you left off when you're ready.</p>
+      <button #primaryAction type="button" class="btn btn-primary" (click)="log.resume()">
+        <app-icon name="play" /> Resume
+      </button>
+    </section>
+  }
+  @case ('ended') {
+    @if (summary(); as summary) {
+      <section class="panel centered">
+        @if (summary.logged) {
+          <p class="saved"><app-icon name="check" /> Session saved</p>
+          <h1 class="state-title">Nice work</h1>
+          <div class="metrics">
+            <div class="metric">
+              <span class="muted">Time</span><strong>{{ summary.time }}</strong>
+            </div>
+            <div class="metric">
+              <span class="muted">Chords</span><strong>{{ summary.chords }}</strong>
+            </div>
+            <div class="metric">
+              <span class="muted">Correct</span><strong>{{ summary.accuracy }}</strong>
+            </div>
+          </div>
+        } @else {
+          <h1 class="state-title">Session ended</h1>
+          <p class="muted">No chords were answered, so nothing was logged.</p>
+        }
+        <div class="actions">
+          <a routerLink="../stats" class="btn">See history</a>
+          <button #primaryAction type="button" class="btn btn-primary" (click)="session.start()">
+            New session
+          </button>
+        </div>
+      </section>
+    }
+  }
+}
+
+@if (view() === 'running' && card(); as card) {
   <section class="panel prompt">
     <div class="tags">
       @for (tag of practiceTags(); track tag) {

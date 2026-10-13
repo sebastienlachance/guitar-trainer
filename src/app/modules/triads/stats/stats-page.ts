@@ -1,6 +1,8 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { displayNoteName, parseNote } from '../../../core/music/notes';
+import { PracticeLog } from '../../../core/practice/practice-log';
+import { formatDuration, formatSessionStart } from '../../../core/practice/session-log';
 import {
   accuracy,
   averageResponseMs,
@@ -9,12 +11,13 @@ import {
 } from '../../../core/practice/stats';
 import { CHORD_QUALITIES, ROOTS } from '../catalog';
 import { cardFromKey, cardTitle, shapeLabel } from '../deck';
-import { TriadsSession } from '../triads-session';
+import { TRIADS_MODULE, TriadsSession } from '../triads-session';
 
 /** Accuracy bands for the grid colours. */
 type Band = 'none' | 'low' | 'mid' | 'high';
 
 const WEAKEST_SHOWN = 8;
+const SESSIONS_SHOWN = 20;
 
 function bandOf(attempts: number, rate: number): Band {
   if (attempts === 0) {
@@ -30,6 +33,10 @@ function percent(rate: number): string {
   return `${Math.round(rate * 100)}%`;
 }
 
+function plural(count: number, word: string): string {
+  return `${count} ${word}${count === 1 ? '' : 's'}`;
+}
+
 /** True when a stats key belongs to the chord, whatever shape it was asked in. */
 function isChordKey(key: string, chordPrefix: string): boolean {
   return key === chordPrefix || key.startsWith(chordPrefix + '|');
@@ -43,6 +50,7 @@ function isChordKey(key: string, chordPrefix: string): boolean {
 })
 export class StatsPage {
   private readonly session = inject(TriadsSession);
+  private readonly log = inject(PracticeLog);
   private readonly stats = this.session.stats;
 
   protected readonly confirmingReset = signal(false);
@@ -86,6 +94,33 @@ export class StatsPage {
         };
       }),
     }));
+  });
+
+  /** Your triads sessions, newest first, with totals over all of them. */
+  protected readonly sessions = computed(() => {
+    const records = this.log.history().filter((record) => record.module === TRIADS_MODULE);
+    const now = Date.now();
+    const activeMs = records.reduce((total, record) => total + record.activeMs, 0);
+    const chords = records.reduce((total, record) => total + record.answered, 0);
+    return {
+      count: records.length,
+      totals: [
+        plural(records.length, 'session'),
+        formatDuration(activeMs),
+        plural(chords, 'chord'),
+      ].join(' · '),
+      rows: records.slice(0, SESSIONS_SHOWN).map((record) => {
+        const rate = record.correct / record.answered;
+        return {
+          id: record.id,
+          when: formatSessionStart(record.startedAt, now),
+          time: formatDuration(record.activeMs),
+          chords: record.answered,
+          accuracy: percent(rate),
+          band: bandOf(record.answered, rate),
+        };
+      }),
+    };
   });
 
   /** The cards you miss most, worst first. */

@@ -1,7 +1,9 @@
 import { DestroyRef, Service, computed, effect, inject, signal, untracked } from '@angular/core';
 import { MicListener } from '../../core/audio/mic-listener';
 import { matchesArpeggio, matchesStrum, targetPitchClasses } from '../../core/audio/matchers';
+import { PracticeLog } from '../../core/practice/practice-log';
 import { pickNextCard } from '../../core/practice/scheduler';
+import { SessionRecord } from '../../core/practice/session-log';
 import { StatsStore } from '../../core/practice/stats-store';
 import { loadJson, saveJson } from '../../core/practice/storage';
 import { CHORD_QUALITIES } from './catalog';
@@ -10,6 +12,9 @@ import { TriadSettings, sanitizeSettings } from './settings';
 
 /** prompt: waiting for you to play; revealed: you looked; heard: the microphone recognised it. */
 export type PracticePhase = 'prompt' | 'revealed' | 'heard';
+
+/** Tags this module's sessions in the shared practice log. */
+export const TRIADS_MODULE = 'triads';
 
 const SETTINGS_KEY = 'triads:settings';
 const STATS_KEY = 'triads:stats';
@@ -21,6 +26,7 @@ export const AUTO_ADVANCE_MS = 1500;
 @Service({ autoProvided: false })
 export class TriadsSession {
   private readonly mic = inject(MicListener);
+  private readonly log = inject(PracticeLog);
 
   readonly settings = signal<TriadSettings>(sanitizeSettings(loadJson(SETTINGS_KEY)));
   readonly deck = computed(() => buildDeck(this.settings()));
@@ -33,6 +39,8 @@ export class TriadsSession {
   readonly phase = signal<PracticePhase>('prompt');
   /** Time from the prompt to the reveal or to the microphone match. */
   readonly responseMs = signal<number | null>(null);
+  /** The session that just ended, for the summary; cleared when a new one starts. */
+  readonly lastSession = signal<SessionRecord | null>(null);
 
   /** Shapes to show for a chord-only prompt, filtered by the chosen string sets and inversions. */
   readonly revealShapes = computed(() => {
@@ -47,7 +55,7 @@ export class TriadsSession {
   private readonly micMatched = computed(() => {
     const card = this.current();
     const { micMode, strumThreshold } = this.settings();
-    if (!card || micMode === 'off' || this.phase() !== 'prompt') {
+    if (!card || micMode === 'off' || this.phase() !== 'prompt' || this.log.paused()) {
       return false;
     }
     const target = chordTarget(card);
@@ -67,7 +75,13 @@ export class TriadsSession {
         untracked(() => this.recordHeard());
       }
     });
-    inject(DestroyRef).onDestroy(() => this.stop());
+    // Playing counts as practice even before you answer.
+    effect(() => {
+      if (this.mic.heard().length > 0) {
+        untracked(() => this.log.touch());
+      }
+    });
+    inject(DestroyRef).onDestroy(() => this.end());
   }
 
   updateSettings(changes: Partial<TriadSettings>): void {
@@ -75,9 +89,10 @@ export class TriadsSession {
     saveJson(SETTINGS_KEY, this.settings());
   }
 
-  /** Starts a practice run; returns false when the settings leave nothing to practise. */
+  /** Starts a timed session; returns false when the settings leave nothing to practise. */
   start(): boolean {
-    this.stop();
+    this.end();
+    this.lastSession.set(null);
     if (this.problems().length > 0) {
       return false;
     }
@@ -85,18 +100,24 @@ export class TriadsSession {
     if (micMode !== 'off') {
       void this.mic.start(micMode);
     }
+    this.log.start(TRIADS_MODULE);
     this.showNext();
     return true;
   }
 
-  stop(): void {
+  /** Ends the session, if one is running, and keeps its summary in `lastSession`. */
+  end(): void {
     clearTimeout(this.advanceTimer);
     this.mic.stop();
+    if (this.current() && this.log.current()?.module === TRIADS_MODULE) {
+      this.lastSession.set(this.log.end());
+    }
     this.current.set(null);
   }
 
   reveal(): void {
     if (this.phase() === 'prompt') {
+      this.log.touch();
       this.responseMs.set(Date.now() - this.shownAt);
       this.phase.set('revealed');
     }
@@ -113,6 +134,7 @@ export class TriadsSession {
       responseMs: this.responseMs() ?? 0,
       at: Date.now(),
     });
+    this.log.recordAnswer(correct);
     this.showNext();
   }
 
@@ -137,6 +159,7 @@ export class TriadsSession {
     }
     const responseMs = Date.now() - this.shownAt;
     this.statsStore.record(card.key, { correct: true, responseMs, at: Date.now() });
+    this.log.recordAnswer(true);
     this.responseMs.set(responseMs);
     this.phase.set('heard');
     this.advanceTimer = setTimeout(() => this.showNext(), AUTO_ADVANCE_MS);

@@ -119,8 +119,8 @@ export class SetupPage {
     this.session.updateSettings(changes);
   }
 
-  protected start(): void {
-    if (this.problems().length === 0) {
+  protected startSession(): void {
+    if (this.session.start()) {
       void this.router.navigate(['practice'], { relativeTo: this.route });
     }
   }

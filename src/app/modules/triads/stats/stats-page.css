@@ -110,3 +110,30 @@ td.high {
   gap: 10px;
   flex-wrap: wrap;
 }
+
+.heading-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+
+.sessions table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.sessions th,
+.sessions td {
+  min-width: 0;
+  padding: 8px 8px 8px 0;
+  text-align: left;
+  border-top: 1px solid var(--border);
+}
+
+.sessions td.rate {
+  background: none;
+}

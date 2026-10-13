@@ -1,6 +1,8 @@
+import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
+import { PracticeLog } from '../../../core/practice/practice-log';
 import { STORAGE_PREFIX } from '../../../core/practice/storage';
 import { TriadsSession } from '../triads-session';
 import { SetupPage } from './setup-page';
@@ -39,6 +41,17 @@ describe('SetupPage', () => {
     expect(screen.queryByRole('group', { name: 'Four-note shapes' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Cm7' }));
     expect(screen.getByRole('group', { name: 'Four-note shapes' })).toBeInTheDocument();
+  });
+
+  it('starts a timed session', async () => {
+    const user = userEvent.setup();
+    await render(SetupPage, {
+      providers: [TriadsSession, provideRouter([{ path: 'practice', children: [] }])],
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Start session' }));
+
+    expect(TestBed.inject(PracticeLog).current()).toMatchObject({ module: 'triads', answered: 0 });
   });
 
   it('says what is missing when nothing is selected', async () => {

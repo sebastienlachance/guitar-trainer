@@ -18,6 +18,10 @@ can be added as modules alongside it.
 - **Microphone (optional):**
   - _Arpeggio:_ play the notes one at a time; checks the exact shape
   - _Strum (experimental):_ checks the notes but not the shape
+- **Sessions:** start a timed session and see the clock, the chords answered and your accuracy as you
+  go. The clock counts active time only: it stops after 2 minutes without an answer and while
+  paused. Finished sessions appear in a history on the stats page, and a session interrupted by
+  closing the tab is still saved.
 - **Stats:** accuracy per root and chord type and a list of your weakest cards. Cards you miss come up
   more often.
 - Dark theme, works on a phone, no backend: everything is saved in the browser
@@ -33,14 +37,14 @@ npm start
 
 Then open http://localhost:4200. The microphone only works on `localhost` or over HTTPS.
 
-| Command             | What it does                        |
-| ------------------- | ----------------------------------- |
-| `npm start`         | Dev server with live reload         |
-| `npm test`          | Unit and component tests (watch)    |
-| `npm run test:once` | Tests, single run                   |
-| `npm run lint`      | ESLint, including accessibility     |
-| `npm run format`    | Prettier                            |
-| `npm run build`     | Production build in `dist/`         |
+| Command             | What it does                     |
+| ------------------- | -------------------------------- |
+| `npm start`         | Dev server with live reload      |
+| `npm test`          | Unit and component tests (watch) |
+| `npm run test:once` | Tests, single run                |
+| `npm run lint`      | ESLint, including accessibility  |
+| `npm run format`    | Prettier                         |
+| `npm run build`     | Production build in `dist/`      |
 
 Keyboard: **Space** reveals, **→** got it, **←** missed.
 
@@ -51,7 +55,7 @@ src/app/
   core/                 shared by every module
     music/              note spelling, intervals, chords, voicings (pure TypeScript)
     fretboard/          tuning, placing shapes on strings, the SVG fretboard component
-    practice/           stats, weighted card picking, local storage
+    practice/           stats, weighted card picking, session log, local storage
     audio/              microphone, pitch detection, chord matching
     ui/                 icons
   modules/
