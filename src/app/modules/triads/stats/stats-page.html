@@ -1,0 +1,81 @@
+<h1 class="visually-hidden">Triad stats</h1>
+
+<section class="metrics" aria-label="Overall">
+  <div class="metric">
+    <span class="muted">Accuracy</span>
+    <strong>{{ overall().accuracy }}</strong>
+  </div>
+  <div class="metric">
+    <span class="muted">Answers</span>
+    <strong>{{ overall().attempts }}</strong>
+  </div>
+  <div class="metric">
+    <span class="muted">Cards practised</span>
+    <strong>{{ overall().cards }}</strong>
+  </div>
+  <div class="metric">
+    <span class="muted">Average time</span>
+    <strong>{{ overall().averageSeconds }}</strong>
+  </div>
+</section>
+
+@if (overall().attempts === 0) {
+  <section class="panel">
+    <h2>No answers yet</h2>
+    <p class="muted">Your accuracy per chord shows up here once you've practised.</p>
+    <a routerLink="../practice" class="btn btn-primary">Start practice</a>
+  </section>
+} @else {
+  <section class="panel">
+    <h2>Accuracy by chord</h2>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col"><span class="visually-hidden">Chord type</span></th>
+            @for (root of roots; track root.name) {
+              <th scope="col">{{ root.label }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of grid(); track row.id) {
+            <tr>
+              <th scope="row" [attr.title]="row.name">{{ row.label }}</th>
+              @for (cell of row.cells; track cell.root) {
+                <td [class]="cell.band" [attr.title]="cell.detail">{{ cell.text }}</td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Practise these more</h2>
+    @if (weakest().length === 0) {
+      <p class="muted">Nothing missed so far.</p>
+    } @else {
+      <ul class="weakest">
+        @for (card of weakest(); track card.key) {
+          <li>
+            <span class="title">{{ card.title }}</span>
+            <span class="muted">{{ card.shape }}</span>
+            <span class="score">{{ card.score }} · {{ card.seconds }}</span>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  <div class="reset">
+    @if (confirmingReset()) {
+      <span class="muted" role="status">This clears every answer. It can't be undone.</span>
+      <button type="button" class="btn" (click)="confirmingReset.set(false)">Cancel</button>
+    }
+    <button type="button" class="btn btn-danger" (click)="reset()">
+      {{ confirmingReset() ? 'Clear stats' : 'Reset stats' }}
+    </button>
+  </div>
+}

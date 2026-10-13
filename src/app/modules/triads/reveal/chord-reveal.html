@@ -1,0 +1,64 @@
+<div class="tones-row">
+  <ul class="tones" aria-label="Chord tones">
+    @for (tone of tones(); track tone.interval) {
+      <li class="tone">
+        <span class="note" [class.root]="tone.isRoot">{{ tone.note }}</span>
+        <span class="interval muted">{{ tone.interval }}</span>
+      </li>
+    }
+  </ul>
+  <fieldset class="labels">
+    <legend class="visually-hidden">Dot labels</legend>
+    <label>
+      <input
+        type="radio"
+        name="label-mode"
+        [checked]="labelMode() === 'interval'"
+        (change)="labelMode.set('interval')"
+      />
+      <span>Intervals</span>
+    </label>
+    <label>
+      <input
+        type="radio"
+        name="label-mode"
+        [checked]="labelMode() === 'note'"
+        (change)="labelMode.set('note')"
+      />
+      <span>Notes</span>
+    </label>
+  </fieldset>
+</div>
+
+@if (positions().length > 0) {
+  <div class="grid">
+    @for (diagram of positions(); track diagram.id) {
+      <figure class="diagram">
+        <app-fretboard [dots]="diagram.dots" [description]="diagram.description" />
+        @if (positions().length > 1) {
+          <figcaption class="muted">{{ diagram.caption }}</figcaption>
+        }
+      </figure>
+    }
+  </div>
+}
+
+@if (neck(); as neck) {
+  <figure class="diagram neck">
+    <div class="scroll">
+      <app-fretboard [dots]="neck.dots" [description]="neck.description" [window]="neckWindow" />
+    </div>
+    <figcaption class="muted">{{ neck.caption }}</figcaption>
+  </figure>
+}
+
+@if (gallery().length > 0) {
+  <div class="grid gallery">
+    @for (diagram of gallery(); track diagram.id) {
+      <figure class="diagram">
+        <app-fretboard [dots]="diagram.dots" [description]="diagram.description" />
+        <figcaption class="muted">{{ diagram.caption }}</figcaption>
+      </figure>
+    }
+  </div>
+}

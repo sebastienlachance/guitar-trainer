@@ -1,0 +1,71 @@
+:host {
+  display: block;
+}
+
+svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: var(--font);
+}
+
+.string-name,
+.fret-number {
+  font-size: 12px;
+  fill: var(--text-muted);
+  text-anchor: middle;
+}
+
+.inlay {
+  fill: var(--inlay);
+}
+
+.fret {
+  stroke: var(--fret);
+  stroke-width: 2;
+}
+
+.nut {
+  stroke: var(--text-muted);
+  stroke-width: 5;
+}
+
+.string {
+  stroke: var(--string);
+}
+
+.dot text {
+  font-size: 12px;
+  font-weight: 500;
+  text-anchor: middle;
+}
+
+.root circle {
+  fill: var(--accent);
+}
+
+.root text {
+  fill: var(--on-accent);
+}
+
+.tone circle {
+  fill: var(--tone);
+}
+
+.tone text {
+  fill: var(--on-tone);
+}
+
+.open circle {
+  fill: var(--surface);
+  stroke: var(--tone);
+  stroke-width: 2;
+}
+
+.open.root circle {
+  stroke: var(--accent);
+}
+
+.open text {
+  fill: var(--text);
+}

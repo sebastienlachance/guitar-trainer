@@ -1,0 +1,113 @@
+:host {
+  display: block;
+}
+
+.tones-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.tones {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tone {
+  min-width: 56px;
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  background: var(--raised);
+  text-align: center;
+}
+
+.note {
+  display: block;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--tone);
+}
+
+.note.root {
+  color: var(--accent);
+}
+
+.interval {
+  font-size: 12px;
+}
+
+.labels {
+  display: flex;
+  gap: 4px;
+  margin: 0 0 0 auto;
+  padding: 0;
+  border: none;
+  font-size: 13px;
+}
+
+.labels label {
+  position: relative;
+}
+
+.labels input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+}
+
+.labels span {
+  display: block;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.labels input:checked + span {
+  color: var(--text);
+  background: var(--control);
+}
+
+.labels input:focus-visible + span {
+  outline: 2px solid var(--accent);
+}
+
+.diagram {
+  width: 100%;
+  max-width: 480px;
+  justify-self: center;
+  margin: 0 0 12px;
+}
+
+.neck {
+  max-width: none;
+}
+
+figcaption {
+  font-size: 13px;
+  text-align: center;
+}
+
+.scroll {
+  overflow-x: auto;
+}
+
+.neck app-fretboard {
+  min-width: 640px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 8px 16px;
+}
+
+.gallery {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  margin-top: 8px;
+}

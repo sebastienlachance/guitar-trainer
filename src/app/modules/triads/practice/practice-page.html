@@ -1,0 +1,114 @@
+@if (!started()) {
+  <section class="panel empty">
+    <h1>Nothing to practise yet</h1>
+    <ul>
+      @for (problem of session.problems(); track problem) {
+        <li>{{ problem }}</li>
+      }
+    </ul>
+    <a routerLink=".." class="btn">Go to setup</a>
+  </section>
+} @else if (card(); as card) {
+  <section class="panel prompt">
+    <div class="tags">
+      @for (tag of practiceTags(); track tag) {
+        <span class="tag">{{ tag }}</span>
+      }
+    </div>
+
+    <div class="question" aria-live="polite">
+      <p class="play muted">Play</p>
+      <h1 class="chord">{{ title() }}</h1>
+      @if (subtitle()) {
+        <p class="shape muted">{{ subtitle() }}</p>
+      }
+    </div>
+
+    @switch (mic.status()) {
+      @case ('starting') {
+        <p class="pill">Starting the microphone…</p>
+      }
+      @case ('listening') {
+        <p class="pill listening">
+          <app-icon name="mic" />
+          @if (settings().micMode === 'arpeggio') {
+            @if (heardNotes()) {
+              Hearing {{ heardNotes() }}
+            } @else {
+              Listening: play the notes one at a time
+            }
+          } @else {
+            Listening: strum the chord
+          }
+        </p>
+        @if (settings().micMode === 'strum') {
+          <div class="chroma" aria-hidden="true">
+            @for (bar of chromaBars(); track bar.name) {
+              <div class="bar" [class.in-chord]="bar.inChord">
+                <span class="fill" [style.height.%]="bar.level * 100"></span>
+                <span class="name">{{ bar.name }}</span>
+              </div>
+            }
+          </div>
+        }
+      }
+      @case ('error') {
+        <p class="pill error" role="alert">
+          {{ mic.errorMessage() }}
+          <button type="button" class="retry" (click)="retryMic()">Try again</button>
+        </p>
+      }
+    }
+
+    @if (phase() === 'prompt') {
+      <div class="actions">
+        <button #primaryAction type="button" class="btn btn-primary" (click)="session.reveal()">
+          Reveal <span class="kbd">Space</span>
+        </button>
+      </div>
+    }
+  </section>
+
+  @if (phase() !== 'prompt') {
+    <section class="panel answer" aria-label="Answer">
+      <div class="answer-head">
+        <span class="muted"
+          >{{ title() }}
+          @if (subtitle()) {
+            · {{ subtitle() }}
+          }
+        </span>
+        @if (phase() === 'heard') {
+          <span class="heard"><app-icon name="check" /> Heard it, {{ responseSeconds() }}</span>
+        }
+      </div>
+
+      <app-chord-reveal
+        [card]="card"
+        [shapes]="session.revealShapes()"
+        [labelMode]="settings().labelMode"
+        (labelModeChange)="setLabelMode($event)"
+      />
+
+      <div class="actions">
+        @if (phase() === 'revealed') {
+          <button type="button" class="btn btn-danger" (click)="session.answer(false)">
+            <app-icon name="arrow-left" /> Missed
+          </button>
+          <button
+            #primaryAction
+            type="button"
+            class="btn btn-success"
+            (click)="session.answer(true)"
+          >
+            Got it <app-icon name="arrow-right" />
+          </button>
+        } @else {
+          <button #primaryAction type="button" class="btn" (click)="session.showNext()">
+            Next <app-icon name="arrow-right" />
+          </button>
+        }
+      </div>
+    </section>
+  }
+}

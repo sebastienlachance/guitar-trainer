@@ -1,0 +1,196 @@
+<h1 class="visually-hidden">Set up triad practice</h1>
+
+<section class="panel" aria-labelledby="chord-types">
+  <h2 id="chord-types">Chord types</h2>
+  <p class="group-label muted" id="three-note">Three notes</p>
+  <div class="chips" role="group" aria-labelledby="three-note">
+    @for (quality of threeNoteQualities; track quality.id) {
+      <button
+        type="button"
+        class="chip"
+        [attr.aria-pressed]="settings().qualities.includes(quality.id)"
+        [attr.title]="quality.name"
+        (click)="toggleQuality(quality.id)"
+      >
+        {{ chordExample(quality) }}
+      </button>
+    }
+  </div>
+  <p class="group-label muted" id="four-note">Four notes</p>
+  <div class="chips" role="group" aria-labelledby="four-note">
+    @for (quality of fourNoteQualities; track quality.id) {
+      <button
+        type="button"
+        class="chip"
+        [attr.aria-pressed]="settings().qualities.includes(quality.id)"
+        [attr.title]="quality.name"
+        (click)="toggleQuality(quality.id)"
+      >
+        {{ chordExample(quality) }}
+      </button>
+    }
+  </div>
+
+  @if (hasFourNoteChords()) {
+    <fieldset class="choice">
+      <legend>Four-note shapes</legend>
+      <div class="segmented">
+        @for (choice of voicingChoices; track choice.value) {
+          <label>
+            <input
+              type="radio"
+              name="four-note-voicing"
+              [value]="choice.value"
+              [checked]="settings().fourNoteVoicing === choice.value"
+              (change)="update({ fourNoteVoicing: choice.value })"
+            />
+            <span>{{ choice.label }}</span>
+          </label>
+        }
+      </div>
+      <p class="hint muted">
+        {{ hintFor(voicingChoices, settings().fourNoteVoicing) }} m7♭5 and dim7 always use drop 2.
+      </p>
+    </fieldset>
+  }
+</section>
+
+<section class="panel" aria-labelledby="roots">
+  <div class="heading-row">
+    <h2 id="roots">Roots</h2>
+    <div class="quick">
+      <button type="button" class="link" (click)="selectRoots('all')">All</button>
+      <button type="button" class="link" (click)="selectRoots('naturals')">Naturals</button>
+    </div>
+  </div>
+  <div class="chips" role="group" aria-labelledby="roots">
+    @for (root of roots; track root.name) {
+      <button
+        type="button"
+        class="chip"
+        [attr.aria-pressed]="settings().roots.includes(root.name)"
+        (click)="toggleRoot(root.name)"
+      >
+        {{ root.label }}
+      </button>
+    }
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="prompt">
+  <h2 id="prompt">What to ask for</h2>
+  <fieldset class="choice">
+    <legend class="visually-hidden">Prompt</legend>
+    <div class="segmented">
+      @for (choice of promptChoices; track choice.value) {
+        <label>
+          <input
+            type="radio"
+            name="prompt-detail"
+            [value]="choice.value"
+            [checked]="settings().promptDetail === choice.value"
+            (change)="update({ promptDetail: choice.value })"
+          />
+          <span>{{ choice.label }}</span>
+        </label>
+      }
+    </div>
+    <p class="hint muted">
+      {{ hintFor(promptChoices, settings().promptDetail) }}
+      @if (settings().promptDetail === 'chord') {
+        The answer shows the shapes picked below.
+      }
+    </p>
+  </fieldset>
+
+  <p class="group-label muted" id="string-sets">String sets</p>
+  <div class="chips" role="group" aria-labelledby="string-sets">
+    @for (set of threeStringSets; track set.id) {
+      <button
+        type="button"
+        class="chip"
+        [attr.aria-pressed]="settings().stringSets.includes(set.id)"
+        (click)="toggleStringSet(set.id)"
+      >
+        {{ set.id }}
+      </button>
+    }
+    @for (set of fourStringSets; track set.id) {
+      <button
+        type="button"
+        class="chip"
+        [attr.aria-pressed]="settings().stringSets.includes(set.id)"
+        (click)="toggleStringSet(set.id)"
+      >
+        {{ set.id }}
+      </button>
+    }
+  </div>
+  <p class="hint muted">
+    Triads and shells use three strings; drop 2 uses four. String 1 is the high E.
+  </p>
+
+  <p class="group-label muted" id="inversions">Inversions</p>
+  <div class="chips" role="group" aria-labelledby="inversions">
+    @for (inversion of inversions; track inversion.value) {
+      <button
+        type="button"
+        class="chip"
+        [attr.aria-pressed]="settings().inversions.includes(inversion.value)"
+        (click)="toggleInversion(inversion.value)"
+      >
+        {{ inversion.label }}
+      </button>
+    }
+  </div>
+  <p class="hint muted">The 3rd inversion only exists for four-note shapes.</p>
+</section>
+
+<section class="panel" aria-labelledby="microphone">
+  <h2 id="microphone">Microphone</h2>
+  <fieldset class="choice">
+    <legend class="visually-hidden">Microphone mode</legend>
+    <div class="segmented">
+      @for (choice of micChoices; track choice.value) {
+        <label>
+          <input
+            type="radio"
+            name="mic-mode"
+            [value]="choice.value"
+            [checked]="settings().micMode === choice.value"
+            (change)="update({ micMode: choice.value })"
+          />
+          <span>{{ choice.label }}</span>
+        </label>
+      }
+    </div>
+    <p class="hint muted">{{ hintFor(micChoices, settings().micMode) }}</p>
+  </fieldset>
+  @if (settings().micMode === 'strum') {
+    <label class="slider">
+      <span>Strictness</span>
+      <input
+        type="range"
+        [min]="strumRange.min"
+        [max]="strumRange.max"
+        step="0.05"
+        [value]="settings().strumThreshold"
+        (input)="setStrumThreshold($event)"
+      />
+      <span class="muted">{{ settings().strumThreshold.toFixed(2) }}</span>
+    </label>
+  }
+</section>
+
+<div class="start">
+  @if (problems().length > 0) {
+    <ul class="problems" role="status">
+      @for (problem of problems(); track problem) {
+        <li>{{ problem }}</li>
+      }
+    </ul>
+  } @else {
+    <p class="muted" role="status">{{ deckSize() }} {{ deckSize() === 1 ? 'card' : 'cards' }}</p>
+  }
+  <button type="button" class="btn btn-primary" (click)="start()">Start practice</button>
+</div>

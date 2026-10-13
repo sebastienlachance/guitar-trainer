@@ -1,0 +1,50 @@
+<svg
+  [attr.viewBox]="'0 0 ' + width() + ' ' + (bottom + 30)"
+  role="img"
+  [attr.aria-label]="description()"
+>
+  @for (string of strings; track string.number) {
+    <text class="string-name" x="14" [attr.y]="string.y + 4">{{ string.name }}</text>
+  }
+
+  @for (inlay of inlays(); track $index) {
+    <circle class="inlay" [attr.cx]="inlay.x" [attr.cy]="inlay.y" r="5" />
+  }
+
+  @for (x of fretLines(); track x; let first = $first) {
+    <line
+      [class]="first && showsNut() ? 'nut' : 'fret'"
+      [attr.x1]="x"
+      [attr.x2]="x"
+      [attr.y1]="top"
+      [attr.y2]="bottom"
+    />
+  }
+
+  @for (string of strings; track string.number) {
+    <line
+      class="string"
+      [attr.x1]="left"
+      [attr.x2]="width() - 12"
+      [attr.y1]="string.y"
+      [attr.y2]="string.y"
+      [attr.stroke-width]="string.thickness"
+    />
+  }
+
+  @for (dot of visibleDots(); track dot.string + '-' + dot.fret) {
+    <g
+      class="dot"
+      [class.root]="dot.isRoot"
+      [class.tone]="!dot.isRoot"
+      [class.open]="dot.fret === 0"
+    >
+      <circle [attr.cx]="dot.x" [attr.cy]="dot.y" r="10" />
+      <text [attr.x]="dot.x" [attr.y]="dot.y + 4">{{ dot.label }}</text>
+    </g>
+  }
+
+  @for (fret of slots(); track fret) {
+    <text class="fret-number" [attr.x]="slotCenter(fret)" [attr.y]="bottom + 24">{{ fret }}</text>
+  }
+</svg>
