@@ -168,3 +168,6 @@ routing, storage, focus or the microphone changed.
 - **Deployment:** every push to `main` that passes all checks deploys to GitHub Pages
   (https://sebastienlachance.github.io/guitar-trainer/). There are no version tags; the home page
   shows the deployed commit. Tauri can come later for a native installer or phone app.
+- **CI runs on `ubuntu-24.04`, not `ubuntu-latest`,** so a new Ubuntu release can't break
+  `playwright install --with-deps` without warning. Move to a newer image on purpose, in its own
+  commit, once Playwright supports it.
