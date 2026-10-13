@@ -77,7 +77,7 @@ export class ChordReveal {
       string: note.string,
       fret: note.fret,
       label: this.label(note.tone),
-      isRoot: note.tone === '1',
+      kind: note.tone === '1' ? ('root' as const) : ('tone' as const),
     }));
     const where = notes
       .map((note) => `string ${note.string} fret ${note.fret} (${displayInterval(note.tone)})`)

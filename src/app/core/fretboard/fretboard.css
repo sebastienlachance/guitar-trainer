@@ -69,3 +69,38 @@ svg {
 .open text {
   fill: var(--text);
 }
+
+.miss circle {
+  fill: var(--danger);
+}
+
+.miss text {
+  fill: #501313;
+}
+
+.hit {
+  fill: transparent;
+  cursor: pointer;
+}
+
+.cursor {
+  display: none;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 2;
+}
+
+svg:focus {
+  outline: none;
+}
+
+svg:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+svg:focus-visible .cursor {
+  display: inline;
+}
