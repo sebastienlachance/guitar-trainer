@@ -77,3 +77,17 @@ export function isStatsByCard(value: unknown): value is StatsByCard {
       ),
   );
 }
+
+/** Accuracy bands used to colour results: under 50%, under 80%, and 80% or more. */
+export type AccuracyBand = 'none' | 'low' | 'mid' | 'high';
+
+export function accuracyBand(stats: Pick<CardStats, 'attempts' | 'correct'>): AccuracyBand {
+  if (stats.attempts === 0) {
+    return 'none';
+  }
+  const rate = accuracy(stats);
+  if (rate >= 0.8) {
+    return 'high';
+  }
+  return rate >= 0.5 ? 'mid' : 'low';
+}

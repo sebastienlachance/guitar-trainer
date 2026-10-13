@@ -1,7 +1,7 @@
 import { provideRouter } from '@angular/router';
 import { render, screen, within } from '@testing-library/angular';
 import { STORAGE_PREFIX } from '../../../core/practice/storage';
-import { TriadsSession } from '../triads-session';
+import { provideTriads } from '../triads-session';
 import { StatsPage } from './stats-page';
 
 const MINUTE = 60_000;
@@ -45,7 +45,7 @@ describe('StatsPage', () => {
       session('scales', now - 60 * MINUTE, 30, 10, 10),
       session('triads', now - 2 * 24 * 60 * MINUTE, 22, 74, 50),
     ]);
-    await render(StatsPage, { providers: [TriadsSession, provideRouter([])] });
+    await render(StatsPage, { providers: [...provideTriads(), provideRouter([])] });
 
     const sessions = within(screen.getByRole('region', { name: 'Sessions' }));
     expect(sessions.getByText('2 sessions · 36 min · 126 chords')).toBeInTheDocument();
@@ -55,7 +55,7 @@ describe('StatsPage', () => {
   });
 
   it('leaves the section out before any session', async () => {
-    await render(StatsPage, { providers: [TriadsSession, provideRouter([])] });
+    await render(StatsPage, { providers: [...provideTriads(), provideRouter([])] });
     expect(screen.queryByRole('region', { name: 'Sessions' })).not.toBeInTheDocument();
   });
 });

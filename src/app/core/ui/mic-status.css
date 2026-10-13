@@ -1,0 +1,70 @@
+:host {
+  display: block;
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 12px auto 0;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  background: var(--raised);
+  color: var(--text-muted);
+}
+
+.pill.listening {
+  background: var(--success-surface);
+  color: var(--success);
+}
+
+.pill.error {
+  background: var(--danger-surface);
+  color: var(--danger);
+  border-radius: var(--radius);
+  flex-wrap: wrap;
+}
+
+.retry {
+  background: none;
+  border: none;
+  color: var(--text);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.chroma {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  width: 20px;
+  height: 56px;
+}
+
+.fill {
+  width: 100%;
+  min-height: 2px;
+  border-radius: 2px;
+  background: var(--border-strong);
+}
+
+.wanted .fill {
+  background: var(--tone);
+}
+
+.name {
+  font-size: 11px;
+  color: var(--text-muted);
+}

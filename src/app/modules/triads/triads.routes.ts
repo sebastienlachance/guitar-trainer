@@ -1,12 +1,12 @@
 import { Routes } from '@angular/router';
-import { TriadsSession } from './triads-session';
-import { TriadsShell } from './triads-shell';
+import { ModuleShell } from '../../core/ui/module-shell';
+import { provideTriads } from './triads-session';
 
 export const TRIADS_ROUTES: Routes = [
   {
     path: '',
-    component: TriadsShell,
-    providers: [TriadsSession],
+    component: ModuleShell,
+    providers: provideTriads(),
     children: [
       {
         path: '',

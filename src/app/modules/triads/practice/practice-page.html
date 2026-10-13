@@ -1,199 +1,37 @@
-@if (view() === 'running' || view() === 'paused') {
-  <section class="session-bar" [class.idle]="log.idle()" aria-label="Session">
-    @if (log.idle()) {
-      <span class="idle-label"><app-icon name="pause" /> Paused (idle)</span>
-    } @else {
-      <app-icon name="clock" class="muted" />
+<app-practice-frame [prompt]="prompt" [answer]="answer" />
+
+<ng-template #prompt>
+  <div class="question" aria-live="polite">
+    <p class="play muted">Play</p>
+    <h1 class="chord">{{ title() }}</h1>
+    @if (subtitle()) {
+      <p class="shape muted">{{ subtitle() }}</p>
     }
-    <span class="figure" role="timer">{{ progress().clock }}</span>
-    <span
-      ><span class="figure">{{ progress().chords }}</span></span
-    >
-    <span class="figure accuracy">{{ progress().accuracy }}</span>
-    <span class="session-actions">
-      @if (view() === 'running') {
-        <button type="button" class="btn small" (click)="log.pause()">
-          <app-icon name="pause" /> Pause
-        </button>
-      }
-      <button type="button" class="btn small btn-danger" (click)="session.end()">
-        End session
-      </button>
-    </span>
-  </section>
-}
+  </div>
+  @if (settings().micMode !== 'off') {
+    <app-mic-status
+      [hint]="
+        settings().micMode === 'arpeggio' ? 'play the notes one at a time' : 'strum the chord'
+      "
+      [showHeard]="settings().micMode === 'arpeggio'"
+      [spectrumFor]="strumTarget()"
+    />
+  }
+</ng-template>
 
-@switch (view()) {
-  @case ('blocked') {
-    <section class="panel empty">
-      <h1>Nothing to practise yet</h1>
-      <ul>
-        @for (problem of session.problems(); track problem) {
-          <li>{{ problem }}</li>
-        }
-      </ul>
-      <a routerLink=".." class="btn">Go to setup</a>
-    </section>
-  }
-  @case ('ready') {
-    <section class="panel centered">
-      <div class="tags">
-        @for (tag of practiceTags(); track tag) {
-          <span class="tag">{{ tag }}</span>
-        }
-      </div>
-      <h1 class="state-title">Ready to practise</h1>
-      <p class="muted">
-        {{ session.deck().length }} cards · the clock stops after {{ idleMinutes }} minutes without
-        an answer
-      </p>
-      <button #primaryAction type="button" class="btn btn-primary" (click)="session.start()">
-        <app-icon name="play" /> Start session
-      </button>
-    </section>
-  }
-  @case ('paused') {
-    <section class="panel centered">
-      <h1 class="state-title">Paused</h1>
-      <p class="muted">The clock is stopped. Pick up where you left off when you're ready.</p>
-      <button #primaryAction type="button" class="btn btn-primary" (click)="log.resume()">
-        <app-icon name="play" /> Resume
-      </button>
-    </section>
-  }
-  @case ('ended') {
-    @if (summary(); as summary) {
-      <section class="panel centered">
-        @if (summary.logged) {
-          <p class="saved"><app-icon name="check" /> Session saved</p>
-          <h1 class="state-title">Nice work</h1>
-          <div class="metrics">
-            <div class="metric">
-              <span class="muted">Time</span><strong>{{ summary.time }}</strong>
-            </div>
-            <div class="metric">
-              <span class="muted">Chords</span><strong>{{ summary.chords }}</strong>
-            </div>
-            <div class="metric">
-              <span class="muted">Correct</span><strong>{{ summary.accuracy }}</strong>
-            </div>
-          </div>
-        } @else {
-          <h1 class="state-title">Session ended</h1>
-          <p class="muted">No chords were answered, so nothing was logged.</p>
-        }
-        <div class="actions">
-          <a routerLink="../stats" class="btn">See history</a>
-          <button #primaryAction type="button" class="btn btn-primary" (click)="session.start()">
-            New session
-          </button>
-        </div>
-      </section>
-    }
-  }
-}
-
-@if (view() === 'running' && card(); as card) {
-  <section class="panel prompt">
-    <div class="tags">
-      @for (tag of practiceTags(); track tag) {
-        <span class="tag">{{ tag }}</span>
-      }
-    </div>
-
-    <div class="question" aria-live="polite">
-      <p class="play muted">Play</p>
-      <h1 class="chord">{{ title() }}</h1>
+<ng-template #answer>
+  @if (card(); as card) {
+    <p class="answer-head muted">
+      {{ title() }}
       @if (subtitle()) {
-        <p class="shape muted">{{ subtitle() }}</p>
+        · {{ subtitle() }}
       }
-    </div>
-
-    @switch (mic.status()) {
-      @case ('starting') {
-        <p class="pill">Starting the microphone…</p>
-      }
-      @case ('listening') {
-        <p class="pill listening">
-          <app-icon name="mic" />
-          @if (settings().micMode === 'arpeggio') {
-            @if (heardNotes()) {
-              Hearing {{ heardNotes() }}
-            } @else {
-              Listening: play the notes one at a time
-            }
-          } @else {
-            Listening: strum the chord
-          }
-        </p>
-        @if (settings().micMode === 'strum') {
-          <div class="chroma" aria-hidden="true">
-            @for (bar of chromaBars(); track bar.name) {
-              <div class="bar" [class.in-chord]="bar.inChord">
-                <span class="fill" [style.height.%]="bar.level * 100"></span>
-                <span class="name">{{ bar.name }}</span>
-              </div>
-            }
-          </div>
-        }
-      }
-      @case ('error') {
-        <p class="pill error" role="alert">
-          {{ mic.errorMessage() }}
-          <button type="button" class="retry" (click)="retryMic()">Try again</button>
-        </p>
-      }
-    }
-
-    @if (phase() === 'prompt') {
-      <div class="actions">
-        <button #primaryAction type="button" class="btn btn-primary" (click)="session.reveal()">
-          Reveal <span class="kbd">Space</span>
-        </button>
-      </div>
-    }
-  </section>
-
-  @if (phase() !== 'prompt') {
-    <section class="panel answer" aria-label="Answer">
-      <div class="answer-head">
-        <span class="muted"
-          >{{ title() }}
-          @if (subtitle()) {
-            · {{ subtitle() }}
-          }
-        </span>
-        @if (phase() === 'heard') {
-          <span class="heard"><app-icon name="check" /> Heard it, {{ responseSeconds() }}</span>
-        }
-      </div>
-
-      <app-chord-reveal
-        [card]="card"
-        [shapes]="session.revealShapes()"
-        [labelMode]="settings().labelMode"
-        (labelModeChange)="setLabelMode($event)"
-      />
-
-      <div class="actions">
-        @if (phase() === 'revealed') {
-          <button type="button" class="btn btn-danger" (click)="session.answer(false)">
-            <app-icon name="arrow-left" /> Missed
-          </button>
-          <button
-            #primaryAction
-            type="button"
-            class="btn btn-success"
-            (click)="session.answer(true)"
-          >
-            Got it <app-icon name="arrow-right" />
-          </button>
-        } @else {
-          <button #primaryAction type="button" class="btn" (click)="session.showNext()">
-            Next <app-icon name="arrow-right" />
-          </button>
-        }
-      </div>
-    </section>
+    </p>
+    <app-chord-reveal
+      [card]="card"
+      [shapes]="session.revealShapes()"
+      [labelMode]="settings().labelMode"
+      (labelModeChange)="setLabelMode($event)"
+    />
   }
-}
+</ng-template>

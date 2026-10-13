@@ -4,7 +4,8 @@ import { chromaFromSpectrum } from './chroma';
 import { MicrophoneError, MicrophoneInput, openMicrophone } from './microphone';
 import { DEFAULT_NOTE_STREAM_OPTIONS, NoteStream } from './note-stream';
 
-export type ListenMode = 'arpeggio' | 'strum';
+/** notes: played notes one at a time; spectrum: a live chroma vector of everything sounding. */
+export type ListenMode = 'notes' | 'spectrum';
 export type ListenerStatus = 'off' | 'starting' | 'listening' | 'error';
 
 /** About 85 ms at 48 kHz: several periods of the low E string, short enough to follow a melody. */
@@ -19,22 +20,24 @@ const HEARD_LIMIT = 8;
  */
 const FRAME_MS = 30;
 
-/** Turns the microphone into played notes (arpeggio mode) or a live chroma vector (strum mode). */
+/** Turns the microphone into played notes, plus a live chroma vector in spectrum mode. */
 @Service()
 export class MicListener {
   readonly status = signal<ListenerStatus>('off');
   readonly errorMessage = signal<string | null>(null);
   /** Played notes as MIDI numbers, oldest first. */
   readonly heard = signal<readonly number[]>([]);
-  /** Pitch-class energy of what is sounding now, or null during silence. Strum mode only. */
+  /** Pitch-class energy of what is sounding now, or null during silence. Spectrum mode only. */
   readonly chroma = signal<readonly number[] | null>(null);
 
   private input: MicrophoneInput | null = null;
+  private mode: ListenMode = 'notes';
   private frameTimer: ReturnType<typeof setInterval> | undefined;
   private session = 0;
 
   async start(mode: ListenMode): Promise<void> {
     this.stop();
+    this.mode = mode;
     const session = ++this.session;
     this.status.set('starting');
     this.errorMessage.set(null);
@@ -55,6 +58,11 @@ export class MicListener {
         );
       }
     }
+  }
+
+  /** Tries again after an error, in the same mode. */
+  retry(): Promise<void> {
+    return this.start(this.mode);
   }
 
   stop(): void {
@@ -88,7 +96,7 @@ export class MicListener {
       if (note !== null) {
         this.heard.update((heard) => [...heard, note].slice(-HEARD_LIMIT));
       }
-      if (mode === 'strum') {
+      if (mode === 'spectrum') {
         analyser.getFloatFrequencyData(spectrum);
         const sounding = level >= DEFAULT_NOTE_STREAM_OPTIONS.minLevel;
         this.chroma.set(sounding ? chromaFromSpectrum(spectrum, sampleRate) : null);

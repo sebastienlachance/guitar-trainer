@@ -3,7 +3,7 @@ import { render, screen, within } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { STORAGE_PREFIX } from '../../../core/practice/storage';
 import { TriadSettings } from '../settings';
-import { TriadsSession } from '../triads-session';
+import { provideTriads } from '../triads-session';
 import { PracticePage } from './practice-page';
 
 function saveSettings(settings: Partial<TriadSettings>): void {
@@ -17,7 +17,7 @@ function savedStats(): Record<string, { attempts: number; correct: number }> {
 /** Renders the page and starts a session, as the "Start session" button does. */
 async function startPractice() {
   const user = userEvent.setup();
-  await render(PracticePage, { providers: [TriadsSession, provideRouter([])] });
+  await render(PracticePage, { providers: [...provideTriads(), provideRouter([])] });
   await user.click(screen.getByRole('button', { name: /start session/i }));
   return user;
 }
@@ -27,7 +27,7 @@ describe('PracticePage', () => {
 
   it('waits for you to start a session', async () => {
     saveSettings({ qualities: ['sus4'], roots: ['C', 'D'], micMode: 'off' });
-    await render(PracticePage, { providers: [TriadsSession, provideRouter([])] });
+    await render(PracticePage, { providers: [...provideTriads(), provideRouter([])] });
 
     expect(screen.getByRole('heading', { name: 'Ready to practise' })).toBeInTheDocument();
     expect(screen.getByText(/2 cards/)).toBeInTheDocument();
@@ -129,7 +129,7 @@ describe('PracticePage', () => {
 
   it('explains why practice cannot start', async () => {
     saveSettings({ qualities: [], micMode: 'off' });
-    await render(PracticePage, { providers: [TriadsSession, provideRouter([])] });
+    await render(PracticePage, { providers: [...provideTriads(), provideRouter([])] });
 
     expect(screen.getByRole('heading', { name: 'Nothing to practise yet' })).toBeInTheDocument();
     expect(screen.getByText('Pick at least one chord type.')).toBeInTheDocument();

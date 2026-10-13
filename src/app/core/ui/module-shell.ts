@@ -1,20 +1,22 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { accuracy, totals } from '../../core/practice/stats';
-import { Icon } from '../../core/ui/icon';
-import { TriadsSession } from './triads-session';
+import { Drill } from '../practice/drill';
+import { accuracy, totals } from '../practice/stats';
+import { Icon } from './icon';
+import { plural } from './text';
 
+/** Top bar and pages of a practice module: setup at the module root, practice and stats below. */
 @Component({
-  selector: 'app-triads-shell',
+  selector: 'app-module-shell',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, Icon],
   template: `
     <header class="bar">
       <a routerLink="/" class="brand">
         <app-icon name="pick" class="pick" />
         Guitar trainer <span class="separator" aria-hidden="true">/</span>
-        <span class="module">Triads</span>
+        <span class="module">{{ title }}</span>
       </a>
-      <nav aria-label="Triads">
+      <nav [attr.aria-label]="title">
         @if (summary(); as s) {
           <span class="summary muted">{{ s }}</span>
         }
@@ -91,17 +93,17 @@ import { TriadsSession } from './triads-session';
     }
   `,
 })
-export class TriadsShell {
-  private readonly session = inject(TriadsSession);
+export class ModuleShell {
+  private readonly drill = inject(Drill);
+  protected readonly title = this.drill.title;
 
   /** E.g. "82% · 23 cards", or nothing before the first answer. */
   protected readonly summary = computed(() => {
-    const stats = this.session.stats();
+    const stats = this.drill.run.stats();
     const overall = totals(stats);
     if (overall.attempts === 0) {
       return null;
     }
-    const cards = Object.keys(stats).length;
-    return `${Math.round(accuracy(overall) * 100)}% · ${cards} ${cards === 1 ? 'card' : 'cards'}`;
+    return `${Math.round(accuracy(overall) * 100)}% · ${plural(Object.keys(stats).length, 'card')}`;
   });
 }

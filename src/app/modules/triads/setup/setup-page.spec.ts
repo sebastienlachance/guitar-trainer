@@ -4,11 +4,11 @@ import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { PracticeLog } from '../../../core/practice/practice-log';
 import { STORAGE_PREFIX } from '../../../core/practice/storage';
-import { TriadsSession } from '../triads-session';
+import { provideTriads } from '../triads-session';
 import { SetupPage } from './setup-page';
 
 async function renderSetup() {
-  return render(SetupPage, { providers: [TriadsSession, provideRouter([])] });
+  return render(SetupPage, { providers: [...provideTriads(), provideRouter([])] });
 }
 
 describe('SetupPage', () => {
@@ -46,7 +46,7 @@ describe('SetupPage', () => {
   it('starts a timed session', async () => {
     const user = userEvent.setup();
     await render(SetupPage, {
-      providers: [TriadsSession, provideRouter([{ path: 'practice', children: [] }])],
+      providers: [...provideTriads(), provideRouter([{ path: 'practice', children: [] }])],
     });
 
     await user.click(screen.getByRole('button', { name: 'Start session' }));

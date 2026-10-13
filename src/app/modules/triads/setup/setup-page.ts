@@ -120,7 +120,7 @@ export class SetupPage {
   }
 
   protected startSession(): void {
-    if (this.session.start()) {
+    if (this.session.run.start()) {
       void this.router.navigate(['practice'], { relativeTo: this.route });
     }
   }
