@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { BUILD, REPOSITORY_URL } from '../core/build-info';
 import { Icon } from '../core/ui/icon';
 import { MODULES } from '../modules/registry';
 
@@ -22,6 +23,14 @@ import { MODULES } from '../modules/registry';
         </li>
       }
     </ul>
+    <footer class="muted">
+      @if (build) {
+        <a [href]="commitUrl">Build {{ build.commit.slice(0, 7) }}</a
+        >, {{ buildDate }}
+      } @else {
+        Development build
+      }
+    </footer>
   `,
   styles: `
     header {
@@ -66,8 +75,20 @@ import { MODULES } from '../modules/registry';
       align-self: center;
       color: var(--accent);
     }
+    footer {
+      margin-top: 32px;
+      font-size: 13px;
+    }
+    footer a {
+      color: inherit;
+    }
   `,
 })
 export class Home {
   protected readonly modules = MODULES;
+  protected readonly build = BUILD;
+  protected readonly commitUrl = BUILD ? `${REPOSITORY_URL}/commit/${BUILD.commit}` : '';
+  protected readonly buildDate = BUILD
+    ? new Date(BUILD.date).toLocaleDateString(undefined, { dateStyle: 'medium' })
+    : '';
 }

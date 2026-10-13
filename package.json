@@ -9,9 +9,11 @@
     "test": "ng test",
     "lint": "ng lint",
     "format": "prettier --write src",
+    "format:check": "prettier --check src",
     "test:once": "ng test --watch=false",
     "e2e": "playwright test",
-    "e2e:report": "playwright show-report"
+    "e2e:report": "playwright show-report",
+    "icons": "node scripts/generate-icons.mjs"
   },
   "private": true,
   "packageManager": "npm@10.9.8",
@@ -22,6 +24,7 @@
     "@angular/forms": "^22.2.0",
     "@angular/platform-browser": "^22.2.0",
     "@angular/router": "^22.2.0",
+    "@angular/service-worker": "^22.2.0",
     "pitchy": "^4.1.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"

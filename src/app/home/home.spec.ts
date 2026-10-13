@@ -17,4 +17,10 @@ describe('Home', () => {
       '/scales',
     );
   });
+
+  it('says a local build is a development build', async () => {
+    await render(Home, { providers: [provideRouter([])] });
+
+    expect(screen.getByText('Development build')).toBeInTheDocument();
+  });
 });

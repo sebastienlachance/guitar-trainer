@@ -1,11 +1,13 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { UpdateBanner } from './core/ui/update-banner';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, UpdateBanner],
   template: `
     <main>
+      <app-update-banner />
       <router-outlet />
     </main>
   `,

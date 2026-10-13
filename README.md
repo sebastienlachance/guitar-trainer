@@ -14,6 +14,18 @@ Practise guitar until the fretboard is automatic. Each kind of exercise is a **m
 A module for intervals within a scale is planned. Adding one is documented in
 [docs/adding-a-practice-module.md](docs/adding-a-practice-module.md).
 
+## Use it
+
+Open **https://sebastienlachance.github.io/guitar-trainer/** and install it as an app:
+
+- **Chrome or Edge on a computer:** the install button at the right of the address bar.
+- **Android:** the browser menu, then **Install app** (or **Add to Home screen**).
+- **iPhone or iPad:** in Safari, **Share**, then **Add to Home Screen**.
+
+Once loaded, it works offline. When a new version is out, a bar offers to reload. The microphone
+works in the installed app too; Safari may ask for permission more often than other browsers.
+Progress is saved in each browser, so a phone and a computer keep separate stats.
+
 ## Features
 
 **Triads**
@@ -69,15 +81,17 @@ npm start
 
 Then open http://localhost:4200. The microphone only works on `localhost` or over HTTPS.
 
-| Command             | What it does                     |
-| ------------------- | -------------------------------- |
-| `npm start`         | Dev server with live reload      |
-| `npm test`          | Unit and component tests (watch) |
-| `npm run test:once` | Tests, single run                |
-| `npm run lint`      | ESLint, including accessibility  |
-| `npm run format`    | Prettier                         |
-| `npm run build`     | Production build in `dist/`      |
-| `npm run e2e`       | End-to-end smoke tests           |
+| Command                | What it does                     |
+| ---------------------- | -------------------------------- |
+| `npm start`            | Dev server with live reload      |
+| `npm test`             | Unit and component tests (watch) |
+| `npm run test:once`    | Tests, single run                |
+| `npm run lint`         | ESLint, including accessibility  |
+| `npm run format`       | Prettier                         |
+| `npm run format:check` | Prettier, check only (CI)        |
+| `npm run build`        | Production build in `dist/`      |
+| `npm run e2e`          | End-to-end smoke tests           |
+| `npm run icons`        | Redraw the app icons and favicon |
 
 Keyboard: **Space** reveals or moves on, **→** got it, **←** missed. On a fretboard you answer on,
 arrow keys move the cursor and **Enter** chooses.
@@ -102,6 +116,9 @@ src/app/
   home/                   home screen
 docs/
   adding-a-practice-module.md
+e2e/                      Playwright smoke tests
+scripts/                  icon generator
+.github/workflows/ci.yml  checks every push, deploys main to GitHub Pages
 ```
 
 Music, scheduling and answer-checking logic is plain TypeScript with unit tests. Angular components
@@ -117,6 +134,8 @@ which run in jsdom, can't:
 - the microphone, through a fake audio device
 - reloads
 - the production build
+- the service worker: the real build, served under `/guitar-trainer/` as on GitHub Pages, keeps
+  working offline
 
 ```bash
 npx playwright install chromium
@@ -127,8 +146,8 @@ npm run e2e
 ```
 
 The first command is needed once per machine. The suite serves a production build on port 4300,
-so it doesn't disturb `npm start`. `npm run e2e:report` opens the last report, with traces of
-failed tests.
+so it doesn't disturb `npm start`, and the Pages-style build on port 4310. `npm run e2e:report`
+opens the last report, with traces of failed tests.
 
 ### Add a practice module
 
@@ -154,10 +173,19 @@ fretboard and stats follow from the intervals.
 - The browser's echo cancellation, noise suppression and auto gain are turned off, since they distort
   sustained instrument notes.
 
-## Packaging later
+## Deployment
 
-The app is a static site with hash URLs (`#/triads`) and no network dependencies, so it can be
-wrapped without code changes:
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push and pull request:
 
-1. **PWA:** `ng add @angular/pwa` makes it installable and usable offline.
-2. **Tauri:** a small native installer (Windows WebView2), with Android and iOS targets.
+1. format check, lint, unit tests and a production build
+2. the end-to-end tests (their report is attached to the run when they fail)
+3. on `main` only, once both pass: deploy to GitHub Pages
+
+The home page shows which commit is live ("Build 7eb9fc1"). The app is a progressive web app
+(`@angular/service-worker`, `public/manifest.webmanifest`), and its hash URLs (`#/triads`) need no
+server rewrites.
+
+The repo's Pages source must be set to **GitHub Actions** (Settings → Pages).
+
+**Later:** Tauri for a native installer (Windows WebView2), with Android and iOS targets. The app
+needs no code changes for it.

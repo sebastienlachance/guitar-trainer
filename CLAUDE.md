@@ -10,8 +10,9 @@ modules on top of shared code, with no backend: everything is saved in the brows
   One file: `npx ng test --watch=false --include src/app/modules/notes/deck.spec.ts`
 - `npm run lint`: ESLint, including the template accessibility rules
 - `npm run build`: production build; warns above 4 kB of styles per component, fails above 8 kB
-- `npm run format`: Prettier
+- `npm run format`: Prettier (`format:check` only checks, as CI does)
 - `npm run e2e`: Playwright smoke tests in `e2e/` (first time on a machine: `npx playwright install chromium`)
+- `npm run icons`: redraws the app icons and favicon from the pick glyph (`scripts/generate-icons.mjs`)
 
 Before committing, run `format`, `test:once`, `lint` and `build`. Also run `e2e` when layout,
 routing, storage, focus or the microphone changed.
@@ -30,13 +31,16 @@ routing, storage, focus or the microphone changed.
     - `practice-frame/`: session bar, start/pause/summary screens, answer buttons, keys, focus
     - `module-shell.ts`
     - `setup/`, `stats/` and `answer/` (multiple-choice buttons) building blocks
-    - `mic-status.ts`, `icon.ts`, `text.ts`
+    - `mic-status.ts`, `icon.ts`, `text.ts`, `update-banner.ts` (offers a reload for a new version)
+  - `build-info.ts`: the deployed commit, set at build time through `define`
 - `src/app/modules/<name>/`: one practice module each, registered in `modules/registry.ts`.
   `notes/` is the reference implementation. `identify/` and `scales/` show multiple choice.
   `triads/` shows a self-check module with an answer template and mic matching.
 - `docs/adding-a-practice-module.md`: how to add a module. Follow it.
-- `e2e/`: Playwright smoke tests. `support/` holds the helpers, the one-card decks and the
-  generator for the fake microphone's recordings.
+- `e2e/`: Playwright smoke tests. `support/` holds the helpers, the one-card decks, the
+  generator for the fake microphone's recordings and the static server for the Pages-style build.
+- PWA: `ngsw-config.json`, `public/manifest.webmanifest`, `public/icons/`.
+- `.github/workflows/ci.yml`: checks every push; deploys `main` to GitHub Pages.
 
 ## Architecture rules
 
@@ -61,7 +65,7 @@ routing, storage, focus or the microphone changed.
   - go through `loadJson()` / `saveJson()` only
   - keys are `<module>:settings` and `<module>:stats`, under the `guitar-trainer:v1:` prefix
   - stats are keyed by card key: never change a module's key format without migrating saved data
-- Keep the app self-contained, since packaging it as a PWA or with Tauri depends on this:
+- Keep the app self-contained, since the PWA's offline cache and a later Tauri build depend on it:
   - hash routing (`withHashLocation()`)
   - no CDN or network assets
   - no backend
@@ -112,6 +116,8 @@ routing, storage, focus or the microphone changed.
   - the microphone, through a fake audio device
   - reloads and saved data
   - the production build
+  - the service worker (`pwa.e2e.ts`, against the real build served under `/guitar-trainer/`;
+    every other test blocks service workers)
 
   Everything else is a component test. Keep the suite small. Seed one-card decks with
   `seedSettings()` so prompts are known, and use the shared helpers in `e2e/support/` (for
@@ -141,6 +147,14 @@ routing, storage, focus or the microphone changed.
 - **Playwright launch options:** `test.use({ launchOptions })` is only allowed at file level. To
   vary them per test (like the fake-microphone recording), launch a browser in a fixture, as
   `e2e/microphone.e2e.ts` does.
+- **Service worker:** it only runs in production builds. `ng serve` produces files whose hashes
+  don't match the worker's manifest, so the worker gives up there: test it against a real build
+  (`PAGES_URL` in `e2e/support/servers.ts`). The Claude desktop browser pane can't register
+  service workers at all; use Playwright.
+- **Base path:** the app is served from `/guitar-trainer/`. Reference files with relative URLs (no
+  leading `/`), and keep `start_url` and `scope` in the manifest at `./`. In Git Bash, prefix a
+  hand-run `ng build --base-href /guitar-trainer/` with `MSYS_NO_PATHCONV=1`, or the path is
+  rewritten into a Windows path.
 - **Line endings:** on Windows, `prettier --check` can also flag files whose only difference is CRLF
   line endings; `.gitattributes` stores LF, so `git diff` shows nothing for those. Running
   `npm run format` fixes both kinds.
@@ -151,5 +165,6 @@ routing, storage, focus or the microphone changed.
   second app (such as a Tauri shell), shared libraries, or slow CI.
 - **End-to-end tests run in Chromium only.** Add a WebKit mic test if the app is used on an
   iPhone, where Safari handles audio differently.
-- **Packaging, when needed:** a PWA first (`ng add @angular/pwa`), then Tauri for a native
-  installer or phone app.
+- **Deployment:** every push to `main` that passes all checks deploys to GitHub Pages
+  (https://sebastienlachance.github.io/guitar-trainer/). There are no version tags; the home page
+  shows the deployed commit. Tauri can come later for a native installer or phone app.
