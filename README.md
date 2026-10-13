@@ -10,8 +10,10 @@ Practise guitar until the fretboard is automatic. Each kind of exercise is a **m
   twelve.
 - **Identify scales:** a scale in one hand position, its root marked, and you name it: major,
   minor, pentatonic, blues or one of the modes.
+- **Intervals in a scale:** a scale shape around its root. "Find the ♭3" and you tap it (or play
+  it), or a note is marked and you name its interval.
 
-A module for intervals within a scale is planned. Adding one is documented in
+Adding a module is documented in
 [docs/adding-a-practice-module.md](docs/adding-a-practice-module.md).
 
 ## Use it
@@ -60,6 +62,16 @@ Progress is saved in each browser, so a phone and a computer keep separate stats
 - Each question shows one position (four frets and a stretch), with the root on the 6th or 5th
   string
 - After answering, the dots show their intervals and the scale's formula appears
+
+**Intervals in a scale**
+
+- **Find it:** tap the asked interval anywhere in the position, or play it into the microphone
+- **Name it:** one note of the scale is marked; pick its interval (keys 1 to 7)
+- The neck shows the whole scale shape as faint rings around the roots, or only the roots
+- Any of the 12 scales, with the root on the 6th or 5th string; the root changes every question,
+  so you learn the shape, not the frets
+- After answering, every note shows its interval, a wrong tap says which interval it was, and the
+  formula appears
 
 **Every module**
 
@@ -113,6 +125,7 @@ src/app/
     triads/               triads, sus, 6th and 7th chords
     identify/             identify notes: multiple choice
     scales/               identify scales: multiple choice over a scale position
+    intervals/            intervals in a scale: tap, play or multiple choice in one module
   home/                   home screen
 docs/
   adding-a-practice-module.md

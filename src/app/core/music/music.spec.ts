@@ -1,6 +1,7 @@
 import { ChordQuality, chordSymbol, spellChord } from './chords';
-import { IntervalName } from './intervals';
+import { IntervalName, intervalFromSemitones, intervalLongName } from './intervals';
 import { displayNoteName, midiToName, noteName, parseNote, pitchClassOf } from './notes';
+import { scaleNameInText, scaleRootName, scaleTypeById } from './scales';
 import { closeVoicing, dropTwo, inversionOf, voicingFor } from './voicings';
 
 function quality(id: string, symbol: string, intervals: IntervalName[]): ChordQuality {
@@ -82,5 +83,36 @@ describe('voicings', () => {
       expect(inversionOf(voicingFor(major7, 'drop2', inversion), major7)).toBe(inversion);
     }
     expect(voicingFor(major7, 'drop2', 0).tones).toEqual(['1', '5', '7', '3']);
+  });
+});
+
+describe('intervals', () => {
+  it('names intervals in words', () => {
+    expect(intervalLongName('b3')).toBe('minor 3rd');
+    expect(intervalLongName('5')).toBe('perfect 5th');
+    expect(intervalLongName('#4')).toBe('augmented 4th');
+  });
+
+  it('spells a distance above the root the usual way, octaves ignored', () => {
+    expect(intervalFromSemitones(0)).toBe('1');
+    expect(intervalFromSemitones(6)).toBe('b5');
+    expect(intervalFromSemitones(8)).toBe('b6');
+    expect(intervalFromSemitones(15)).toBe('b3');
+  });
+});
+
+describe('scales', () => {
+  it('writes scale names as they read in a sentence', () => {
+    expect(scaleNameInText(scaleTypeById('minor-pentatonic')!)).toBe('minor pentatonic');
+    expect(scaleNameInText(scaleTypeById('dorian')!)).toBe('Dorian');
+  });
+
+  it('spells the root as the key is usually written', () => {
+    const scale = (id: string) => scaleTypeById(id)!;
+
+    expect(scaleRootName(scale('major'), 8)).toBe('A♭');
+    expect(scaleRootName(scale('minor-pentatonic'), 8)).toBe('G♯');
+    expect(scaleRootName(scale('dorian'), 1)).toBe('C♯');
+    expect(scaleRootName(scale('lydian'), 1)).toBe('D♭');
   });
 });

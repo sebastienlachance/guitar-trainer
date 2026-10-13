@@ -24,3 +24,16 @@ export const E_ON_A_STRING = { notes: ['E'], strings: [5], maxFret: 7, choices: 
 
 /** Identify scales: with pickFirstCard(), C major in the position from the 2nd fret. */
 export const MAJOR_OR_MINOR_PENTATONIC = { scales: ['major', 'minor-pentatonic'], maxFret: 12 };
+
+/**
+ * Intervals in a scale: with pickFirstCard(), the ♭3 of F♯ minor pentatonic, root on string 6,
+ * in frets 1–5. The ♭3 (A) is at 6:5, 3:2 and 1:5.
+ */
+export const MINOR_THIRD_IN_F_SHARP = {
+  tasks: ['find'],
+  scales: ['minor-pentatonic'],
+  rootStrings: [6],
+  neck: 'shape',
+  maxFret: 12,
+  micMode: 'off',
+};

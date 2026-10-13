@@ -1,0 +1,52 @@
+.question {
+  text-align: center;
+  padding: 16px 0 10px;
+}
+
+.ask {
+  font-size: 13px;
+  margin: 0 0 4px;
+}
+
+h1 {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0 12px;
+  font-size: clamp(26px, 7vw, 34px);
+}
+
+.interval {
+  font-size: clamp(44px, 12vw, 60px);
+  line-height: 1.1;
+}
+
+.long {
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.where {
+  margin: 4px 0 0;
+  font-size: 15px;
+}
+
+.correction {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--danger);
+}
+
+.formula {
+  margin: 6px 0 0;
+  font-size: 15px;
+  color: var(--tone);
+}
+
+/* One position is five frets wide: it fits a phone without scrolling. */
+.board {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 4px 0;
+}

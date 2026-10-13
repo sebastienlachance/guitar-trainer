@@ -1,0 +1,60 @@
+<h1 class="visually-hidden">Set up intervals in a scale practice</h1>
+
+<section class="panel">
+  <h2>Questions</h2>
+  <app-chip-toggles
+    label="Kinds of question"
+    [hideLabel]="true"
+    [options]="taskChips"
+    [selected]="settings().tasks"
+    (selectedChange)="update({ tasks: $event })"
+  />
+  <p class="hint">
+    <strong>Find it:</strong> "Find the ♭3", and you tap it on the neck. <strong>Name it:</strong>
+    a note of the scale is marked and you say which interval it is.
+  </p>
+</section>
+
+<section class="panel">
+  <h2>Scales</h2>
+  <app-scale-toggles [selected]="settings().scales" (selectedChange)="update({ scales: $event })" />
+</section>
+
+<section class="panel">
+  <h2>Position</h2>
+  <app-chip-toggles
+    label="Root on"
+    [options]="rootStringChips"
+    [selected]="settings().rootStrings"
+    (selectedChange)="update({ rootStrings: $event })"
+  />
+  <app-segmented-choice
+    label="On the neck"
+    [options]="neckChoices"
+    [value]="settings().neck"
+    (valueChange)="update({ neck: $event })"
+  />
+  <app-segmented-choice
+    label="Frets"
+    [options]="fretChoices"
+    [value]="settings().maxFret"
+    (valueChange)="update({ maxFret: $event })"
+  />
+  <p class="hint">
+    Each question shows one hand position, the root under your second finger. The root changes every
+    time.
+  </p>
+</section>
+
+<section class="panel">
+  <h2>Microphone</h2>
+  <app-segmented-choice
+    label="Microphone mode"
+    [hideLabel]="true"
+    [options]="micChoices"
+    [value]="settings().micMode"
+    (valueChange)="update({ micMode: $event })"
+  />
+</section>
+
+<app-setup-start />

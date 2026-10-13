@@ -39,4 +39,10 @@ export const MODULES: readonly TrainerModule[] = [
     description: 'A scale in one hand position, root marked: major, minor, pentatonics or modes?',
     loadRoutes: () => import('./scales/scales.routes').then((m) => m.SCALES_ROUTES),
   },
+  {
+    path: 'intervals',
+    title: 'Intervals in a scale',
+    description: 'Find or name the ♭3, 5 or ♭7 in a scale shape, around its root.',
+    loadRoutes: () => import('./intervals/intervals.routes').then((m) => m.INTERVALS_ROUTES),
+  },
 ];

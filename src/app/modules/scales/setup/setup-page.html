@@ -2,24 +2,7 @@
 
 <section class="panel">
   <h2>Scales to choose between</h2>
-  <app-chip-toggles
-    label="Major and minor"
-    [options]="majorMinorChips"
-    [selected]="settings().scales"
-    (selectedChange)="update({ scales: $event })"
-  />
-  <app-chip-toggles
-    label="Pentatonic and blues"
-    [options]="pentatonicChips"
-    [selected]="settings().scales"
-    (selectedChange)="update({ scales: $event })"
-  />
-  <app-chip-toggles
-    label="Modes"
-    [options]="modeChips"
-    [selected]="settings().scales"
-    (selectedChange)="update({ scales: $event })"
-  />
+  <app-scale-toggles [selected]="settings().scales" (selectedChange)="update({ scales: $event })" />
   <p class="hint">
     Each question shows one of these in a hand position; you pick which. Up to nine scales can be
     answered with number keys.

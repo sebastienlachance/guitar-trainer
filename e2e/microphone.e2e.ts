@@ -1,7 +1,7 @@
 import { Page, chromium, expect, test as base } from '@playwright/test';
-import { correctResult, seedSettings, startSession } from './support/app';
+import { correctResult, pickFirstCard, seedSettings, startSession } from './support/app';
 import { TONES, tonePath } from './support/audio';
-import { F_SHARP_ON_A } from './support/decks';
+import { F_SHARP_ON_A, MINOR_THIRD_IN_F_SHARP } from './support/decks';
 
 type Tone = keyof typeof TONES;
 
@@ -25,6 +25,7 @@ const test = base.extend<{ tone: Tone; micPage: Page }>({
 });
 
 const WITH_MIC = { ...F_SHARP_ON_A, micMode: 'play' };
+const INTERVAL_WITH_MIC = { ...MINOR_THIRD_IN_F_SHARP, micMode: 'play' };
 
 test.describe('Microphone: playing the asked note', () => {
   test.use({ tone: 'fSharp3' });
@@ -43,6 +44,32 @@ test.describe('Microphone: playing another note', () => {
   test('is heard but does not count', async ({ micPage: page }) => {
     await seedSettings(page, 'notes', WITH_MIC);
     await startSession(page, 'notes');
+
+    await expect(page.getByText('Hearing E3')).toBeVisible({ timeout: 10_000 });
+    await expect(correctResult(page)).toHaveCount(0);
+    await expect(page.getByText('Not quite')).toHaveCount(0);
+  });
+});
+
+test.describe('Microphone: playing the asked interval', () => {
+  test.use({ tone: 'a3' });
+
+  test('answers a Find question', async ({ micPage: page }) => {
+    await seedSettings(page, 'intervals', INTERVAL_WITH_MIC);
+    await pickFirstCard(page);
+    await startSession(page, 'intervals');
+
+    await expect(correctResult(page)).toBeVisible({ timeout: 10_000 });
+  });
+});
+
+test.describe('Microphone: playing another note of the scale', () => {
+  test.use({ tone: 'e3' });
+
+  test('is heard but does not answer', async ({ micPage: page }) => {
+    await seedSettings(page, 'intervals', INTERVAL_WITH_MIC);
+    await pickFirstCard(page);
+    await startSession(page, 'intervals');
 
     await expect(page.getByText('Hearing E3')).toBeVisible({ timeout: 10_000 });
     await expect(correctResult(page)).toHaveCount(0);

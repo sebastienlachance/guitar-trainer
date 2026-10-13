@@ -78,6 +78,16 @@ svg {
   fill: #501313;
 }
 
+.ghost circle {
+  fill: var(--surface);
+  stroke: var(--text-muted);
+  stroke-width: 2;
+}
+
+.ghost text {
+  fill: var(--text);
+}
+
 .hit {
   fill: transparent;
   cursor: pointer;

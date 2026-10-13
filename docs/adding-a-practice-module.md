@@ -110,6 +110,23 @@ Put every rule that decides whether an answer is right in this file as plain fun
 `isTarget()` and `allFound()` in the notes module. They're easy to unit test there and keep the
 components thin.
 
+### Cards that vary each time they come up
+
+A card doesn't have to fix every detail of the question. In `modules/intervals/` a card is a
+_shape_ ("the ♭3 in minor pentatonic, root on string 6"), and the root changes every time it
+comes up, so the stats follow what you're learning and you can't memorise fret numbers. The
+session picks the details in `PracticeRun`'s `onNext`, which runs for every card, including the
+first, with a pure function you can test with a fixed `random`:
+
+```ts
+onNext: () => {
+  const card = this.run.current();
+  this.question.set(card ? questionFor(card, this.settings().maxFret, Math.random) : null);
+},
+```
+
+Tests then fix `Math.random` at 0 to know the question, as for any random choice.
+
 ## 5. The module service (`scales-session.ts`)
 
 The service holds the settings, the deck and the card flow. It implements `Drill`, the contract the
@@ -280,6 +297,10 @@ Build grid cells with `accuracyCell(id, totals(stats, (key) => …))`.
 | Note name where any spelling is right     | `pitchClassNames()` ("C♯/D♭"), `commonNoteName()` ("D♭") in `core/music/notes.ts`                  |
 | The note at a string and fret             | `pitchClassAt()` in `core/fretboard/placement.ts`                                                  |
 | Scales and where to play them             | `SCALE_TYPES` in `core/music/scales.ts`; `scaleInPosition()`, `positionStarts()` in `placement.ts` |
+| Let people choose scales                  | `<app-scale-toggles [selected] (selectedChange)>` in `core/ui/setup/`                              |
+| Name a scale in a sentence                | `scaleRootName()` ("G♯" minor, "A♭" major), `scaleNameInText()` in `core/music/scales.ts`          |
+| Notes shown for context only              | Fretboard dots of kind `'ghost'`: faint rings, labelled like the others                            |
+| Interval names                            | `displayInterval()` ("♭3"), `intervalLongName()` ("minor 3rd"), `intervalFromSemitones()`          |
 | Where a note or chord tone is on the neck | `findNotePositions()`, `findChordTones()`, `placeVoicing()` in `core/fretboard/placement.ts`       |
 | Spell notes, intervals, chords            | `core/music/notes.ts`, `intervals.ts`, `chords.ts`                                                 |
 | Listen to the guitar                      | `MicListener.start('notes')`, then `heard()`; `<app-mic-status>`                                   |

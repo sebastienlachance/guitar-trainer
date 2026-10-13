@@ -1,0 +1,51 @@
+<app-practice-frame [prompt]="prompt" />
+
+<ng-template #prompt>
+  @if (card(); as card) {
+    <div class="question" aria-live="polite">
+      @if (card.task === 'find') {
+        <p class="ask muted">Find the</p>
+        <h1>
+          <span class="interval">{{ asked() }}</span
+          >{{ ' ' }}<span class="long muted">{{ askedName() }}</span>
+        </h1>
+        <p class="where muted">in {{ scale() }}, {{ rootString() }}</p>
+      } @else {
+        <p class="ask muted">Which interval is marked?</p>
+        <h1>{{ scale() }}</h1>
+        <p class="where muted">{{ rootString() }}</p>
+      }
+      @if (correction()) {
+        <p class="correction">{{ correction() }}</p>
+      }
+      @if (answered()) {
+        <p class="formula">{{ formula() }}</p>
+      }
+    </div>
+
+    <div class="board">
+      <app-fretboard
+        [dots]="dots()"
+        [window]="window()"
+        [selectable]="card.task === 'find' && run.phase() === 'prompt'"
+        [cursorStart]="cursorStart()"
+        [takesFocus]="card.task === 'find'"
+        [description]="description()"
+        (picked)="session.pick($event)"
+      />
+    </div>
+
+    @if (card.task === 'name') {
+      <app-choice-buttons
+        label="Intervals"
+        [options]="options()"
+        [checked]="checked()"
+        [takesFocus]="true"
+        (chosen)="session.answer($event)"
+      />
+    }
+    @if (micOn()) {
+      <app-mic-status [hint]="micHint()" />
+    }
+  }
+</ng-template>

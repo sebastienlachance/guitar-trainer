@@ -5,6 +5,7 @@ import {
   E_ON_A_STRING,
   F_SHARP_ON_A,
   MAJOR_OR_MINOR_PENTATONIC,
+  MINOR_THIRD_IN_F_SHARP,
 } from './support/decks';
 
 /** Fails when the page is wider than the screen, i.e. it scrolls sideways. */
@@ -101,6 +102,44 @@ test.describe('Phone width, identify scales', () => {
     await page.goto('/#/scales/stats');
     await expect(page.getByRole('heading', { name: 'Accuracy by scale' })).toBeVisible();
     await expectFitsWidth(page, 'Scales stats');
+  });
+});
+
+test.describe('Phone width, intervals in a scale', () => {
+  test.use({ viewport: { width: 375, height: 812 } });
+
+  test.beforeEach(async ({ page }) => {
+    await pickFirstCard(page);
+  });
+
+  test('intervals setup, Find and stats pages fit the screen', async ({ page }) => {
+    await seedSettings(page, 'intervals', MINOR_THIRD_IN_F_SHARP);
+
+    await page.goto('/#/intervals');
+    await expectFitsWidth(page, 'Intervals setup');
+
+    await startSession(page, 'intervals');
+    await tapFret(page, 5, 2);
+    await expect(page.getByText("That's the 4 (perfect 4th).")).toBeVisible();
+    await expectFitsWidth(page, 'Intervals find answer');
+
+    await page.goto('/#/intervals/stats');
+    await expect(
+      page.getByRole('heading', { name: 'Accuracy by scale and interval' }),
+    ).toBeVisible();
+    await expectFitsWidth(page, 'Intervals stats');
+  });
+
+  test('an intervals Name question fits the screen', async ({ page }) => {
+    await seedSettings(page, 'intervals', { ...MINOR_THIRD_IN_F_SHARP, tasks: ['name'] });
+
+    await startSession(page, 'intervals');
+    await page
+      .getByRole('group', { name: 'Intervals' })
+      .getByRole('button', { name: '♭3' })
+      .click();
+    await expect(correctResult(page)).toBeVisible();
+    await expectFitsWidth(page, 'Intervals name answer');
   });
 });
 

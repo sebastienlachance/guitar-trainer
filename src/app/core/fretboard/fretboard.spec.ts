@@ -59,4 +59,13 @@ describe('Fretboard', () => {
     expect(container.querySelector('.hit')).toBeNull();
     expect(container.querySelector('.dot.miss')).not.toBeNull();
   });
+
+  it('draws context notes as faded rings, with their labels', async () => {
+    const { container } = await renderFretboard({
+      selectable: false,
+      dots: [{ string: 4, fret: 2, label: '♭7', kind: 'ghost' }],
+    });
+
+    expect(container.querySelector('.dot.ghost')).toHaveTextContent('♭7');
+  });
 });

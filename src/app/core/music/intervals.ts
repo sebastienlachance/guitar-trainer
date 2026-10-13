@@ -47,3 +47,50 @@ export function spellInterval(root: SpelledNote, interval: IntervalName): Spelle
 export function displayInterval(interval: IntervalName): string {
   return interval.replaceAll('b', '♭').replaceAll('#', '♯');
 }
+
+const LONG_NAMES: Readonly<Record<IntervalName, string>> = {
+  '1': 'root',
+  b2: 'minor 2nd',
+  '2': 'major 2nd',
+  b3: 'minor 3rd',
+  '3': 'major 3rd',
+  '4': 'perfect 4th',
+  '#4': 'augmented 4th',
+  b5: 'diminished 5th',
+  '5': 'perfect 5th',
+  '#5': 'augmented 5th',
+  b6: 'minor 6th',
+  '6': 'major 6th',
+  bb7: 'diminished 7th',
+  b7: 'minor 7th',
+  '7': 'major 7th',
+};
+
+/** The interval's name in words, e.g. "b3" -> "minor 3rd". */
+export function intervalLongName(interval: IntervalName): string {
+  return LONG_NAMES[interval];
+}
+
+/** The usual spelling of each distance above the root: ♭5 rather than ♯4, ♭6 rather than ♯5. */
+const BY_SEMITONES: readonly IntervalName[] = [
+  '1',
+  'b2',
+  '2',
+  'b3',
+  '3',
+  '4',
+  'b5',
+  '5',
+  'b6',
+  '6',
+  'b7',
+  '7',
+];
+
+/**
+ * The interval a number of semitones above the root, octaves ignored. Use it for notes outside a
+ * scale; a scale's own spelling (Lydian's ♯4) comes from its intervals.
+ */
+export function intervalFromSemitones(semitones: number): IntervalName {
+  return BY_SEMITONES[mod(semitones, 12)];
+}

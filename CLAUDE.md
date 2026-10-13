@@ -35,7 +35,9 @@ routing, storage, focus or the microphone changed.
   - `build-info.ts`: the deployed commit, set at build time through `define`
 - `src/app/modules/<name>/`: one practice module each, registered in `modules/registry.ts`.
   `notes/` is the reference implementation. `identify/` and `scales/` show multiple choice.
-  `triads/` shows a self-check module with an answer template and mic matching.
+  `triads/` shows a self-check module with an answer template and mic matching. `intervals/` mixes
+  tap, mic and multiple-choice questions in one module, and gives a card a new root each time it
+  comes up (picked in `onNext`).
 - `docs/adding-a-practice-module.md`: how to add a module. Follow it.
 - `e2e/`: Playwright smoke tests. `support/` holds the helpers, the one-card decks, the
   generator for the fake microphone's recordings and the static server for the Pages-style build.
@@ -155,6 +157,11 @@ routing, storage, focus or the microphone changed.
   leading `/`), and keep `start_url` and `scope` in the manifest at `./`. In Git Bash, prefix a
   hand-run `ng build --base-href /guitar-trainer/` with `MSYS_NO_PATHCONV=1`, or the path is
   rewritten into a Windows path.
+- **Stale unit tests:** Vitest 5 caches transformed modules on disk (`node_modules/.vitest-cache`)
+  by default. Angular builds each spec in memory with the code it imports, and that cache only
+  notices changes to the spec file, so a test could pass against an old copy of the code under
+  test. `vitest-base.config.ts` (loaded through `runnerConfig` in `angular.json`) turns it off;
+  keep it off. If a result ever looks stale, delete that folder.
 - **Line endings:** on Windows, `prettier --check` can also flag files whose only difference is CRLF
   line endings; `.gitattributes` stores LF, so `git diff` shows nothing for those. Running
   `npm run format` fixes both kinds.

@@ -8,8 +8,8 @@ export interface FretPosition {
   readonly fret: number;
 }
 
-/** root: amber; tone: teal; miss: red, for a wrong answer. */
-export type DotKind = 'root' | 'tone' | 'miss';
+/** root: amber; tone: teal; miss: red, for a wrong answer; ghost: a faded ring, for context. */
+export type DotKind = 'root' | 'tone' | 'miss' | 'ghost';
 
 export interface FretboardDot extends FretPosition {
   readonly label: string;

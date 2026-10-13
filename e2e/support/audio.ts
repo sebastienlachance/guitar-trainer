@@ -12,6 +12,8 @@ export const TONES = {
   fSharp3: 185.0,
   /** E3, fret 7 on the A string. */
   e3: 164.81,
+  /** A3, fret 2 on the G string. */
+  a3: 220.0,
 } as const;
 
 /** Absolute path of a recording, as Chromium's fake-microphone flag needs. */
