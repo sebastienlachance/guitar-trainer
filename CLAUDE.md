@@ -13,8 +13,8 @@ modules on top of shared code, with no backend: everything is saved in the brows
 - `npm run format`: Prettier
 - `npm run e2e`: Playwright smoke tests in `e2e/` (first time on a machine: `npx playwright install chromium`)
 
-Run `test:once`, `lint` and `build` before committing; also `e2e` when layout, routing, storage or
-the microphone changed.
+Before committing, run `format`, `test:once`, `lint` and `build`. Also run `e2e` when layout,
+routing, storage, focus or the microphone changed.
 
 ## Layout
 
@@ -114,6 +114,9 @@ the microphone changed.
   example `correctResult()`), so a test expecting something and one expecting its absence can't
   drift apart. Wait for the content to appear before measuring layout.
 
+- Playwright matches accessible names as substrings: `{ name: 'E' }` also finds "D♯/E♭". Use
+  `exact: true` for short names. Testing Library matches whole names by default.
+
 ## Pitfalls
 
 - **Whitespace:** Angular removes whitespace-only text between elements, so
@@ -127,8 +130,22 @@ the microphone changed.
   cursor stays where the last answer was.
 - **Keys in module controls:** a control that handles keys itself must call `preventDefault()`, so
   the practice frame ignores them.
+- **Focus on answers:** the practice frame moves focus to a `data-autofocus` answer control only
+  after keyboard use, so mouse users never see an answer that looks preselected. Keyboard tests
+  must therefore start the session from the keyboard (`startSessionWithKeyboard()` in e2e, or
+  pressing Enter on the focused Start session button in component tests).
 - **Playwright launch options:** `test.use({ launchOptions })` is only allowed at file level. To
   vary them per test (like the fake-microphone recording), launch a browser in a fixture, as
   `e2e/microphone.e2e.ts` does.
-- **Line endings:** on Windows, `prettier --check` can flag files that only have CRLF line endings.
-  `.gitattributes` stores LF, so check `git diff` before reformatting anything.
+- **Line endings:** on Windows, `prettier --check` can also flag files whose only difference is CRLF
+  line endings; `.gitattributes` stores LF, so `git diff` shows nothing for those. Running
+  `npm run format` fixes both kinds.
+
+## Decisions
+
+- **No Nx:** one app, builds of about 2 s, and boundaries covered by one lint rule. Revisit with a
+  second app (such as a Tauri shell), shared libraries, or slow CI.
+- **End-to-end tests run in Chromium only.** Add a WebKit mic test if the app is used on an
+  iPhone, where Safari handles audio differently.
+- **Packaging, when needed:** a PWA first (`ng add @angular/pwa`), then Tauri for a native
+  installer or phone app.
