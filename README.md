@@ -8,8 +8,10 @@ Practise guitar until the fretboard is automatic. Each kind of exercise is a **m
   fretboard or playing the note.
 - **Identify notes:** a dot appears on the neck and you name the note, from four choices or all
   twelve.
+- **Identify scales:** a scale in one hand position, its root marked, and you name it: major,
+  minor, pentatonic, blues or one of the modes.
 
-More modules (scales, intervals) are planned. Adding one is documented in
+A module for intervals within a scale is planned. Adding one is documented in
 [docs/adding-a-practice-module.md](docs/adding-a-practice-module.md).
 
 ## Features
@@ -38,6 +40,14 @@ More modules (scales, intervals) are planned. Adding one is documented in
 - Any of the 12 notes (or naturals only), on chosen strings, within frets 0–5, 0–12 or 0–15
 - Four choices (keys 1 to 4) or all twelve names (arrow keys and Enter)
 - A wrong answer shows the right name, on the buttons and on the dot
+
+**Identify scales**
+
+- 12 scales: major, natural, harmonic and melodic minor, major and minor pentatonic, blues, and
+  the modes Dorian, Phrygian, Lydian, Mixolydian and Locrian
+- Each question shows one position (four frets and a stretch), with the root on the 6th or 5th
+  string
+- After answering, the dots show their intervals and the scale's formula appears
 
 **Every module**
 
@@ -77,7 +87,7 @@ arrow keys move the cursor and **Enter** chooses.
 ```
 src/app/
   core/                   shared by every module
-    music/                note spelling, intervals, chords, voicings (pure TypeScript)
+    music/                note spelling, intervals, chords, voicings, scales (pure TypeScript)
     fretboard/            tuning, note and shape positions, the SVG fretboard (also answers taps)
     practice/             card flow (PracticeRun), the Drill contract, stats, session log, storage
     audio/                microphone, pitch detection, chord matching
@@ -88,6 +98,7 @@ src/app/
     notes/                fretboard notes: the smallest complete module, a template for new ones
     triads/               triads, sus, 6th and 7th chords
     identify/             identify notes: multiple choice
+    scales/               identify scales: multiple choice over a scale position
   home/                   home screen
 docs/
   adding-a-practice-module.md

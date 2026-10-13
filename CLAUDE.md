@@ -19,7 +19,8 @@ routing, storage, focus or the microphone changed.
 ## Layout
 
 - `src/app/core/`: shared by every module
-  - `music/`, `fretboard/`: note spelling, intervals, chords, voicings, fret positions (pure TS)
+  - `music/`, `fretboard/`: note spelling, intervals, chords, voicings, the scale catalog
+    (`SCALE_TYPES`), fret positions and scale positions (pure TS)
   - `practice/`:
     - `PracticeRun`: the card flow
     - `Drill`: the contract a module provides
@@ -31,8 +32,8 @@ routing, storage, focus or the microphone changed.
     - `setup/`, `stats/` and `answer/` (multiple-choice buttons) building blocks
     - `mic-status.ts`, `icon.ts`, `text.ts`
 - `src/app/modules/<name>/`: one practice module each, registered in `modules/registry.ts`.
-  `notes/` is the reference implementation. `identify/` shows multiple choice. `triads/` shows a
-  self-check module with an answer template and mic matching.
+  `notes/` is the reference implementation. `identify/` and `scales/` show multiple choice.
+  `triads/` shows a self-check module with an answer template and mic matching.
 - `docs/adding-a-practice-module.md`: how to add a module. Follow it.
 - `e2e/`: Playwright smoke tests. `support/` holds the helpers, the one-card decks and the
   generator for the fake microphone's recordings.
@@ -100,6 +101,9 @@ routing, storage, focus or the microphone changed.
   - to seed settings, write them to localStorage under `STORAGE_PREFIX` before rendering
 - Outside a component, create injected classes with `TestBed.runInInjectionContext`. Control time
   with `vi.useFakeTimers()` and `vi.setSystemTime()`.
+- Prefer one-card decks set through settings. When settings can't narrow the deck to one card
+  (like identify scales), fix `Math.random` at 0 so the deck's first card comes up:
+  `vi.spyOn(Math, 'random').mockReturnValue(0)` in component tests, `pickFirstCard()` in e2e.
 - Microphone logic (`note-stream.ts`, `matchers.ts`, `chroma.ts`) is pure: test it with synthetic
   input, not audio.
 - End-to-end tests (`e2e/*.e2e.ts`) are only for what jsdom can't check:

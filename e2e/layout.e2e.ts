@@ -1,6 +1,11 @@
 import { Page, expect, test } from '@playwright/test';
-import { correctResult, seedSettings, startSession, tapFret } from './support/app';
-import { CSUS4_ONLY, E_ON_A_STRING, F_SHARP_ON_A } from './support/decks';
+import { correctResult, pickFirstCard, seedSettings, startSession, tapFret } from './support/app';
+import {
+  CSUS4_ONLY,
+  E_ON_A_STRING,
+  F_SHARP_ON_A,
+  MAJOR_OR_MINOR_PENTATONIC,
+} from './support/decks';
 
 /** Fails when the page is wider than the screen, i.e. it scrolls sideways. */
 async function expectFitsWidth(page: Page, where: string): Promise<void> {
@@ -72,6 +77,30 @@ test.describe('Phone width, identify notes', () => {
     await page.goto('/#/identify/stats');
     await expect(page.getByRole('heading', { name: 'Accuracy by string' })).toBeVisible();
     await expectFitsWidth(page, 'Identify stats');
+  });
+});
+
+test.describe('Phone width, identify scales', () => {
+  test.use({ viewport: { width: 375, height: 812 } });
+
+  test('identify scales pages fit the screen', async ({ page }) => {
+    await seedSettings(page, 'scales', MAJOR_OR_MINOR_PENTATONIC);
+    await pickFirstCard(page);
+
+    await page.goto('/#/scales');
+    await expectFitsWidth(page, 'Scales setup');
+
+    await startSession(page, 'scales');
+    await page
+      .getByRole('group', { name: 'Scale names' })
+      .getByRole('button', { name: 'Major', exact: true })
+      .click();
+    await expect(page.getByText('Major: 1 2 3 4 5 6 7')).toBeVisible();
+    await expectFitsWidth(page, 'Scales answer');
+
+    await page.goto('/#/scales/stats');
+    await expect(page.getByRole('heading', { name: 'Accuracy by scale' })).toBeVisible();
+    await expectFitsWidth(page, 'Scales stats');
   });
 });
 

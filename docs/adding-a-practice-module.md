@@ -27,7 +27,7 @@ Everything else is shared and comes for free:
 
 **The quickest start is to copy a module close to yours** and rename things:
 
-- `src/app/modules/identify/` for multiple-choice answers
+- `src/app/modules/identify/` for multiple-choice answers (`scales/` is another example)
 - `src/app/modules/notes/` for answering on the fretboard
 - `src/app/modules/triads/` for self-check (reveal, then Got it / Missed)
 
@@ -273,17 +273,18 @@ Build grid cells with `accuracyCell(id, totals(stats, (key) => …))`.
 
 ## 8. Shared building blocks
 
-| Need                                      | Use                                                                                          |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Show or answer on the neck                | `<app-fretboard [selectable] (picked) [cursorStart] [takesFocus]>`                           |
-| Pick one answer from a few or many        | `<app-choice-buttons [options] [checked] [takesFocus] (chosen)>` in `core/ui/answer/`        |
-| Note name where any spelling is right     | `pitchClassNames()` ("C♯/D♭"), `commonNoteName()` ("D♭") in `core/music/notes.ts`            |
-| The note at a string and fret             | `pitchClassAt()` in `core/fretboard/placement.ts`                                            |
-| Where a note or chord tone is on the neck | `findNotePositions()`, `findChordTones()`, `placeVoicing()` in `core/fretboard/placement.ts` |
-| Spell notes, intervals, chords            | `core/music/notes.ts`, `intervals.ts`, `chords.ts`                                           |
-| Listen to the guitar                      | `MicListener.start('notes')`, then `heard()`; `<app-mic-status>`                             |
-| Words                                     | `plural()`, `percentCorrect()`, `capitalize()` in `core/ui/text.ts`                          |
-| Save something                            | `loadJson()` / `saveJson()` in `core/practice/storage.ts`                                    |
+| Need                                      | Use                                                                                                |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Show or answer on the neck                | `<app-fretboard [selectable] (picked) [cursorStart] [takesFocus]>`                                 |
+| Pick one answer from a few or many        | `<app-choice-buttons [options] [checked] [takesFocus] (chosen)>` in `core/ui/answer/`              |
+| Note name where any spelling is right     | `pitchClassNames()` ("C♯/D♭"), `commonNoteName()` ("D♭") in `core/music/notes.ts`                  |
+| The note at a string and fret             | `pitchClassAt()` in `core/fretboard/placement.ts`                                                  |
+| Scales and where to play them             | `SCALE_TYPES` in `core/music/scales.ts`; `scaleInPosition()`, `positionStarts()` in `placement.ts` |
+| Where a note or chord tone is on the neck | `findNotePositions()`, `findChordTones()`, `placeVoicing()` in `core/fretboard/placement.ts`       |
+| Spell notes, intervals, chords            | `core/music/notes.ts`, `intervals.ts`, `chords.ts`                                                 |
+| Listen to the guitar                      | `MicListener.start('notes')`, then `heard()`; `<app-mic-status>`                                   |
+| Words                                     | `plural()`, `percentCorrect()`, `capitalize()` in `core/ui/text.ts`                                |
+| Save something                            | `loadJson()` / `saveJson()` in `core/practice/storage.ts`                                          |
 
 ### Multiple choice
 

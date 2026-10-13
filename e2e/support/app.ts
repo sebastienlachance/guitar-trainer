@@ -14,6 +14,16 @@ export async function seedSettings(page: Page, module: string, settings: object)
   );
 }
 
+/**
+ * Makes card picking predictable: with Math.random fixed at 0, the first card of the deck comes
+ * up. For modules whose deck can't be narrowed to one card through settings.
+ */
+export async function pickFirstCard(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    Math.random = () => 0;
+  });
+}
+
 /** Opens a module's practice page and starts a session. */
 export async function startSession(page: Page, module: string): Promise<void> {
   await page.goto(`/#/${module}/practice`);

@@ -97,3 +97,59 @@ export function findNotePositions(
     })).filter((position) => mod(position.midi, 12) === pitchClass),
   );
 }
+
+/** Frets one hand covers in a position, one finger each. One more fret is allowed as a stretch. */
+export const POSITION_FRETS = 4;
+
+/**
+ * A scale in one hand position starting at `start`: every scale note in frets
+ * `start`..`start + 3`, each pitch once, plus a stretch to `start + 4` for pitches that fall
+ * between two strings or above the top string. Notes go on the lowest string that reaches them,
+ * as in usual fingerings.
+ */
+export function scaleInPosition(
+  rootPitchClass: number,
+  intervals: readonly IntervalName[],
+  start: number,
+): FrettedNote[] {
+  const lowest = openString(STRING_COUNT) + start;
+  const highest = openString(1) + start + POSITION_FRETS;
+  const notes: FrettedNote[] = [];
+  for (let midi = lowest; midi <= highest; midi++) {
+    const tone = intervals.find(
+      (interval) => mod(rootPitchClass + semitonesOf(interval), 12) === mod(midi, 12),
+    );
+    const place = tone ? placeInPosition(midi, start) : null;
+    if (tone && place) {
+      notes.push({ ...place, midi, tone });
+    }
+  }
+  return notes;
+}
+
+/** The lowest string that plays a pitch within the position, trying the four frets before the stretch. */
+function placeInPosition(midi: number, start: number): { string: number; fret: number } | null {
+  for (const reach of [POSITION_FRETS - 1, POSITION_FRETS]) {
+    for (let string = STRING_COUNT; string >= 1; string--) {
+      const fret = midi - openString(string);
+      if (fret >= start && fret <= start + reach) {
+        return { string, fret };
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Where to start the positions of a scale, as usually taught: one with the root on the 6th
+ * string and one with it on the 5th, the root under the second finger. Only positions that end
+ * at or below `maxFret` are kept.
+ */
+export function positionStarts(rootPitchClass: number, maxFret: number): number[] {
+  const starts = [STRING_COUNT, STRING_COUNT - 1].flatMap((string) =>
+    findNotePositions(rootPitchClass, [string], maxFret).map((root) => Math.max(0, root.fret - 1)),
+  );
+  return [...new Set(starts)]
+    .filter((start) => start + POSITION_FRETS <= maxFret)
+    .sort((a, b) => a - b);
+}

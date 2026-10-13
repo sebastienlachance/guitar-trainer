@@ -1,6 +1,13 @@
 import { IntervalName } from '../music/intervals';
 import { voicingFor } from '../music/voicings';
-import { MAX_SPAN, fretSpan, findChordTones, placeVoicing } from './placement';
+import {
+  MAX_SPAN,
+  fretSpan,
+  findChordTones,
+  placeVoicing,
+  positionStarts,
+  scaleInPosition,
+} from './placement';
 import { stringSetById } from './tuning';
 
 function frets(
@@ -64,5 +71,48 @@ describe('findChordTones', () => {
       [13, '4'],
       [15, '5'],
     ]);
+  });
+});
+
+describe('scaleInPosition', () => {
+  const A = 9;
+  const C = 0;
+  const minorPentatonic: IntervalName[] = ['1', 'b3', '4', '5', 'b7'];
+
+  it('gives the familiar A minor pentatonic box at the 5th fret', () => {
+    const frets = (string: number) =>
+      scaleInPosition(A, minorPentatonic, 4)
+        .filter((note) => note.string === string)
+        .map((note) => note.fret);
+    expect([6, 5, 4, 3, 2, 1].map(frets)).toEqual([
+      [5, 8],
+      [5, 7],
+      [5, 7],
+      [5, 7],
+      [5, 8],
+      [5, 8],
+    ]);
+  });
+
+  it('plays each pitch once, within reach of the hand', () => {
+    const major: IntervalName[] = ['1', '2', '3', '4', '5', '6', '7'];
+    for (const start of [0, 2, 7]) {
+      const notes = scaleInPosition(C, major, start);
+      expect(new Set(notes.map((note) => note.midi)).size).toBe(notes.length);
+      expect(notes.every((note) => note.fret >= start && note.fret <= start + 4)).toBe(true);
+      // Two octaves and more: every degree is there.
+      expect(new Set(notes.map((note) => note.tone)).size).toBe(7);
+    }
+  });
+});
+
+describe('positionStarts', () => {
+  it('starts one position per root on the two bass strings, within the fret range', () => {
+    // A: open 5th string, and 5th fret of the 6th string (12th fret of the 5th is too high).
+    expect(positionStarts(9, 12)).toEqual([0, 4]);
+    // C: 3rd fret of the 5th string, 8th fret of the 6th string.
+    expect(positionStarts(0, 12)).toEqual([2, 7]);
+    // Up to fret 15, C on the 15th fret of the 5th string would still run past the range.
+    expect(positionStarts(0, 15)).toEqual([2, 7]);
   });
 });

@@ -12,5 +12,9 @@ describe('Home', () => {
       'href',
       '/identify',
     );
+    expect(screen.getByRole('link', { name: /Identify scales/ })).toHaveAttribute(
+      'href',
+      '/scales',
+    );
   });
 });

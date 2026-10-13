@@ -1,0 +1,24 @@
+<h1 class="visually-hidden">Identify scales stats</h1>
+
+<app-stats-overview />
+<app-session-history />
+
+@if (hasAnswers()) {
+  <section class="panel">
+    <h2>Accuracy by scale</h2>
+    <app-accuracy-grid [columns]="roots" [rows]="grid()" rowHeader="Scale" />
+  </section>
+
+  <section class="panel">
+    <h2>Practise these more</h2>
+    <app-weakest-cards [describe]="describeCard" />
+  </section>
+
+  <app-reset-stats />
+} @else {
+  <section class="panel">
+    <h2>No answers yet</h2>
+    <p class="muted">Your accuracy per scale and root shows up here once you've practised.</p>
+    <a routerLink="../practice" class="btn btn-primary">Go to practice</a>
+  </section>
+}

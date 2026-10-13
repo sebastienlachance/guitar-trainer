@@ -33,4 +33,10 @@ export const MODULES: readonly TrainerModule[] = [
     description: 'A dot on the neck: name the note, from four choices or all twelve.',
     loadRoutes: () => import('./identify/identify.routes').then((m) => m.IDENTIFY_ROUTES),
   },
+  {
+    path: 'scales',
+    title: 'Identify scales',
+    description: 'A scale in one hand position, root marked: major, minor, pentatonics or modes?',
+    loadRoutes: () => import('./scales/scales.routes').then((m) => m.SCALES_ROUTES),
+  },
 ];

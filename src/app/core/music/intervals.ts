@@ -1,7 +1,7 @@
 import { LETTERS, SpelledNote, mod, naturalPitchClass, pitchClassOf } from './notes';
 
 export type IntervalName =
-  '1' | 'b2' | '2' | 'b3' | '3' | '4' | 'b5' | '5' | '#5' | '6' | 'bb7' | 'b7' | '7';
+  '1' | 'b2' | '2' | 'b3' | '3' | '4' | '#4' | 'b5' | '5' | '#5' | 'b6' | '6' | 'bb7' | 'b7' | '7';
 
 interface Interval {
   /** Scale degree: 3 for any kind of third. Decides the letter of the spelled note. */
@@ -16,9 +16,11 @@ export const INTERVALS: Readonly<Record<IntervalName, Interval>> = {
   b3: { degree: 3, semitones: 3 },
   '3': { degree: 3, semitones: 4 },
   '4': { degree: 4, semitones: 5 },
+  '#4': { degree: 4, semitones: 6 },
   b5: { degree: 5, semitones: 6 },
   '5': { degree: 5, semitones: 7 },
   '#5': { degree: 5, semitones: 8 },
+  b6: { degree: 6, semitones: 8 },
   '6': { degree: 6, semitones: 9 },
   bb7: { degree: 7, semitones: 9 },
   b7: { degree: 7, semitones: 10 },

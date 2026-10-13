@@ -21,3 +21,6 @@ export const F_SHARP_ON_A = {
 
 /** Identify notes: the dot is always on string 5, fret 7, which is E. */
 export const E_ON_A_STRING = { notes: ['E'], strings: [5], maxFret: 7, choices: 4 };
+
+/** Identify scales: with pickFirstCard(), C major in the position from the 2nd fret. */
+export const MAJOR_OR_MINOR_PENTATONIC = { scales: ['major', 'minor-pentatonic'], maxFret: 12 };
