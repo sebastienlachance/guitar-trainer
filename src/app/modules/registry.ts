@@ -1,6 +1,10 @@
 import { LoadChildren } from '@angular/router';
 
-/** A practice area of the app. Adding a guitar concept means adding an entry here. */
+/**
+ * A practice module: one kind of exercise, listed on the home screen. To add one, follow
+ * docs/adding-a-practice-module.md (copying the `notes` folder is the quickest start), then add
+ * an entry to MODULES below.
+ */
 export interface TrainerModule {
   /** URL segment, e.g. "triads" for #/triads. */
   readonly path: string;

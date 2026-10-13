@@ -1,13 +1,18 @@
 # Guitar trainer
 
-Practise guitar chord shapes until they're automatic. The app names a chord, say **Csus4**, optionally
-with a shape (_1st inversion · strings 2-3-4_). You play it, then reveal the answer or let the
-microphone check you.
+Practise guitar until the fretboard is automatic. Each kind of exercise is a **module**:
 
-Triads is the first module. The app is built so other guitar concepts (scales, arpeggios, intervals)
-can be added as modules alongside it.
+- **Triads:** the app names a chord, say **Csus4**, optionally with a shape (_1st inversion ·
+  strings 2-3-4_). You play it, then reveal the answer or let the microphone check you.
+- **Fretboard notes:** "Find **F♯** on string 5" or "Find **every G**". You answer by tapping the
+  fretboard or playing the note.
+
+More modules (scales, intervals, identifying notes) are planned. Adding one is documented in
+[docs/adding-a-practice-module.md](docs/adding-a-practice-module.md).
 
 ## Features
+
+**Triads**
 
 - **Chord types:** major, minor, dim, aug, sus2, sus4, 6, m6, 7, maj7, m7, m7♭5, dim7, 7sus4
 - **Shapes:** close triads on the four three-string sets; four-note chords as drop 2 (four strings) or
@@ -18,12 +23,21 @@ can be added as modules alongside it.
 - **Microphone (optional):**
   - _Arpeggio:_ play the notes one at a time; checks the exact shape
   - _Strum (experimental):_ checks the notes but not the shape
-- **Sessions:** start a timed session and see the clock, the chords answered and your accuracy as you
-  go. The clock counts active time only: it stops after 2 minutes without an answer and while
-  paused. Finished sessions appear in a history on the stats page, and a session interrupted by
-  closing the tab is still saved.
-- **Stats:** accuracy per root and chord type and a list of your weakest cards. Cards you miss come up
-  more often.
+
+**Fretboard notes**
+
+- Any of the 12 notes (or naturals only), on chosen strings, within frets 0–5, 0–12 or 0–15
+- **One string:** a single tap answers; a wrong one shows where the note really is
+- **Whole neck:** find every place, one tap at a time; **Show me** reveals the rest
+- Answer with a tap, the keyboard (arrows to move, Enter to choose), or by playing the note
+
+**Every module**
+
+- **Sessions:** start a timed session and see the clock, the answers and your accuracy as you go.
+  The clock counts active time only: it stops after 2 minutes without an answer and while paused.
+  Finished sessions appear in a history on the stats page, and a session interrupted by closing the
+  tab is still saved.
+- **Stats:** accuracy grids and a list of your weakest cards. Cards you miss come up more often.
 - Dark theme, works on a phone, no backend: everything is saved in the browser
 
 ## Run it
@@ -46,44 +60,52 @@ Then open http://localhost:4200. The microphone only works on `localhost` or ove
 | `npm run format`    | Prettier                         |
 | `npm run build`     | Production build in `dist/`      |
 
-Keyboard: **Space** reveals, **→** got it, **←** missed.
+Keyboard: **Space** reveals or moves on, **→** got it, **←** missed. On a fretboard you answer on,
+arrow keys move the cursor and **Enter** chooses.
 
 ## How it's organised
 
 ```
 src/app/
-  core/                 shared by every module
-    music/              note spelling, intervals, chords, voicings (pure TypeScript)
-    fretboard/          tuning, placing shapes on strings, the SVG fretboard component
-    practice/           stats, weighted card picking, session log, local storage
-    audio/              microphone, pitch detection, chord matching
-    ui/                 icons
+  core/                   shared by every module
+    music/                note spelling, intervals, chords, voicings (pure TypeScript)
+    fretboard/            tuning, note and shape positions, the SVG fretboard (also answers taps)
+    practice/             card flow (PracticeRun), the Drill contract, stats, session log, storage
+    audio/                microphone, pitch detection, chord matching
+    ui/                   practice frame, module top bar, setup controls, stats blocks, icons
   modules/
-    registry.ts         list of modules shown on the home screen
-    triads/             the triads module: catalog, deck, session, pages
-  home/                 home screen
+    registry.ts           the modules on the home screen
+    notes/                fretboard notes: the smallest complete module, a template for new ones
+    triads/               triads, sus, 6th and 7th chords
+  home/                   home screen
+docs/
+  adding-a-practice-module.md
 ```
 
-Music, scheduling and detection logic is plain TypeScript with unit tests. Angular components and
-services are thin layers on top of it.
+Music, scheduling and answer-checking logic is plain TypeScript with unit tests. Angular components
+and services are thin layers on top of it.
+
+### Add a practice module
+
+Follow [docs/adding-a-practice-module.md](docs/adding-a-practice-module.md). In short: copy
+`src/app/modules/notes/`, write your cards and answer logic, and add an entry to
+`src/app/modules/registry.ts`. The session timer, stats, setup controls and practice screen come
+from `core/`.
 
 ### Add a chord type
 
 Add a line to `CHORD_QUALITIES` in `src/app/modules/triads/catalog.ts`. Spelling, shapes, the
 fretboard and stats follow from the intervals.
 
-### Add a module
-
-1. Create `src/app/modules/<name>/` with a `<name>.routes.ts`.
-2. Add an entry to `MODULES` in `src/app/modules/registry.ts`. The route and the home screen card
-   come from it.
-
 ## Microphone notes
 
-- Arpeggio mode uses the McLeod pitch method ([pitchy](https://github.com/ianprime0509/pitchy)) and
-  matches the last notes played against the exact pitches of the shape, up or down.
+- Single notes (triads arpeggio mode, fretboard notes) use the McLeod pitch method
+  ([pitchy](https://github.com/ianprime0509/pitchy)). A note counts once it holds steady for about
+  100 ms.
 - Strum mode folds the spectrum into 12 pitch classes and compares it with the chord. Overtones make
   it less reliable; adjust **Strictness** in setup if it's too picky or too lenient.
+- The mic hears pitch, not strings. When a prompt names a string, the same pitch on another string
+  also counts.
 - The browser's echo cancellation, noise suppression and auto gain are turned off, since they distort
   sustained instrument notes.
 

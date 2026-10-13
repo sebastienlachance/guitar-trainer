@@ -2,8 +2,10 @@ import { Signal } from '@angular/core';
 import { PracticeCard, PracticeRun } from './practice-run';
 
 /**
- * What a practice module gives the shared screens (top bar, practice frame, session history).
- * A module provides its service under this token in its routes.
+ * What a practice module gives the shared screens (top bar, practice frame, setup and stats
+ * blocks). A module's service implements this and is provided under this token in its routes:
+ * `[MySession, { provide: Drill, useExisting: MySession }]`.
+ * See docs/adding-a-practice-module.md.
  */
 export abstract class Drill {
   /** Module name for the top bar, e.g. "Triads". */

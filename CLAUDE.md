@@ -57,3 +57,15 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Use the `providedIn: 'root'` option for singleton services
 - Prefer the `@Service` decorator over `@Injectable({providedIn: 'root'})` for new singleton services (Angular v22+)
 - Use the `inject()` function instead of constructor injection
+
+## This project
+
+- The app is a set of practice **modules** (`src/app/modules/<name>/`) on top of shared code in
+  `src/app/core/`. To add or change a module, follow `docs/adding-a-practice-module.md`, and use
+  `src/app/modules/notes/` as the reference implementation.
+- Keep music, card and answer logic in plain TypeScript (`deck.ts`, `core/music`, `core/fretboard`)
+  with unit tests. Components stay thin.
+- Anything two modules would need (an answer control, a stats block, a setup control) belongs in
+  `src/app/core/`, not inside a module.
+- Stats are stored by card key: never change a module's key format without migrating saved data.
+- Before committing, run `npm run test:once`, `npm run lint` and `npm run build`.
