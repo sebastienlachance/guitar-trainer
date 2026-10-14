@@ -1,6 +1,8 @@
+import { signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { render, screen, within } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
+import { MicListener } from '../../../core/audio/mic-listener';
 import { STORAGE_PREFIX } from '../../../core/practice/storage';
 import { TriadSettings } from '../settings';
 import { provideTriads } from '../triads-session';
@@ -133,5 +135,79 @@ describe('PracticePage', () => {
 
     expect(screen.getByRole('heading', { name: 'Nothing to practise yet' })).toBeInTheDocument();
     expect(screen.getByText('Pick at least one chord type.')).toBeInTheDocument();
+  });
+});
+
+describe('PracticePage with the microphone strumming', () => {
+  /** What the microphone hears; the rest of MicListener does nothing. */
+  function fakeMicrophone() {
+    return {
+      status: signal('listening'),
+      errorMessage: signal<string | null>(null),
+      heard: signal<readonly number[]>([]),
+      chroma: signal<readonly number[] | null>(null),
+      strums: signal(0),
+      start: vi.fn(async () => undefined),
+      retry: vi.fn(async () => undefined),
+      stop: vi.fn(),
+      clearHeard: vi.fn(),
+    };
+  }
+
+  /** Energy on the given pitch classes only (C = 0), as a clean strum gives. */
+  function chromaOf(pitchClasses: number[]): number[] {
+    return Array.from({ length: 12 }, (_, pitchClass) =>
+      pitchClasses.includes(pitchClass) ? 1 : 0,
+    );
+  }
+
+  const C_SUS4 = [0, 5, 7];
+
+  async function startStrumming() {
+    saveSettings({
+      qualities: ['sus4'],
+      roots: ['C', 'D'],
+      promptDetail: 'chord',
+      micMode: 'strum',
+    });
+    const mic = fakeMicrophone();
+    const user = userEvent.setup();
+    const { fixture } = await render(PracticePage, {
+      providers: [...provideTriads(), provideRouter([]), { provide: MicListener, useValue: mic }],
+    });
+    await user.click(screen.getByRole('button', { name: /start session/i }));
+    return { mic, fixture };
+  }
+
+  beforeEach(() => {
+    localStorage.clear();
+    // The deck's first chord comes up: Csus4.
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it('goes straight to the next chord once it hears this one, and says so', async () => {
+    const { mic } = await startStrumming();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Csus4');
+
+    mic.strums.set(1);
+    mic.chroma.set(chromaOf(C_SUS4));
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Dsus4' })).toBeInTheDocument();
+    expect(screen.getByText(/^Csus4, \d\.\d s$/)).toHaveTextContent(/^Heard Csus4/);
+    expect(screen.queryByRole('region', { name: 'Answer' })).not.toBeInTheDocument();
+    expect(savedStats()['C|sus4']).toMatchObject({ attempts: 1, correct: 1 });
+  });
+
+  it('only counts a strum made after the chord appeared', async () => {
+    const { mic, fixture } = await startStrumming();
+
+    mic.chroma.set(chromaOf(C_SUS4));
+    await fixture.whenStable();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Csus4');
+
+    mic.strums.set(1);
+    expect(await screen.findByRole('heading', { level: 1, name: 'Dsus4' })).toBeInTheDocument();
   });
 });

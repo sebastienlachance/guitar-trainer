@@ -3,6 +3,23 @@
   padding: 28px 0 8px;
 }
 
+/* With the microphone on, the confirmation line takes the top of the padding, so the chord
+   stays in the same place whether or not the line shows. */
+.question.listening {
+  padding-top: 10px;
+}
+
+.heard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 18px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--success);
+}
+
 .play {
   font-size: 13px;
   margin: 0 0 4px;

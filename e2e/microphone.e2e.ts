@@ -1,7 +1,7 @@
 import { Page, chromium, expect, test as base } from '@playwright/test';
 import { correctResult, pickFirstCard, seedSettings, startSession } from './support/app';
 import { TONES, tonePath } from './support/audio';
-import { F_SHARP_ON_A, MINOR_THIRD_IN_F_SHARP } from './support/decks';
+import { CSUS4_ONLY, F_SHARP_ON_A, MINOR_THIRD_IN_F_SHARP } from './support/decks';
 
 type Tone = keyof typeof TONES;
 
@@ -74,5 +74,22 @@ test.describe('Microphone: playing another note of the scale', () => {
     await expect(page.getByText('Hearing E3')).toBeVisible({ timeout: 10_000 });
     await expect(correctResult(page)).toHaveCount(0);
     await expect(page.getByText('Not quite')).toHaveCount(0);
+  });
+});
+
+test.describe('Microphone: strumming the asked chord', () => {
+  test.use({ tone: 'cSus4' });
+
+  test('moves straight on to the next chord and says which one it heard', async ({
+    micPage: page,
+  }) => {
+    // With pickFirstCard(), Csus4 comes first, then Dsus4.
+    await seedSettings(page, 'triads', { ...CSUS4_ONLY, roots: ['C', 'D'], micMode: 'strum' });
+    await pickFirstCard(page);
+    await startSession(page, 'triads');
+
+    await expect(page.getByText(/Csus4, \d\.\d s/)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Dsus4');
+    await expect(page.getByRole('region', { name: 'Answer' })).toHaveCount(0);
   });
 });

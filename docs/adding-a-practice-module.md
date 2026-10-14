@@ -177,6 +177,7 @@ export function provideScales(): Provider[] {
 | -------------------------------------- | ------------------------------------------------------------------------- |
 | `current()`, `phase()`                 | The card on screen, and `'prompt'`, `'revealed'` or `'answered'`          |
 | `resolve(correct)`                     | App-checked answer: records it and shows the result                       |
+| `resolveAndMoveOn()`, `movedOn()`      | A correct answer not worth a look: straight to the next card; confirm it  |
 | `reveal()`, `selfCheck(correct)`       | Self-check flow (the frame's buttons call these for you)                  |
 | `touch()`                              | Marks activity, for example a played note, so the idle timer doesn't stop |
 | `paused()`, `lastCorrect()`, `stats()` | For your templates and checks                                             |

@@ -87,6 +87,24 @@ describe('PracticeRun', () => {
     expect(run.current()?.key).not.toBe(card.key);
   });
 
+  it('moves straight on after a correct answer that needs no look, and remembers it', () => {
+    const run = createRun();
+    run.start();
+    const card = run.current()!;
+    vi.advanceTimersByTime(800);
+
+    run.resolveAndMoveOn();
+
+    expect(run.stats()[card.key]).toMatchObject({ attempts: 1, correct: 1 });
+    expect(run.phase()).toBe('prompt');
+    expect(run.current()?.key).not.toBe(card.key);
+    expect(run.movedOn()).toEqual({ card, responseMs: 800 });
+
+    run.reveal();
+    run.selfCheck(true);
+    expect(run.movedOn()).toBeNull();
+  });
+
   it('waits for Next after a wrong checked answer', () => {
     const run = createRun();
     run.start();

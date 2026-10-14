@@ -1,6 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { Drill } from '../../practice/drill';
 import { averageResponseMs, smoothedMissRate } from '../../practice/stats';
+import { formatSeconds } from '../text';
 
 export interface CardDescription {
   readonly title: string;
@@ -70,7 +71,7 @@ export class WeakestCards {
                 key,
                 ...description,
                 score: `${card.correct} of ${card.attempts}`,
-                seconds: `${(averageResponseMs(card) / 1000).toFixed(1)} s`,
+                seconds: formatSeconds(averageResponseMs(card)),
               },
             ]
           : [];

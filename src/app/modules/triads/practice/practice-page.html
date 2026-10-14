@@ -1,7 +1,14 @@
 <app-practice-frame [prompt]="prompt" [answer]="answer" />
 
 <ng-template #prompt>
-  <div class="question" aria-live="polite">
+  <div class="question" [class.listening]="settings().micMode !== 'off'" aria-live="polite">
+    @if (settings().micMode !== 'off') {
+      <p class="heard">
+        @if (heardLast()) {
+          <app-icon name="check" /><span class="visually-hidden">Heard </span>{{ heardLast() }}
+        }
+      </p>
+    }
     <p class="play muted">Play</p>
     <h1 class="chord">{{ title() }}</h1>
     @if (subtitle()) {

@@ -35,6 +35,9 @@ export class TriadsSession implements Drill {
   readonly deck = computed(() => buildDeck(this.settings()));
   readonly problems = computed(() => settingsProblems(this.settings(), this.deck()));
 
+  /** Strums heard before the current chord appeared: only a later one can answer it. */
+  private readonly strumsBefore = signal(0);
+
   readonly run = new PracticeRun<TriadCard>({
     module: TRIADS_MODULE,
     statsKey: STATS_KEY,
@@ -47,7 +50,10 @@ export class TriadsSession implements Drill {
       }
     },
     onEnd: () => this.mic.stop(),
-    onNext: () => this.mic.clearHeard(),
+    onNext: () => {
+      this.mic.clearHeard();
+      this.strumsBefore.set(this.mic.strums());
+    },
   });
 
   readonly tags = computed(() => {
@@ -86,14 +92,22 @@ export class TriadsSession implements Drill {
     if (micMode === 'arpeggio') {
       return matchesArpeggio(this.mic.heard(), target);
     }
+    // The last chord may still be ringing, and it can share every note with this one (Csus4 and
+    // Fsus2): only a strum made since this chord appeared counts.
+    const strummedSince = this.mic.strums() > this.strumsBefore();
     const chroma = this.mic.chroma();
-    return chroma !== null && matchesStrum(chroma, targetPitchClasses(target), strumThreshold);
+    return (
+      strummedSince &&
+      chroma !== null &&
+      matchesStrum(chroma, targetPitchClasses(target), strumThreshold)
+    );
   });
 
   constructor() {
+    // A heard chord needs no look at the answer: straight on to the next one.
     effect(() => {
       if (this.micMatched()) {
-        untracked(() => this.run.resolve(true));
+        untracked(() => this.run.resolveAndMoveOn());
       }
     });
     // Playing counts as practice even before you answer.

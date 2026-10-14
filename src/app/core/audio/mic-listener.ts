@@ -3,6 +3,7 @@ import { PitchDetector } from 'pitchy';
 import { chromaFromSpectrum } from './chroma';
 import { MicrophoneError, MicrophoneInput, openMicrophone } from './microphone';
 import { DEFAULT_NOTE_STREAM_OPTIONS, NoteStream } from './note-stream';
+import { OnsetDetector } from './onsets';
 
 /** notes: played notes one at a time; spectrum: a live chroma vector of everything sounding. */
 export type ListenMode = 'notes' | 'spectrum';
@@ -29,6 +30,11 @@ export class MicListener {
   readonly heard = signal<readonly number[]>([]);
   /** Pitch-class energy of what is sounding now, or null during silence. Spectrum mode only. */
   readonly chroma = signal<readonly number[] | null>(null);
+  /**
+   * How many strums (sudden attacks) have been heard. Spectrum mode only. It only goes up: compare
+   * with a count taken earlier to know whether you strummed since, which a ringing chord doesn't.
+   */
+  readonly strums = signal(0);
 
   private input: MicrophoneInput | null = null;
   private mode: ListenMode = 'notes';
@@ -85,6 +91,7 @@ export class MicListener {
     const spectrum = new Float32Array(analyser.frequencyBinCount);
     const detector = PitchDetector.forFloat32Array(PITCH_WINDOW);
     const notes = new NoteStream();
+    const onsets = new OnsetDetector();
 
     const onFrame = () => {
       const time = performance.now();
@@ -97,6 +104,9 @@ export class MicListener {
         this.heard.update((heard) => [...heard, note].slice(-HEARD_LIMIT));
       }
       if (mode === 'spectrum') {
+        if (onsets.push({ level, time })) {
+          this.strums.update((count) => count + 1);
+        }
         analyser.getFloatFrequencyData(spectrum);
         const sounding = level >= DEFAULT_NOTE_STREAM_OPTIONS.minLevel;
         this.chroma.set(sounding ? chromaFromSpectrum(spectrum, sampleRate) : null);

@@ -41,6 +41,8 @@ Progress is saved in each browser, so a phone and a computer keep separate stats
 - **Microphone (optional):**
   - _Arpeggio:_ play the notes one at a time; checks the exact shape
   - _Strum (experimental):_ checks the notes but not the shape
+  - Once the microphone hears the chord, the next one comes straight away, with a line saying
+    which chord it heard and how fast
 
 **Fretboard notes**
 
@@ -181,6 +183,8 @@ fretboard and stats follow from the intervals.
   100 ms.
 - Strum mode folds the spectrum into 12 pitch classes and compares it with the chord. Overtones make
   it less reliable; adjust **Strictness** in setup if it's too picky or too lenient.
+- In strum mode, only a strum made after the chord appeared counts: the last chord, still ringing,
+  can't answer the next one, even when they share every note (Csus4 and Fsus2).
 - The mic hears pitch, not strings. When a prompt names a string, the same pitch on another string
   also counts.
 - The browser's echo cancellation, noise suppression and auto gain are turned off, since they distort

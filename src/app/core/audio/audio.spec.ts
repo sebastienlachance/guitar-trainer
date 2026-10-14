@@ -1,6 +1,7 @@
 import { chordSimilarity, chromaFromSpectrum } from './chroma';
 import { ChordTarget, matchesArpeggio, matchesStrum } from './matchers';
 import { NoteStream, frequencyToMidi } from './note-stream';
+import { OnsetDetector } from './onsets';
 
 const hz = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
 
@@ -111,5 +112,32 @@ describe('matchesArpeggio', () => {
     expect(matchesArpeggio([55, 60, 65], anyCsus4)).toBe(true);
     expect(matchesArpeggio([60, 64, 67], anyCsus4)).toBe(false);
     expect(matchesArpeggio([60, 60, 67], anyCsus4)).toBe(false);
+  });
+});
+
+describe('OnsetDetector', () => {
+  /** Feeds levels 30 ms apart and returns the times of the attacks found. */
+  function attacks(levels: number[]): number[] {
+    const detector = new OnsetDetector();
+    return levels.flatMap((level, index) =>
+      detector.push({ level, time: index * 30 }) ? [index * 30] : [],
+    );
+  }
+
+  it('finds the strum that breaks a silence, once while it swells', () => {
+    expect(attacks([0, 0, 0.05, 0.2, 0.3, 0.25, 0.2])).toEqual([60]);
+  });
+
+  it('finds nothing more while the chord rings and fades', () => {
+    expect(attacks([0, 0.3, 0.28, 0.25, 0.22, 0.2, 0.18, 0.15, 0.12, 0.1])).toEqual([30]);
+  });
+
+  it('ignores the small wobbles of a steady sound', () => {
+    expect(attacks([0, 0.2, 0.22, 0.19, 0.21, 0.2, 0.23, 0.2, 0.22, 0.2, 0.21])).toEqual([30]);
+  });
+
+  it('finds a new strum over a chord still ringing', () => {
+    const ringing = [0.3, 0.27, 0.24, 0.21, 0.19, 0.17, 0.15, 0.14, 0.13];
+    expect(attacks([0, ...ringing, 0.4, 0.35])).toEqual([30, 300]);
   });
 });

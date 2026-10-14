@@ -6,7 +6,7 @@ const SAMPLE_RATE = 48_000;
 /** Where the generated microphone recordings go; recreated before every run. */
 export const AUDIO_DIR = 'e2e/.generated';
 
-/** Recordings the fake microphone can play, by name. */
+/** Recordings the fake microphone can play, by name: one note, or the notes of a chord. */
 export const TONES = {
   /** F♯3, fret 9 on the A string. */
   fSharp3: 185.0,
@@ -14,6 +14,8 @@ export const TONES = {
   e3: 164.81,
   /** A3, fret 2 on the G string. */
   a3: 220.0,
+  /** Csus4 strummed: C3, F3 and G3 together. */
+  cSus4: [130.81, 174.61, 196.0],
 } as const;
 
 /** Absolute path of a recording, as Chromium's fake-microphone flag needs. */
@@ -22,21 +24,32 @@ export function tonePath(tone: keyof typeof TONES): string {
 }
 
 /**
- * A steady note as a 16-bit mono WAV. A few harmonics make it closer to a plucked string than a
- * pure sine, which is what the pitch detector is tuned for.
+ * A steady note, or several sounding together, as a 16-bit mono WAV. A few harmonics make each
+ * note closer to a plucked string than a pure sine, which is what the pitch detector is tuned for.
  */
-export function writeToneWav(path: string, frequency: number, seconds = 2): void {
+export function writeToneWav(
+  path: string,
+  frequencies: number | readonly number[],
+  seconds = 2,
+): void {
+  const notes = typeof frequencies === 'number' ? [frequencies] : frequencies;
   const harmonics = [1, 0.5, 0.25, 0.12];
   const sampleCount = Math.round(SAMPLE_RATE * seconds);
   const data = Buffer.alloc(sampleCount * 2);
   for (let index = 0; index < sampleCount; index++) {
     const time = index / SAMPLE_RATE;
-    const sample = harmonics.reduce(
-      (sum, level, overtone) =>
-        sum + level * Math.sin(2 * Math.PI * frequency * (overtone + 1) * time),
+    const sample = notes.reduce(
+      (total, frequency) =>
+        total +
+        harmonics.reduce(
+          (sum, level, overtone) =>
+            sum + level * Math.sin(2 * Math.PI * frequency * (overtone + 1) * time),
+          0,
+        ),
       0,
     );
-    data.writeInt16LE(Math.round((sample / 2) * 0.5 * 32767), index * 2);
+    // Each note's harmonics peak just under 2; scaled so the mix stays at half of full scale.
+    data.writeInt16LE(Math.round((sample / (2 * notes.length)) * 0.5 * 32767), index * 2);
   }
   writeFileSync(path, Buffer.concat([wavHeader(data.length), data]));
 }

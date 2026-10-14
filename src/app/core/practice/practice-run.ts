@@ -54,6 +54,11 @@ export class PracticeRun<C extends PracticeCard> {
   readonly responseMs = signal<number | null>(null);
   /** Result of the last answer the app checked; null after a self-checked one. */
   readonly lastCorrect = signal<boolean | null>(null);
+  /**
+   * The card answered by `resolveAndMoveOn()`, while the next one is on screen, for a brief
+   * confirmation. Null after any other way of moving on.
+   */
+  readonly movedOn = signal<{ readonly card: C; readonly responseMs: number } | null>(null);
   /** The session that just ended, for the summary; cleared when a new one starts. */
   readonly lastSession = signal<SessionRecord | null>(null);
   readonly paused: Signal<boolean> = this.log.paused;
@@ -149,8 +154,24 @@ export class PracticeRun<C extends PracticeCard> {
     }
   }
 
+  /**
+   * A correct answer the app checked, when the answer isn't worth a look (the triads microphone):
+   * records it and shows the next card straight away. `movedOn` keeps it for a confirmation.
+   */
+  resolveAndMoveOn(): void {
+    const card = this.current();
+    if (!card || this.phase() !== 'prompt') {
+      return;
+    }
+    const responseMs = Date.now() - this.shownAt;
+    this.record(card, true, responseMs);
+    this.next();
+    this.movedOn.set({ card, responseMs });
+  }
+
   next(): void {
     clearTimeout(this.advanceTimer);
+    this.movedOn.set(null);
     const previous = this.current();
     this.current.set(pickNextCard(this.options.deck(), this.stats(), previous?.key ?? null));
     this.phase.set('prompt');

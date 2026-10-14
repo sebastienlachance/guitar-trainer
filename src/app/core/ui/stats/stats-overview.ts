@@ -1,7 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 import { Drill } from '../../practice/drill';
 import { totals } from '../../practice/stats';
-import { percentCorrect } from '../text';
+import { formatSeconds, percentCorrect } from '../text';
 
 /** Headline numbers for a module: accuracy, answers, cards practised, average time. */
 @Component({
@@ -58,7 +58,7 @@ export class StatsOverview {
       attempts: sum.attempts,
       accuracy: percentCorrect(sum.correct, sum.attempts),
       cards: cards.length,
-      averageSeconds: sum.attempts > 0 ? `${(responseMs / sum.attempts / 1000).toFixed(1)} s` : '–',
+      averageSeconds: sum.attempts > 0 ? formatSeconds(responseMs / sum.attempts) : '–',
     };
   });
 }

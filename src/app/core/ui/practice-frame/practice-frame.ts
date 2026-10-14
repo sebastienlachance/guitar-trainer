@@ -16,7 +16,7 @@ import { PracticeLog } from '../../practice/practice-log';
 import { IDLE_LIMIT_MS, formatClock, formatDuration } from '../../practice/session-log';
 import { accuracyBand } from '../../practice/stats';
 import { Icon } from '../icon';
-import { capitalize, percentCorrect, plural } from '../text';
+import { capitalize, formatSeconds, percentCorrect, plural } from '../text';
 
 /**
  * Everything around a practice prompt: the session bar, the start, pause and summary screens,
@@ -79,7 +79,7 @@ export class PracticeFrame implements OnDestroy {
 
   protected readonly responseSeconds = computed(() => {
     const ms = this.run.responseMs();
-    return ms === null ? '' : `${(ms / 1000).toFixed(1)} s`;
+    return ms === null ? '' : formatSeconds(ms);
   });
 
   private readonly primaryAction = viewChild<ElementRef<HTMLElement>>('primaryAction');
