@@ -23,6 +23,7 @@
         [selectable]="run.phase() === 'prompt'"
         [cursorStart]="cursorStart()"
         [takesFocus]="true"
+        [highlightString]="stringToPlay()"
         [description]="description()"
         (picked)="session.pick($event)"
       />
@@ -34,7 +35,7 @@
       </div>
     }
     @if (micOn()) {
-      <app-mic-status hint="play the note" />
+      <app-mic-status [hint]="micHint()" />
     }
   }
 </ng-template>

@@ -1,6 +1,9 @@
+import { Provider, signal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
+import { MicListener } from '../../../core/audio/mic-listener';
 import { STORAGE_PREFIX } from '../../../core/practice/storage';
 import { provideNotes } from '../notes-session';
 import { NotesSettings } from '../settings';
@@ -14,9 +17,11 @@ function savedStats(): Record<string, { attempts: number; correct: number }> {
   return JSON.parse(localStorage.getItem(STORAGE_PREFIX + 'notes:stats') ?? '{}');
 }
 
-async function startPractice() {
+async function startPractice(providers: Provider[] = []) {
   const user = userEvent.setup();
-  const result = await render(PracticePage, { providers: [...provideNotes(), provideRouter([])] });
+  const result = await render(PracticePage, {
+    providers: [...provideNotes(), provideRouter([]), ...providers],
+  });
   await user.click(screen.getByRole('button', { name: /start session/i }));
   const tap = (string: number, fret: number) =>
     user.click(result.container.querySelector(`[data-position="${string}:${fret}"]`)!);
@@ -82,6 +87,43 @@ describe('Notes PracticePage', () => {
 
     expect(screen.getByText('Not quite')).toBeInTheDocument();
     expect(savedStats()['G|neck']).toMatchObject({ attempts: 1, correct: 0 });
+  });
+
+  it('takes a whole-neck prompt played string by string, from the lowest', async () => {
+    saveSettings({ notes: ['G'], strings: [5, 6], promptKind: 'neck', micMode: 'play' });
+    const heard = signal<readonly number[]>([]);
+    const mic = {
+      status: signal('listening'),
+      errorMessage: signal<string | null>(null),
+      heard,
+      chroma: signal(null),
+      strums: signal(0),
+      start: vi.fn(async () => undefined),
+      retry: vi.fn(async () => undefined),
+      stop: vi.fn(),
+      clearHeard: vi.fn(),
+    };
+    const { container } = await startPractice([{ provide: MicListener, useValue: mic }]);
+    const highlighted = () =>
+      container.querySelector('.string-name.highlight')?.textContent?.trim();
+
+    expect(screen.getByText(/play G on string 6 \(E\)/)).toBeInTheDocument();
+    expect(highlighted()).toBe('E');
+
+    // G3 isn't on string 6 below fret 12: it doesn't count yet.
+    heard.set([55]);
+    TestBed.tick();
+    expect(screen.getByText('0 of 2 found')).toBeInTheDocument();
+
+    heard.set([55, 43]);
+    TestBed.tick();
+    expect(screen.getByText('1 of 2 found')).toBeInTheDocument();
+    expect(highlighted()).toBe('A');
+
+    heard.set([55, 43, 55]);
+    TestBed.tick();
+    expect(screen.getByText(/Correct/)).toBeInTheDocument();
+    expect(savedStats()['G|neck']).toMatchObject({ attempts: 1, correct: 1 });
   });
 
   it('reveals the rest with Show me', async () => {

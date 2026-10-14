@@ -7,7 +7,16 @@ import { Drill } from '../../core/practice/drill';
 import { PracticeRun } from '../../core/practice/practice-run';
 import { loadJson, saveJson } from '../../core/practice/storage';
 import { plural } from '../../core/ui/text';
-import { NoteCard, Pick, allFound, buildDeck, isTarget, settingsProblems, targetsOf } from './deck';
+import {
+  NoteCard,
+  Pick,
+  allFound,
+  buildDeck,
+  isTarget,
+  settingsProblems,
+  stringToPlay,
+  targetsOf,
+} from './deck';
 import { NotesSettings, sanitizeSettings } from './settings';
 
 /** Tags this module's sessions in the shared practice log. */
@@ -18,7 +27,8 @@ const STATS_KEY = 'notes:stats';
 
 /**
  * The fretboard notes module: "Find F♯ on string 5" or "Find every G". You answer by tapping the
- * fretboard (or playing the note), and the app checks it.
+ * fretboard or by playing: a whole-neck prompt is then played string by string, since the
+ * microphone hears the pitch but not the string. The app checks the answer.
  */
 @Service({ autoProvided: false })
 export class NotesSession implements Drill {
@@ -58,6 +68,11 @@ export class NotesSession implements Drill {
     return card ? targetsOf(card, this.settings()) : [];
   });
 
+  /** In a whole-neck prompt, the string a played note is taken to be on. */
+  readonly stringToPlay = computed(() =>
+    this.run.current()?.string === null ? stringToPlay(this.targets(), this.picks()) : null,
+  );
+
   readonly tags = computed(() => {
     const { notes, strings, maxFret, promptKind } = this.settings();
     const naturalsOnly =
@@ -72,8 +87,9 @@ export class NotesSession implements Drill {
   });
 
   constructor() {
-    // A played note answers a one-string prompt when its exact pitch is one of the places asked
-    // for. The microphone can't tell strings apart, so the same pitch on another string counts.
+    // A played note answers when its exact pitch is one of the places asked for. The microphone
+    // can't tell strings apart: the same pitch on another string counts for a one-string prompt,
+    // and a whole-neck prompt takes it as played on the string being walked.
     effect(() => {
       const note = this.mic.heard().at(-1);
       if (note === undefined) {
@@ -81,8 +97,11 @@ export class NotesSession implements Drill {
       }
       untracked(() => {
         this.run.touch();
-        const target = this.targets().find((place) => place.midi === note);
-        if (target && this.run.current()?.string !== null) {
+        const walking = this.stringToPlay();
+        const target = this.targets().find(
+          (place) => place.midi === note && (walking === null || place.string === walking),
+        );
+        if (target) {
           this.pick(target);
         }
       });
@@ -126,8 +145,7 @@ export class NotesSession implements Drill {
   }
 
   private micListens(): boolean {
-    const { micMode, promptKind } = this.settings();
-    return micMode === 'play' && promptKind === 'string';
+    return this.settings().micMode === 'play';
   }
 }
 

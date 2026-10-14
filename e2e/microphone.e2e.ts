@@ -107,3 +107,21 @@ test.describe('Microphone: a chord not played in time', () => {
     await expect(page.getByRole('button', { name: /Next/ })).toBeVisible();
   });
 });
+
+test.describe('Microphone: a whole-neck prompt', () => {
+  test.use({ tone: 'e3' });
+
+  test('is answered by playing each place', async ({ micPage: page }) => {
+    // "Find every E" on string 5 alone has one place below fret 12: fret 7, which is E3.
+    await seedSettings(page, 'notes', {
+      ...F_SHARP_ON_A,
+      notes: ['E'],
+      promptKind: 'neck',
+      micMode: 'play',
+    });
+    await startSession(page, 'notes');
+    await expect(page.getByText(/play E on string 5 \(A\)/)).toBeVisible();
+
+    await expect(correctResult(page)).toBeVisible({ timeout: 10_000 });
+  });
+});

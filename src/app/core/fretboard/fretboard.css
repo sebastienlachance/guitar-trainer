@@ -34,6 +34,15 @@ svg {
   stroke: var(--string);
 }
 
+.string.highlight {
+  stroke: var(--accent);
+}
+
+.string-name.highlight {
+  fill: var(--accent);
+  font-weight: 500;
+}
+
 .dot text {
   font-size: 12px;
   font-weight: 500;

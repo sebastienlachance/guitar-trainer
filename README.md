@@ -53,7 +53,9 @@ Progress is saved in each browser, so a phone and a computer keep separate stats
 - Any of the 12 notes (or naturals only), on chosen strings, within frets 0–5, 0–12 or 0–15
 - **One string:** a single tap answers; a wrong one shows where the note really is
 - **Whole neck:** find every place, one tap at a time; **Show me** reveals the rest
-- Answer with a tap, the keyboard (arrows to move, Enter to choose), or by playing the note
+- Answer with a tap, the keyboard (arrows to move, Enter to choose), or by playing the note. The
+  microphone hears a pitch, not a string, so a whole-neck prompt is played string by string from
+  the low E up: the neck highlights the string the app is listening for
 
 **Identify notes**
 
@@ -187,7 +189,8 @@ fretboard and stats follow from the intervals.
 
 - Single notes (triads arpeggio mode, fretboard notes) use the McLeod pitch method
   ([pitchy](https://github.com/ianprime0509/pitchy)). A note counts once it holds steady for about
-  100 ms.
+  100 ms. Striking the string again counts the same note again right away; a note left ringing
+  counts once.
 - Strum mode folds the spectrum into 12 pitch classes and compares it with the chord. Overtones make
   it less reliable; adjust **Strictness** in setup if it's too picky or too lenient.
 - In strum mode, only a strum made after the chord appeared counts: the last chord, still ringing,

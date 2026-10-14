@@ -21,6 +21,17 @@ describe('Notes SetupPage', () => {
     expect(screen.getByRole('status')).toHaveTextContent('7 cards');
   });
 
+  it('explains how playing works for each kind of prompt', async () => {
+    const user = userEvent.setup();
+    await render(SetupPage, { providers: [...provideNotes(), provideRouter([])] });
+
+    await user.click(screen.getByRole('radio', { name: 'Play the note' }));
+    expect(screen.getByText(/same note on another string also counts/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('radio', { name: 'Whole neck' }));
+    expect(screen.getByText(/Play every place string by string/)).toBeInTheDocument();
+  });
+
   it('says what is missing when no string is chosen', async () => {
     const user = userEvent.setup();
     await render(SetupPage, { providers: [...provideNotes(), provideRouter([])] });

@@ -49,7 +49,7 @@
   <app-segmented-choice
     label="Microphone mode"
     [hideLabel]="true"
-    [options]="micChoices"
+    [options]="micChoices()"
     [value]="settings().micMode"
     (valueChange)="update({ micMode: $event })"
   />

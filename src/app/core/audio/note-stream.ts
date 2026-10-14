@@ -34,14 +34,23 @@ export function frequencyToMidi(frequency: number): number {
 
 /**
  * Turns a stream of pitch frames into discrete played notes. A note is reported once when its
- * pitch has held steady for `stableMs`; it can be reported again after silence or another note,
- * so a sustained note counts once while a re-picked one counts twice.
+ * pitch has held steady for `stableMs`; it can be reported again after silence, another note, or
+ * `rearm()` (a new attack), so a sustained note counts once while a re-picked one counts twice.
  */
 export class NoteStream {
   private candidate: { midi: number; since: number } | null = null;
   private lastReported: number | null = null;
 
   constructor(private readonly options: NoteStreamOptions = DEFAULT_NOTE_STREAM_OPTIONS) {}
+
+  /**
+   * The string was struck again: the next note counts even if it's the same pitch as the last,
+   * as when a G on the D string is followed by the open G string without a pause.
+   */
+  rearm(): void {
+    this.candidate = null;
+    this.lastReported = null;
+  }
 
   /** Returns the MIDI note when this frame completes a new note, otherwise null. */
   push(frame: PitchFrame): number | null {

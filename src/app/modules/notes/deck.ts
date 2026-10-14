@@ -77,6 +77,19 @@ export function allFound(targets: readonly FretPosition[], picks: readonly Pick[
   );
 }
 
+/**
+ * For playing a whole-neck prompt into the microphone, which hears a pitch but not the string:
+ * the string to play on now, the lowest-sounding one with places left to find. Null when all are
+ * found.
+ */
+export function stringToPlay(
+  targets: readonly FretPosition[],
+  picks: readonly Pick[],
+): number | null {
+  const left = targets.filter((target) => !allFound([target], picks));
+  return left.length === 0 ? null : Math.max(...left.map((target) => target.string));
+}
+
 /** Display name of the note at a position, e.g. "F♯". */
 export function noteNameAt(position: FretPosition): string {
   return commonNoteName(pitchClassAt(position));

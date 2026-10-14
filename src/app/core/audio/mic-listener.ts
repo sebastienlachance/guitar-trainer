@@ -99,12 +99,16 @@ export class MicListener {
       const window = samples.subarray(samples.length - PITCH_WINDOW);
       const level = rootMeanSquare(window);
       const [frequency, clarity] = detector.findPitch(window, sampleRate);
+      const attack = onsets.push({ level, time });
+      if (attack) {
+        notes.rearm();
+      }
       const note = notes.push({ frequency, clarity, level, time });
       if (note !== null) {
         this.heard.update((heard) => [...heard, note].slice(-HEARD_LIMIT));
       }
       if (mode === 'spectrum') {
-        if (onsets.push({ level, time })) {
+        if (attack) {
           this.strums.update((count) => count + 1);
         }
         analyser.getFloatFrequencyData(spectrum);

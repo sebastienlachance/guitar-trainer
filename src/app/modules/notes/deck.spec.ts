@@ -6,6 +6,7 @@ import {
   cardFromKey,
   noteNameAt,
   settingsProblems,
+  stringToPlay,
   targetsOf,
   whereLabel,
 } from './deck';
@@ -84,6 +85,16 @@ describe('answers', () => {
     const secondHit = { position: { string: 4, fret: 5 }, hit: true };
     expect(allFound(targets, [firstHit, miss])).toBe(false);
     expect(allFound(targets, [firstHit, miss, secondHit])).toBe(true);
+  });
+
+  it('walks the strings from the lowest-sounding one with places left', () => {
+    const lowG = { position: { string: 6, fret: 3 }, hit: true };
+    const highG = { position: { string: 4, fret: 5 }, hit: true };
+    expect(stringToPlay(targets, [])).toBe(6);
+    expect(stringToPlay(targets, [lowG])).toBe(4);
+    // Tapping places out of order is fine: the walk goes back to what's left.
+    expect(stringToPlay(targets, [highG])).toBe(6);
+    expect(stringToPlay(targets, [lowG, highG])).toBeNull();
   });
 
   it('names the note at any position', () => {

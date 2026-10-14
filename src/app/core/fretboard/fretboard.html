@@ -11,7 +11,14 @@
   (keydown)="onKeydown($event)"
 >
   @for (string of strings; track string.number) {
-    <text class="string-name" x="14" [attr.y]="string.y + 4">{{ string.name }}</text>
+    <text
+      class="string-name"
+      [class.highlight]="string.number === highlightString()"
+      x="14"
+      [attr.y]="string.y + 4"
+    >
+      {{ string.name }}
+    </text>
   }
 
   @for (inlay of inlays(); track $index) {
@@ -31,6 +38,7 @@
   @for (string of strings; track string.number) {
     <line
       class="string"
+      [class.highlight]="string.number === highlightString()"
       [attr.x1]="left"
       [attr.x2]="width() - 12"
       [attr.y1]="string.y"

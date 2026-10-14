@@ -295,7 +295,7 @@ Build grid cells with `accuracyCell(id, totals(stats, (key) => …))`.
 
 | Need                                      | Use                                                                                                |
 | ----------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Show or answer on the neck                | `<app-fretboard [selectable] (picked) [cursorStart] [takesFocus]>`                                 |
+| Show or answer on the neck                | `<app-fretboard [selectable] (picked) [cursorStart] [takesFocus] [highlightString]>`               |
 | Pick one answer from a few or many        | `<app-choice-buttons [options] [checked] [takesFocus] (chosen)>` in `core/ui/answer/`              |
 | Note name where any spelling is right     | `pitchClassNames()` ("C♯/D♭"), `commonNoteName()` ("D♭") in `core/music/notes.ts`                  |
 | The note at a string and fret             | `pitchClassAt()` in `core/fretboard/placement.ts`                                                  |

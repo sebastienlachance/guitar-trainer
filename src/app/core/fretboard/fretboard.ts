@@ -67,6 +67,8 @@ export class Fretboard {
   readonly cursorStart = input<FretPosition | null>(null);
   /** Marks the fretboard for the practice frame to focus when a new prompt appears. */
   readonly takesFocus = input(false);
+  /** A string to draw in the accent colour, e.g. the one to play on now. */
+  readonly highlightString = input<number | null>(null);
 
   readonly picked = output<FretPosition>();
 

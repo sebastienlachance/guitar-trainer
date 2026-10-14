@@ -68,4 +68,14 @@ describe('Fretboard', () => {
 
     expect(container.querySelector('.dot.ghost')).toHaveTextContent('♭7');
   });
+
+  it('draws the highlighted string in the accent colour', async () => {
+    const { container } = await render(Fretboard, {
+      inputs: { dots: [], description: 'Fretboard', highlightString: 5 },
+    });
+
+    const highlighted = container.querySelectorAll('.highlight');
+    expect([...highlighted].map((element) => element.tagName)).toEqual(['text', 'line']);
+    expect(highlighted[0]).toHaveTextContent('A');
+  });
 });

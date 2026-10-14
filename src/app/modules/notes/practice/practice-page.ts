@@ -1,5 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { Fretboard, FretboardDot } from '../../../core/fretboard/fretboard';
+import { stringLabel } from '../../../core/fretboard/tuning';
 import { displayNoteName } from '../../../core/music/notes';
 import { MicStatus } from '../../../core/ui/mic-status';
 import { PracticeFrame } from '../../../core/ui/practice-frame/practice-frame';
@@ -40,9 +41,18 @@ export class PracticePage {
     return card ? { string: card.string ?? 3, fret: 0 } : null;
   });
 
-  protected readonly micOn = computed(() => {
-    const { micMode, promptKind } = this.settings();
-    return micMode === 'play' && promptKind === 'string';
+  protected readonly micOn = computed(() => this.settings().micMode === 'play');
+
+  /** With the microphone on, the string a whole-neck prompt is being played on, highlighted. */
+  protected readonly stringToPlay = computed(() =>
+    this.micOn() && this.run.phase() === 'prompt' ? this.session.stringToPlay() : null,
+  );
+
+  protected readonly micHint = computed(() => {
+    const string = this.stringToPlay();
+    return string === null
+      ? 'play the note'
+      : `play ${this.noteLabel()} on ${stringLabel(string)}, from the low strings up`;
   });
 
   /** Your picks, plus every place the note is once the card is settled. */

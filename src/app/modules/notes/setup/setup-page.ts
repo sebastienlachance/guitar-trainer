@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { STRING_NAMES, STRING_NUMBERS } from '../../../core/fretboard/tuning';
 import {
   COMMON_NOTE_NAMES,
@@ -46,14 +46,18 @@ export class SetupPage {
     label: `0–${maxFret}`,
   }));
 
-  protected readonly micChoices: Choice<NotesMicMode>[] = [
+  /** The microphone hears a pitch, not a string: how that plays out depends on the prompt. */
+  protected readonly micChoices = computed((): Choice<NotesMicMode>[] => [
     { value: 'off', label: 'Off', hint: 'Answer by tapping the fretboard.' },
     {
       value: 'play',
       label: 'Play the note',
-      hint: 'One-string prompts only. The app hears the pitch, not the string, so the same note on another string also counts.',
+      hint:
+        this.settings().promptKind === 'string'
+          ? 'The app hears the pitch, not the string, so the same note on another string also counts.'
+          : 'Play every place string by string, from the low E up: the app follows the string you are on. Tapping still works.',
     },
-  ];
+  ]);
 
   protected selectNotes(which: 'all' | 'naturals'): void {
     this.update({ notes: which === 'all' ? COMMON_NOTE_NAMES : NATURAL_NOTE_NAMES });

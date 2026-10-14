@@ -44,7 +44,16 @@ describe('NoteStream', () => {
     expect(play(stream, frames)).toEqual([60, 65, 67]);
   });
 
-  it('counts a re-picked note again only after silence', () => {
+  it('counts a re-picked note again right away after a new attack', () => {
+    const stream = new NoteStream();
+    const first = play(stream, [frame(55, 0), frame(55, 120)]);
+    stream.rearm();
+    const again = play(stream, [frame(55, 150), frame(55, 270)]);
+
+    expect([...first, ...again]).toEqual([55, 55]);
+  });
+
+  it('counts a ringing note once, and again after silence', () => {
     const stream = new NoteStream();
     const notes = play(stream, [
       frame(60, 0),
