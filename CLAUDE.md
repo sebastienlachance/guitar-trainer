@@ -17,6 +17,23 @@ modules on top of shared code, with no backend: everything is saved in the brows
 Before committing, run `format`, `test:once`, `lint` and `build`. Also run `e2e` when layout,
 routing, storage, focus or the microphone changed.
 
+## Workflow with the owner
+
+- Propose a plan (and a mockup for anything visual) before building a feature; small fixes can go
+  ahead. Ask when a choice is the owner's to make.
+- Commit and push only when asked ("commit it", "commit and push"): one commit per feature on
+  `main`, message in plain words, no ticket keys.
+- **A push to `main` deploys** once CI passes. Follow the run read-only with
+  `gh run list -R sebastienlachance/guitar-trainer` / `gh run watch <id> -R …` (the repo is
+  public; `gh` itself is signed in to another account, so never push or write with it).
+- Push with plain `git push origin main`. The remote URL carries the username
+  (`https://sebastienlachance@github.com/...`), which picks the right GitHub account: the machine's
+  default credential is a different (work) account. Keep the username in the URL.
+- Commits use this repo's local identity: name Sebastien Lachance, email
+  `359003+sebastienlachance@users.noreply.github.com`. Check `git config user.email` before
+  committing; the global identity is a work address that must never appear in this public repo.
+- Before calling a test done, make it fail once: break the code it covers, run it, restore.
+
 ## Layout
 
 - `src/app/core/`: shared by every module
@@ -26,11 +43,14 @@ routing, storage, focus or the microphone changed.
     - `PracticeRun`: the card flow
     - `Drill`: the contract a module provides
     - stats, the session log (`PracticeLog`), storage, `saved-settings.ts`
-  - `audio/`: `MicListener` (played notes or a live spectrum), pitch and chord matching
+  - `audio/`: `MicListener` (played notes or a live spectrum, plus a strum count), pitch and chord
+    matching, `OnsetDetector` (string strikes: counts strums, and lets a re-picked note count again)
   - `ui/`:
-    - `practice-frame/`: session bar, start/pause/summary screens, answer buttons, keys, focus
+    - `practice-frame/`: session bar, start/pause/summary screens, answer buttons, keys, focus, the
+      time-limit bar
     - `module-shell.ts`
-    - `setup/`, `stats/` and `answer/` (multiple-choice buttons) building blocks
+    - `setup/`, `stats/` (including the progress chart) and `answer/` (multiple-choice buttons)
+      building blocks
     - `mic-status.ts`, `icon.ts`, `text.ts`, `update-banner.ts` (offers a reload for a new version)
   - `build-info.ts`: the deployed commit, set at build time through `define`
 - `src/app/modules/<name>/`: one practice module each, registered in `modules/registry.ts`.
@@ -106,7 +126,14 @@ routing, storage, focus or the microphone changed.
     `render(PracticePage, { providers: [...provideNotes(), provideRouter([])] })`
   - to seed settings, write them to localStorage under `STORAGE_PREFIX` before rendering
 - Outside a component, create injected classes with `TestBed.runInInjectionContext`. Control time
-  with `vi.useFakeTimers()` and `vi.setSystemTime()`.
+  with `vi.useFakeTimers()` and `vi.setSystemTime()`. When a test switches to fake timers part-way,
+  reset them in `afterEach`, so a failure can't leak them into the next test.
+- Effects (in services and `PracticeRun`) run during change detection: after setting a signal by
+  hand in a test, call `TestBed.tick()` before checking the result.
+- The microphone in component tests: provide `{ provide: MicListener, useValue: fake }`, where the
+  fake has `status`, `errorMessage`, `heard`, `chroma` and `strums` signals plus `start`, `retry`,
+  `stop` and `clearHeard` mocks; set `heard` (MIDI numbers) or `chroma` and `strums` to "play".
+  See `modules/triads/practice/practice-page.spec.ts`.
 - Prefer one-card decks set through settings. When settings can't narrow the deck to one card
   (like identify scales), fix `Math.random` at 0 so the deck's first card comes up:
   `vi.spyOn(Math, 'random').mockReturnValue(0)` in component tests, `pickFirstCard()` in e2e.
@@ -122,7 +149,7 @@ routing, storage, focus or the microphone changed.
     every other test blocks service workers)
 
   Everything else is a component test. Keep the suite small. Seed one-card decks with
-  `seedSettings()` so prompts are known, and use the shared helpers in `e2e/support/` (for
+  `seedSettings()` so prompts are known (and other saved data with `seedStorage()`), and use the shared helpers in `e2e/support/` (for
   example `correctResult()`), so a test expecting something and one expecting its absence can't
   drift apart. Wait for the content to appear before measuring layout.
 
@@ -162,6 +189,12 @@ routing, storage, focus or the microphone changed.
   notices changes to the spec file, so a test could pass against an old copy of the code under
   test. `vitest-base.config.mts` (loaded through `runnerConfig` in `angular.json`) turns it off;
   keep it off. If a result ever looks stale, delete that folder.
+- **The Claude desktop browser pane:** turning the microphone on there pops up a permission
+  prompt on the owner's screen, and service workers don't work in it. Check mic and PWA flows in
+  Playwright (fake microphone flags, as in `e2e/microphone.e2e.ts`); for a look at the screen,
+  write a throwaway spec that saves `page.screenshot()` outside the repo, then delete it.
+- **One-off crashes:** a build or test run occasionally dies with a V8 "Fatal error … unreachable
+  code" or a Vitest worker crash. Run it again before investigating.
 - **Line endings:** on Windows, `prettier --check` can also flag files whose only difference is CRLF
   line endings; `.gitattributes` stores LF, so `git diff` shows nothing for those. Running
   `npm run format` fixes both kinds.
@@ -186,3 +219,16 @@ routing, storage, focus or the microphone changed.
 - **CI runs on `ubuntu-24.04`, not `ubuntu-latest`,** so a new Ubuntu release can't break
   `playwright install --with-deps` without warning. Move to a newer image on purpose, in its own
   commit, once Playwright supports it.
+
+## Where things stand (2026-10-14)
+
+- **Modules:** triads, fretboard notes, identify notes, identify scales, intervals in a scale. Live
+  at https://sebastienlachance.github.io/guitar-trainer/ as an installable PWA.
+- **Recently added:**
+  - stats measure progress by speed (progress chart, speed grid, slow cards come up more)
+  - an optional time limit in triads with the mic
+  - mic successes in triads move straight to the next chord (strums must be fresh)
+  - whole-neck notes prompts can be played into the mic, string by string
+- **Tested by the owner:** triads in strum mode, on a computer. Not yet confirmed on a real guitar:
+  single-note detection (fretboard notes, intervals, triads arpeggio), phones, iPhone Safari.
+- **No task in progress.** Ideas mentioned but not requested: more modules, Tauri packaging.
