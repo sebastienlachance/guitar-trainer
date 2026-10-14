@@ -18,12 +18,16 @@ export interface TriadSettings {
   readonly micMode: MicMode;
   /** How close a strum's spectrum must be to the chord to count (0 to 1). */
   readonly strumThreshold: number;
+  /** Seconds to play each chord with the microphone on; 0 for no limit. */
+  readonly timeLimit: number;
   readonly labelMode: LabelMode;
 }
 
 export const INVERSIONS: readonly number[] = [0, 1, 2, 3];
 
 export const STRUM_THRESHOLD_RANGE = { min: 0.5, max: 0.95 } as const;
+
+export const TIME_LIMIT_CHOICES: readonly number[] = [0, 5, 10];
 
 export const DEFAULT_SETTINGS: TriadSettings = {
   qualities: ['sus2', 'sus4'],
@@ -34,6 +38,7 @@ export const DEFAULT_SETTINGS: TriadSettings = {
   inversions: INVERSIONS,
   micMode: 'off',
   strumThreshold: 0.8,
+  timeLimit: 0,
   labelMode: 'interval',
 };
 
@@ -60,6 +65,7 @@ export function sanitizeSettings(saved: unknown): TriadSettings {
       STRUM_THRESHOLD_RANGE.max,
       defaults.strumThreshold,
     ),
+    timeLimit: pickOne(raw['timeLimit'], TIME_LIMIT_CHOICES, defaults.timeLimit),
     labelMode: pickOne(raw['labelMode'], ['interval', 'note'], defaults.labelMode),
   };
 }

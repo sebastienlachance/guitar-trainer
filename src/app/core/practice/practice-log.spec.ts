@@ -28,7 +28,7 @@ describe('PracticeLog', () => {
     log.start('triads');
     for (const correct of [true, false, true]) {
       vi.advanceTimersByTime(10 * SECOND);
-      log.recordAnswer(correct);
+      log.recordAnswer(correct, 2 * SECOND);
     }
     expect(log.activeMs()).toBe(30 * SECOND);
 
@@ -39,6 +39,7 @@ describe('PracticeLog', () => {
       answered: 3,
       correct: 2,
       activeMs: 30 * SECOND,
+      totalResponseMs: 6 * SECOND,
     });
     expect(log.current()).toBeNull();
     expect(log.history()).toEqual([record]);

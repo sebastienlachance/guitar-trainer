@@ -13,6 +13,7 @@ import {
   MicMode,
   PromptDetail,
   STRUM_THRESHOLD_RANGE,
+  TIME_LIMIT_CHOICES,
   TriadSettings,
 } from '../settings';
 import { TriadsSession } from '../triads-session';
@@ -82,6 +83,15 @@ export class SetupPage {
       hint: 'Experimental. Checks the notes but not the shape; works best with a clean tone.',
     },
   ];
+
+  protected readonly timeLimitChoices: Choice<number>[] = TIME_LIMIT_CHOICES.map((seconds) => ({
+    value: seconds,
+    label: seconds === 0 ? 'Off' : `${seconds} s`,
+    hint:
+      seconds === 0
+        ? 'Take as long as you need.'
+        : 'Not heard in time: counts as a miss and shows the answer.',
+  }));
 
   protected selectRoots(which: 'all' | 'naturals'): void {
     this.update({ roots: which === 'all' ? ROOTS : NATURAL_ROOTS });

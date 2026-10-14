@@ -77,6 +77,12 @@ export class PracticeFrame implements OnDestroy {
       : null;
   });
 
+  /** The countdown as a list of zero or one, so the template can restart its bar for each one. */
+  protected readonly countdowns = computed(() => {
+    const countdown = this.run.countdown();
+    return countdown ? [countdown] : [];
+  });
+
   protected readonly responseSeconds = computed(() => {
     const ms = this.run.responseMs();
     return ms === null ? '' : formatSeconds(ms);

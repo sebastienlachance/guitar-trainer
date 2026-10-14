@@ -12,18 +12,19 @@ You write only what makes your exercise different:
 
 Everything else is shared and comes for free:
 
-| You get                                                           | From                            |
-| ----------------------------------------------------------------- | ------------------------------- |
-| Top bar with practice, stats and setup links                      | `core/ui/module-shell.ts`       |
-| Timed sessions: start, pause, idle detection, summary, history    | `core/practice/practice-log.ts` |
-| Card picking that favours what you miss, per-card stats           | `core/practice/practice-run.ts` |
-| Practice screen: session bar, reveal and answer buttons, keyboard | `core/ui/practice-frame/`       |
-| Setup controls: chip toggles, segmented choices, start button     | `core/ui/setup/`                |
-| Stats blocks: overview, accuracy grid, weakest cards, history     | `core/ui/stats/`                |
-| Fretboard diagram you can also answer on (tap or keyboard)        | `core/fretboard/fretboard.ts`   |
-| Multiple-choice answers with number and arrow keys                | `core/ui/answer/`               |
-| Microphone: played notes or a live spectrum                       | `core/audio/mic-listener.ts`    |
-| Music theory: spelling, intervals, chords, voicings               | `core/music/`                   |
+| You get                                                           | From                              |
+| ----------------------------------------------------------------- | --------------------------------- |
+| Top bar with practice, stats and setup links                      | `core/ui/module-shell.ts`         |
+| Timed sessions: start, pause, idle detection, summary, history    | `core/practice/practice-log.ts`   |
+| Card picking that favours what you miss, per-card stats           | `core/practice/practice-run.ts`   |
+| Practice screen: session bar, reveal and answer buttons, keyboard | `core/ui/practice-frame/`         |
+| Setup controls: chip toggles, segmented choices, start button     | `core/ui/setup/`                  |
+| Stats blocks: overview, accuracy grid, weakest cards, history     | `core/ui/stats/`                  |
+| A progress chart of your pace, in the session history             | `core/ui/stats/progress-chart.ts` |
+| Fretboard diagram you can also answer on (tap or keyboard)        | `core/fretboard/fretboard.ts`     |
+| Multiple-choice answers with number and arrow keys                | `core/ui/answer/`                 |
+| Microphone: played notes or a live spectrum                       | `core/audio/mic-listener.ts`      |
+| Music theory: spelling, intervals, chords, voicings               | `core/music/`                     |
 
 **The quickest start is to copy a module close to yours** and rename things:
 
@@ -178,6 +179,7 @@ export function provideScales(): Provider[] {
 | `current()`, `phase()`                 | The card on screen, and `'prompt'`, `'revealed'` or `'answered'`          |
 | `resolve(correct)`                     | App-checked answer: records it and shows the result                       |
 | `resolveAndMoveOn()`, `movedOn()`      | A correct answer not worth a look: straight to the next card; confirm it  |
+| `timeLimitMs` option, `timedOut()`     | A time limit per card: a miss when it runs out ("Time's up"), with a bar  |
 | `reveal()`, `selfCheck(correct)`       | Self-check flow (the frame's buttons call these for you)                  |
 | `touch()`                              | Marks activity, for example a played note, so the idle timer doesn't stop |
 | `paused()`, `lastCorrect()`, `stats()` | For your templates and checks                                             |
@@ -299,6 +301,7 @@ Build grid cells with `accuracyCell(id, totals(stats, (key) => …))`.
 | The note at a string and fret             | `pitchClassAt()` in `core/fretboard/placement.ts`                                                  |
 | Scales and where to play them             | `SCALE_TYPES` in `core/music/scales.ts`; `scaleInPosition()`, `positionStarts()` in `placement.ts` |
 | Let people choose scales                  | `<app-scale-toggles [selected] (selectedChange)>` in `core/ui/setup/`                              |
+| A grid of how fast you answer             | `speedCell()` next to `accuracyCell()` in `core/ui/stats/accuracy-grid.ts`                         |
 | Name a scale in a sentence                | `scaleRootName()` ("G♯" minor, "A♭" major), `scaleNameInText()` in `core/music/scales.ts`          |
 | Notes shown for context only              | Fretboard dots of kind `'ghost'`: faint rings, labelled like the others                            |
 | Interval names                            | `displayInterval()` ("♭3"), `intervalLongName()` ("minor 3rd"), `intervalFromSemitones()`          |

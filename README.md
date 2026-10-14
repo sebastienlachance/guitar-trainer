@@ -43,6 +43,10 @@ Progress is saved in each browser, so a phone and a computer keep separate stats
   - _Strum (experimental):_ checks the notes but not the shape
   - Once the microphone hears the chord, the next one comes straight away, with a line saying
     which chord it heard and how fast
+  - _Time limit_ (off, 5 s or 10 s): a chord not heard in time counts as a miss and shows the
+    answer
+- **Stats:** how fast you play each chord (recent average, green to red) or your accuracy, by
+  chord type and root
 
 **Fretboard notes**
 
@@ -81,7 +85,10 @@ Progress is saved in each browser, so a phone and a computer keep separate stats
   The clock counts active time only: it stops after 2 minutes without an answer and while paused.
   Finished sessions appear in a history on the stats page, and a session interrupted by closing the
   tab is still saved.
-- **Stats:** accuracy grids and a list of your weakest cards. Cards you miss come up more often.
+- **Progress:** a chart of your pace session after session (answers per minute, or time per
+  answer), and the same in the session history.
+- **Stats:** accuracy grids, and "Practise these more": the cards you miss or answer slower than
+  usual, with how fast you were at first. Those cards also come up more often.
 - Dark theme, works on a phone, no backend: everything is saved in the browser
 
 ## Run it

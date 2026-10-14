@@ -1,5 +1,12 @@
 import { Page, expect, test } from '@playwright/test';
-import { correctResult, pickFirstCard, seedSettings, startSession, tapFret } from './support/app';
+import {
+  correctResult,
+  pickFirstCard,
+  seedSettings,
+  seedStorage,
+  startSession,
+  tapFret,
+} from './support/app';
 import {
   CSUS4_ONLY,
   E_ON_A_STRING,
@@ -35,7 +42,7 @@ test.describe('Phone width', () => {
     await page.getByRole('button', { name: /Got it/ }).click();
 
     await page.goto('/#/triads/stats');
-    await expect(page.getByRole('heading', { name: 'Accuracy by chord' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'By chord' })).toBeVisible();
     await expectFitsWidth(page, 'Triads stats');
   });
 
@@ -140,6 +147,50 @@ test.describe('Phone width, intervals in a scale', () => {
       .click();
     await expect(correctResult(page)).toBeVisible();
     await expectFitsWidth(page, 'Intervals name answer');
+  });
+});
+
+test.describe('Phone width, progress', () => {
+  test.use({ viewport: { width: 375, height: 812 } });
+
+  test('the progress chart and speed grid fit the screen', async ({ page }) => {
+    const day = 24 * 60 * 60_000;
+    const now = Date.now();
+    await seedStorage(
+      page,
+      'sessions',
+      [3, 2, 1].map((daysAgo, index) => ({
+        id: `triads-${now - daysAgo * day}`,
+        module: 'triads',
+        startedAt: now - daysAgo * day,
+        endedAt: now - daysAgo * day + 10 * 60_000,
+        activeMs: 10 * 60_000,
+        answered: 60 + 20 * index,
+        correct: 60 + 20 * index,
+        totalResponseMs: (60 + 20 * index) * (3000 - 500 * index),
+      })),
+    );
+    await seedStorage(page, 'triads:stats', {
+      'C|sus4': {
+        attempts: 8,
+        correct: 8,
+        totalResponseMs: 16_000,
+        lastSeen: now,
+        recentMs: [1500],
+      },
+      'Ab|sus4': {
+        attempts: 8,
+        correct: 8,
+        totalResponseMs: 40_000,
+        lastSeen: now,
+        recentMs: [5000],
+      },
+    });
+
+    await page.goto('/#/triads/stats');
+    await expect(page.getByRole('img', { name: /^Over 3 sessions/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'By chord' })).toBeVisible();
+    await expectFitsWidth(page, 'Triads stats with progress');
   });
 });
 

@@ -4,14 +4,19 @@ import { Locator, Page, expect } from '@playwright/test';
 const STORAGE_PREFIX = 'guitar-trainer:v1:';
 
 /**
- * Saves a module's settings before the app loads, e.g. a one-card deck so the prompt is known.
- * Applies to every later navigation and reload of the page.
+ * Saves a value under an app storage key (without the prefix) before the app loads. Applies to
+ * every later navigation and reload of the page.
  */
-export async function seedSettings(page: Page, module: string, settings: object): Promise<void> {
+export async function seedStorage(page: Page, key: string, value: unknown): Promise<void> {
   await page.addInitScript(
-    ([key, value]) => localStorage.setItem(key, value),
-    [`${STORAGE_PREFIX}${module}:settings`, JSON.stringify(settings)],
+    ([fullKey, json]) => localStorage.setItem(fullKey, json),
+    [`${STORAGE_PREFIX}${key}`, JSON.stringify(value)],
   );
+}
+
+/** Saves a module's settings before the app loads, e.g. a one-card deck so the prompt is known. */
+export async function seedSettings(page: Page, module: string, settings: object): Promise<void> {
+  await seedStorage(page, `${module}:settings`, settings);
 }
 
 /**

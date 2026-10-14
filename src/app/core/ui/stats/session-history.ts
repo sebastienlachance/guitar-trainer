@@ -1,15 +1,25 @@
 import { Component, computed, inject } from '@angular/core';
 import { Drill } from '../../practice/drill';
 import { PracticeLog } from '../../practice/practice-log';
-import { formatDuration, formatSessionStart } from '../../practice/session-log';
+import {
+  answersPerMinute,
+  averageAnswerMs,
+  formatDuration,
+  formatSessionStart,
+} from '../../practice/session-log';
 import { accuracyBand } from '../../practice/stats';
-import { capitalize, percentCorrect, plural } from '../text';
+import { capitalize, formatSeconds, percentCorrect, plural } from '../text';
+import { ProgressChart } from './progress-chart';
 
 const SHOWN = 20;
 
-/** The module's practice sessions, newest first, with totals over all of them. */
+/** Sessions on the progress chart: enough to see a trend, few enough to tell the points apart. */
+const CHARTED = 30;
+
+/** The module's practice sessions: a progress chart, then a table, newest first, with totals. */
 @Component({
   selector: 'app-session-history',
+  imports: [ProgressChart],
   template: `
     @if (history().count > 0) {
       <section class="panel" aria-labelledby="sessions-title">
@@ -17,26 +27,33 @@ const SHOWN = 20;
           <h2 id="sessions-title">Sessions</h2>
           <span class="muted">{{ history().totals }}</span>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">When</th>
-              <th scope="col">Time</th>
-              <th scope="col">{{ unitLabel }}</th>
-              <th scope="col">Correct</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of history().rows; track row.id) {
+        <app-progress-chart [records]="history().charted" [unit]="unit" />
+        <div class="scroll">
+          <table>
+            <thead>
               <tr>
-                <td>{{ row.when }}</td>
-                <td>{{ row.time }}</td>
-                <td>{{ row.answered }}</td>
-                <td [class]="row.band">{{ row.accuracy }}</td>
+                <th scope="col">When</th>
+                <th scope="col">Time</th>
+                <th scope="col">{{ unitLabel }}</th>
+                <th scope="col">Per min</th>
+                <th scope="col">Each</th>
+                <th scope="col">Correct</th>
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (row of history().rows; track row.id) {
+                <tr>
+                  <td>{{ row.when }}</td>
+                  <td>{{ row.time }}</td>
+                  <td>{{ row.answered }}</td>
+                  <td>{{ row.perMinute }}</td>
+                  <td>{{ row.each }}</td>
+                  <td [class]="row.band">{{ row.accuracy }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       </section>
     }
   `,
@@ -53,10 +70,15 @@ const SHOWN = 20;
       font-size: 17px;
       margin-bottom: 12px;
     }
+    .scroll {
+      overflow-x: auto;
+      margin-top: 8px;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 14px;
+      white-space: nowrap;
     }
     th,
     td {
@@ -83,6 +105,7 @@ export class SessionHistory {
   private readonly drill = inject(Drill);
   private readonly log = inject(PracticeLog);
 
+  protected readonly unit = this.drill.unit;
   protected readonly unitLabel = capitalize(this.drill.unit + 's');
 
   protected readonly history = computed(() => {
@@ -98,14 +121,21 @@ export class SessionHistory {
         formatDuration(activeMs),
         plural(answered, this.drill.unit),
       ].join(' · '),
-      rows: records.slice(0, SHOWN).map((record) => ({
-        id: record.id,
-        when: formatSessionStart(record.startedAt, now),
-        time: formatDuration(record.activeMs),
-        answered: record.answered,
-        accuracy: percentCorrect(record.correct, record.answered),
-        band: accuracyBand({ attempts: record.answered, correct: record.correct }),
-      })),
+      charted: records.slice(0, CHARTED).reverse(),
+      rows: records.slice(0, SHOWN).map((record) => {
+        const perMinute = answersPerMinute(record);
+        const each = averageAnswerMs(record);
+        return {
+          id: record.id,
+          when: formatSessionStart(record.startedAt, now),
+          time: formatDuration(record.activeMs),
+          answered: record.answered,
+          perMinute: perMinute === null ? '–' : perMinute.toFixed(1),
+          each: each === null ? '–' : formatSeconds(each),
+          accuracy: percentCorrect(record.correct, record.answered),
+          band: accuracyBand({ attempts: record.answered, correct: record.correct }),
+        };
+      }),
     };
   });
 }

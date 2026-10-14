@@ -51,7 +51,14 @@ export class PracticeLog {
   start(module: string): void {
     this.end();
     const now = this.tick();
-    this.open.set({ module, startedAt: now, timer: startTimer(now), answered: 0, correct: 0 });
+    this.open.set({
+      module,
+      startedAt: now,
+      timer: startTimer(now),
+      answered: 0,
+      correct: 0,
+      totalResponseMs: 0,
+    });
     this.saveSnapshot();
     this.ticker = setInterval(() => this.tick(), 1000);
   }
@@ -62,13 +69,14 @@ export class PracticeLog {
     this.updateOpen((session) => ({ ...session, timer: touchTimer(session.timer, now) }));
   }
 
-  recordAnswer(correct: boolean): void {
+  recordAnswer(correct: boolean, responseMs: number): void {
     const now = this.tick();
     this.updateOpen((session) => ({
       ...session,
       timer: touchTimer(resumeTimer(session.timer, now), now),
       answered: session.answered + 1,
       correct: session.correct + (correct ? 1 : 0),
+      totalResponseMs: (session.totalResponseMs ?? 0) + responseMs,
     }));
     this.saveSnapshot();
   }

@@ -84,7 +84,7 @@
               "src/**/*.html",
               "e2e/**/*.ts",
               "playwright.config.ts",
-              "vitest-base.config.ts"
+              "vitest-base.config.mts"
             ]
           }
         }

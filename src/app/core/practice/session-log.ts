@@ -62,6 +62,8 @@ export interface OpenSession {
   readonly timer: ActiveTimer;
   readonly answered: number;
   readonly correct: number;
+  /** Sum of the answers' response times; missing in snapshots from older versions. */
+  readonly totalResponseMs?: number;
 }
 
 /** A finished session as kept in the history. */
@@ -73,6 +75,8 @@ export interface SessionRecord {
   readonly activeMs: number;
   readonly answered: number;
   readonly correct: number;
+  /** Sum of the answers' response times; missing in sessions saved by older versions. */
+  readonly totalResponseMs?: number;
 }
 
 export function closeSession(session: OpenSession, now: number): SessionRecord {
@@ -84,7 +88,22 @@ export function closeSession(session: OpenSession, now: number): SessionRecord {
     activeMs: elapsedMs(session.timer, now),
     answered: session.answered,
     correct: session.correct,
+    ...(session.totalResponseMs === undefined ? {} : { totalResponseMs: session.totalResponseMs }),
   };
+}
+
+/** Answers per minute of active time, or null for a session too short to tell. */
+export function answersPerMinute(record: SessionRecord): number | null {
+  return record.activeMs > 0 && record.answered > 0
+    ? record.answered / (record.activeMs / 60_000)
+    : null;
+}
+
+/** Average response time over the session's answers, or null when it wasn't kept. */
+export function averageAnswerMs(record: SessionRecord): number | null {
+  return record.totalResponseMs !== undefined && record.answered > 0
+    ? record.totalResponseMs / record.answered
+    : null;
 }
 
 function hasNumbers(value: unknown, fields: readonly string[]): value is Record<string, number> {
@@ -95,10 +114,17 @@ function hasNumbers(value: unknown, fields: readonly string[]): value is Record<
   );
 }
 
+/** A field added in a later version: absent in older saved data, a number otherwise. */
+function hasOptionalNumber(value: unknown, field: string): boolean {
+  const found = (value as Record<string, unknown>)[field];
+  return found === undefined || typeof found === 'number';
+}
+
 /** Structural check for a session snapshot read back from storage. */
 export function isOpenSession(value: unknown): value is OpenSession {
   return (
     hasNumbers(value, ['startedAt', 'answered', 'correct']) &&
+    hasOptionalNumber(value, 'totalResponseMs') &&
     typeof (value as Record<string, unknown>)['module'] === 'string' &&
     hasNumbers((value as Record<string, unknown>)['timer'], ['accumulatedMs', 'lastActivity'])
   );
@@ -111,6 +137,7 @@ export function isSessionRecords(value: unknown): value is SessionRecord[] {
     value.every(
       (record) =>
         hasNumbers(record, ['startedAt', 'endedAt', 'activeMs', 'answered', 'correct']) &&
+        hasOptionalNumber(record, 'totalResponseMs') &&
         typeof (record as Record<string, unknown>)['id'] === 'string' &&
         typeof (record as Record<string, unknown>)['module'] === 'string',
     )

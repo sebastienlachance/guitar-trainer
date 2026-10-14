@@ -160,7 +160,7 @@ routing, storage, focus or the microphone changed.
 - **Stale unit tests:** Vitest 5 caches transformed modules on disk (`node_modules/.vitest-cache`)
   by default. Angular builds each spec in memory with the code it imports, and that cache only
   notices changes to the spec file, so a test could pass against an old copy of the code under
-  test. `vitest-base.config.ts` (loaded through `runnerConfig` in `angular.json`) turns it off;
+  test. `vitest-base.config.mts` (loaded through `runnerConfig` in `angular.json`) turns it off;
   keep it off. If a result ever looks stale, delete that folder.
 - **Line endings:** on Windows, `prettier --check` can also flag files whose only difference is CRLF
   line endings; `.gitattributes` stores LF, so `git diff` shows nothing for those. Running
@@ -175,6 +175,14 @@ routing, storage, focus or the microphone changed.
 - **Deployment:** every push to `main` that passes all checks deploys to GitHub Pages
   (https://sebastienlachance.github.io/guitar-trainer/). There are no version tags; the home page
   shows the deployed commit. Tauri can come later for a native installer or phone app.
+- **Progress is speed.** With the microphone, a wrong chord isn't recognised rather than counted
+  wrong, so accuracy stays at 100%. Stats therefore keep each card's first and latest correct
+  times (`earlyMs`, `recentMs`) and each session's total response time, and the scheduler adds
+  _slowness_ to the miss rate: how much slower than your own median a card is, capped at +1.
+  Relative, so no per-module thresholds. Unseen cards weigh 2 so the deck still gets covered.
+- **Stored data only grows backwards-compatibly:** new fields are optional, the `is…` checks
+  accept data without them, and code falls back (a card's average stands in for its first times).
+  Never change a stored shape in a way that makes older saved data fail its check.
 - **CI runs on `ubuntu-24.04`, not `ubuntu-latest`,** so a new Ubuntu release can't break
   `playwright install --with-deps` without warning. Move to a newer image on purpose, in its own
   commit, once Playwright supports it.

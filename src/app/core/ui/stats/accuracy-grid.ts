@@ -1,6 +1,15 @@
 import { Component, input } from '@angular/core';
-import { AccuracyBand, CardStats, accuracyBand } from '../../practice/stats';
-import { percentCorrect } from '../text';
+import {
+  AccuracyBand,
+  CardStats,
+  DEFAULT_SPEED_LIMITS,
+  SpeedBand,
+  SpeedLimits,
+  accuracyBand,
+  recentAverageMs,
+  speedBand,
+} from '../../practice/stats';
+import { formatSeconds, percentCorrect } from '../text';
 
 export interface AccuracyCell {
   readonly id: string;
@@ -30,7 +39,37 @@ export function accuracyCell(
   };
 }
 
-/** Accuracy table coloured by band, e.g. chord type × root or string × note. */
+/** Fast reads like high accuracy: green. */
+const COLOUR_FOR_SPEED: Readonly<Record<SpeedBand, AccuracyBand>> = {
+  none: 'none',
+  fast: 'high',
+  medium: 'mid',
+  slow: 'low',
+};
+
+/**
+ * A cell showing how fast you answer lately, in seconds without the unit (the grid's legend says
+ * it), averaged over the cards it covers.
+ */
+export function speedCell(
+  id: string,
+  cards: readonly CardStats[],
+  limits: SpeedLimits = DEFAULT_SPEED_LIMITS,
+): AccuracyCell {
+  const answered = cards.filter((card) => card.attempts > 0);
+  if (answered.length === 0) {
+    return { id, text: '–', band: 'none', detail: 'Not practised yet' };
+  }
+  const ms = answered.reduce((sum, card) => sum + recentAverageMs(card), 0) / answered.length;
+  return {
+    id,
+    text: (ms / 1000).toFixed(1),
+    band: COLOUR_FOR_SPEED[speedBand(ms, limits)],
+    detail: `${formatSeconds(ms)} lately`,
+  };
+}
+
+/** Accuracy or speed table coloured by band, e.g. chord type × root or string × note. */
 @Component({
   selector: 'app-accuracy-grid',
   template: `

@@ -1,4 +1,4 @@
-import { signal } from '@angular/core';
+import { Signal, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { PracticeLog } from './practice-log';
 import { AUTO_ADVANCE_MS, PracticeRun } from './practice-run';
@@ -6,17 +6,24 @@ import { AUTO_ADVANCE_MS, PracticeRun } from './practice-run';
 const deck = [{ key: 'a' }, { key: 'b' }, { key: 'c' }];
 
 function createRun(
-  options: { problems?: string[]; onStart?: () => void; onEnd?: () => void } = {},
+  options: {
+    problems?: string[];
+    onStart?: () => void;
+    onEnd?: () => void;
+    timeLimitMs?: Signal<number | null>;
+    deck?: { key: string }[];
+  } = {},
 ) {
   return TestBed.runInInjectionContext(
     () =>
       new PracticeRun({
         module: 'test',
         statsKey: 'test:stats',
-        deck: signal(deck),
+        deck: signal(options.deck ?? deck),
         problems: signal(options.problems ?? []),
         onStart: options.onStart,
         onEnd: options.onEnd,
+        timeLimitMs: options.timeLimitMs,
       }),
   );
 }
@@ -144,5 +151,75 @@ describe('PracticeRun', () => {
     expect(onEnd).toHaveBeenCalled();
     expect(run.view()).toBe('ended');
     expect(run.lastSession()).toMatchObject({ module: 'test', answered: 2, correct: 2 });
+  });
+
+  describe('with a time limit', () => {
+    /** Starts a session with a 5 s limit; effects run on TestBed.tick(). */
+    function startTimed(limit: number | null = 5000, cards = deck) {
+      const run = createRun({ timeLimitMs: signal(limit), deck: cards });
+      run.start();
+      TestBed.tick();
+      return run;
+    }
+
+    it('counts the card as a miss when its time runs out', () => {
+      const run = startTimed();
+      const card = run.current()!;
+      expect(run.countdown()).toMatchObject({ ms: 5000 });
+
+      vi.advanceTimersByTime(4999);
+      expect(run.phase()).toBe('prompt');
+      vi.advanceTimersByTime(1);
+
+      expect(run.phase()).toBe('answered');
+      expect(run.timedOut()).toBe(true);
+      expect(run.lastCorrect()).toBe(false);
+      expect(run.stats()[card.key]).toMatchObject({ attempts: 1, correct: 0 });
+      TestBed.tick();
+      expect(run.countdown()).toBeNull();
+
+      run.next();
+      expect(run.timedOut()).toBe(false);
+    });
+
+    it('stops while paused and starts over on resume', () => {
+      const run = startTimed();
+      const log = TestBed.inject(PracticeLog);
+
+      vi.advanceTimersByTime(4000);
+      log.pause();
+      TestBed.tick();
+      vi.advanceTimersByTime(60_000);
+      expect(run.phase()).toBe('prompt');
+
+      log.resume();
+      TestBed.tick();
+      vi.advanceTimersByTime(4999);
+      expect(run.phase()).toBe('prompt');
+      vi.advanceTimersByTime(1);
+      expect(run.phase()).toBe('answered');
+    });
+
+    it('starts over for every card, even when you move straight on to the same one', () => {
+      // A one-card deck shows the same card again after moving on.
+      const run = startTimed(5000, [{ key: 'only' }]);
+
+      vi.advanceTimersByTime(4000);
+      run.resolveAndMoveOn();
+      TestBed.tick();
+      vi.advanceTimersByTime(4000);
+
+      expect(run.phase()).toBe('prompt');
+      expect(run.timedOut()).toBe(false);
+    });
+
+    it('never runs out without a limit', () => {
+      const run = startTimed(null);
+
+      vi.advanceTimersByTime(60_000);
+
+      expect(run.phase()).toBe('prompt');
+      expect(run.countdown()).toBeNull();
+    });
   });
 });

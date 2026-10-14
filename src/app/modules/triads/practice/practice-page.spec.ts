@@ -1,11 +1,12 @@
 import { signal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { render, screen, within } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { MicListener } from '../../../core/audio/mic-listener';
 import { STORAGE_PREFIX } from '../../../core/practice/storage';
 import { TriadSettings } from '../settings';
-import { provideTriads } from '../triads-session';
+import { TriadsSession, provideTriads } from '../triads-session';
 import { PracticePage } from './practice-page';
 
 function saveSettings(settings: Partial<TriadSettings>): void {
@@ -185,7 +186,10 @@ describe('PracticePage with the microphone strumming', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0);
   });
 
-  afterEach(() => vi.restoreAllMocks());
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
 
   it('goes straight to the next chord once it hears this one, and says so', async () => {
     const { mic } = await startStrumming();
@@ -209,5 +213,33 @@ describe('PracticePage with the microphone strumming', () => {
 
     mic.strums.set(1);
     expect(await screen.findByRole('heading', { level: 1, name: 'Dsus4' })).toBeInTheDocument();
+  });
+
+  it('counts a chord not played in time as a miss, and shows it', async () => {
+    saveSettings({
+      qualities: ['sus4'],
+      roots: ['C'],
+      promptDetail: 'chord',
+      micMode: 'strum',
+      timeLimit: 5,
+    });
+    await render(PracticePage, {
+      providers: [
+        ...provideTriads(),
+        provideRouter([]),
+        { provide: MicListener, useValue: fakeMicrophone() },
+      ],
+    });
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+    TestBed.inject(TriadsSession).run.start();
+    TestBed.tick();
+    expect(screen.getByText('5 s limit')).toBeInTheDocument();
+
+    vi.advanceTimersByTime(5000);
+    TestBed.tick();
+
+    expect(screen.getByText("Time's up")).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Answer' })).toBeInTheDocument();
+    expect(savedStats()['C|sus4']).toMatchObject({ attempts: 1, correct: 0 });
   });
 });

@@ -34,6 +34,18 @@ describe('SetupPage', () => {
     expect(saved.qualities).toEqual(['sus2', 'sus4', '7']);
   });
 
+  it('offers a time limit only with the microphone on', async () => {
+    const user = userEvent.setup();
+    await renderSetup();
+
+    expect(screen.queryByRole('group', { name: 'Time limit' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('radio', { name: 'Strum' }));
+    await user.click(screen.getByRole('radio', { name: '5 s' }));
+
+    const saved = JSON.parse(localStorage.getItem(STORAGE_PREFIX + 'triads:settings') ?? '{}');
+    expect(saved).toMatchObject({ micMode: 'strum', timeLimit: 5 });
+  });
+
   it('offers four-note shape options only when a four-note chord is chosen', async () => {
     const user = userEvent.setup();
     await renderSetup();

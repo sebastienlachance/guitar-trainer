@@ -38,11 +38,18 @@ export class TriadsSession implements Drill {
   /** Strums heard before the current chord appeared: only a later one can answer it. */
   private readonly strumsBefore = signal(0);
 
+  /** The time limit applies only with the microphone, which is what can answer in time. */
+  private readonly timeLimitMs = computed(() => {
+    const { micMode, timeLimit } = this.settings();
+    return micMode !== 'off' && timeLimit > 0 ? timeLimit * 1000 : null;
+  });
+
   readonly run = new PracticeRun<TriadCard>({
     module: TRIADS_MODULE,
     statsKey: STATS_KEY,
     deck: this.deck,
     problems: this.problems,
+    timeLimitMs: this.timeLimitMs,
     onStart: () => {
       const { micMode } = this.settings();
       if (micMode !== 'off') {
@@ -62,17 +69,22 @@ export class TriadsSession implements Drill {
       qualityTag,
     );
     if (settings.promptDetail === 'chord') {
-      return [...tags, 'Any shape'];
+      tags.push('Any shape');
+    } else {
+      const sets = settings.stringSets;
+      tags.push(
+        sets.length === STRING_SETS.length ? 'All string sets' : `Strings ${sets.join(', ')}`,
+      );
+      tags.push(
+        settings.inversions.length === INVERSIONS.length
+          ? 'All inversions'
+          : settings.inversions.map((inversion) => INVERSION_SHORT_NAMES[inversion]).join(', '),
+      );
     }
-    const sets = settings.stringSets;
-    tags.push(
-      sets.length === STRING_SETS.length ? 'All string sets' : `Strings ${sets.join(', ')}`,
-    );
-    tags.push(
-      settings.inversions.length === INVERSIONS.length
-        ? 'All inversions'
-        : settings.inversions.map((inversion) => INVERSION_SHORT_NAMES[inversion]).join(', '),
-    );
+    const limit = this.timeLimitMs();
+    if (limit !== null) {
+      tags.push(`${limit / 1000} s limit`);
+    }
     return tags;
   });
 

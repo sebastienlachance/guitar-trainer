@@ -1,5 +1,8 @@
 import {
   IDLE_LIMIT_MS,
+  SessionRecord,
+  answersPerMinute,
+  averageAnswerMs,
   closeSession,
   elapsedMs,
   formatClock,
@@ -52,7 +55,14 @@ describe('active timer', () => {
   });
 
   it('closes a session into a record', () => {
-    const open = { module: 'triads', startedAt: 0, timer: startTimer(0), answered: 4, correct: 3 };
+    const open = {
+      module: 'triads',
+      startedAt: 0,
+      timer: startTimer(0),
+      answered: 4,
+      correct: 3,
+      totalResponseMs: 10 * SECOND,
+    };
     expect(closeSession(open, 90 * SECOND)).toEqual({
       id: 'triads-0',
       module: 'triads',
@@ -61,7 +71,32 @@ describe('active timer', () => {
       activeMs: 90 * SECOND,
       answered: 4,
       correct: 3,
+      totalResponseMs: 10 * SECOND,
     });
+  });
+});
+
+describe('session pace', () => {
+  const record: SessionRecord = {
+    id: 'triads-0',
+    module: 'triads',
+    startedAt: 0,
+    endedAt: 0,
+    activeMs: 2 * MINUTE,
+    answered: 24,
+    correct: 24,
+    totalResponseMs: 60 * SECOND,
+  };
+
+  it('gives answers per minute of active time', () => {
+    expect(answersPerMinute(record)).toBe(12);
+    expect(answersPerMinute({ ...record, activeMs: 0 })).toBeNull();
+  });
+
+  it('gives the average time per answer, when it was kept', () => {
+    expect(averageAnswerMs(record)).toBe(2500);
+    const older: SessionRecord = { ...record, totalResponseMs: undefined };
+    expect(averageAnswerMs(older)).toBeNull();
   });
 });
 
@@ -103,6 +138,8 @@ describe('saved data checks', () => {
       correct: 1,
     };
     expect(isSessionRecords([record])).toBe(true);
+    expect(isSessionRecords([{ ...record, totalResponseMs: 900 }])).toBe(true);
+    expect(isSessionRecords([{ ...record, totalResponseMs: '900' }])).toBe(false);
     expect(isSessionRecords([{ ...record, answered: '1' }])).toBe(false);
     expect(isSessionRecords({})).toBe(false);
   });

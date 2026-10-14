@@ -15,4 +15,6 @@ test('a session interrupted by a reload is still saved', async ({ page }) => {
   const sessions = page.getByRole('region', { name: 'Sessions' });
   await expect(sessions).toContainText('1 session');
   await expect(sessions).toContainText('1 note');
+  // The answer's time survived the reload too: the "Each" column shows it.
+  await expect(sessions.getByRole('row').nth(1)).toContainText(/\d\.\d s/);
 });

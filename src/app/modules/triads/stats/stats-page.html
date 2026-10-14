@@ -5,8 +5,24 @@
 
 @if (hasAnswers()) {
   <section class="panel">
-    <h2>Accuracy by chord</h2>
+    <div class="heading-row">
+      <h2>By chord</h2>
+      <app-segmented-choice
+        label="Measure"
+        [hideLabel]="true"
+        [options]="measures"
+        [value]="measure()"
+        (valueChange)="measure.set($event)"
+      />
+    </div>
     <app-accuracy-grid [columns]="roots" [rows]="grid()" rowHeader="Chord type" />
+    <p class="hint">
+      @if (measure() === 'time') {
+        Seconds to play it, lately. Green under 2, amber 2 to 4, red over 4.
+      } @else {
+        Share of right answers. With the microphone, only the time limit makes misses.
+      }
+    </p>
   </section>
 
   <section class="panel">

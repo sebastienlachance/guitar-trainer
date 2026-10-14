@@ -95,6 +95,14 @@
       <span class="muted">{{ settings().strumThreshold.toFixed(2) }}</span>
     </label>
   }
+  @if (settings().micMode !== 'off') {
+    <app-segmented-choice
+      label="Time limit"
+      [options]="timeLimitChoices"
+      [value]="settings().timeLimit"
+      (valueChange)="update({ timeLimit: $event })"
+    />
+  }
 </section>
 
 <app-setup-start />

@@ -134,6 +134,52 @@
   color: var(--danger);
 }
 
+.countdown {
+  height: 3px;
+  margin: 14px auto 0;
+  max-width: 320px;
+  border-radius: 2px;
+  background: var(--raised);
+  overflow: hidden;
+}
+
+.countdown span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transform-origin: left;
+  animation: count-down linear forwards;
+}
+
+@keyframes count-down {
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* Screen readers and reduced-motion users get the limit in words instead of a moving bar. */
+.countdown-text {
+  margin: 6px 0 0;
+  font-size: 12px;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .countdown-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .countdown {
+    display: none;
+  }
+}
+
 .empty ul {
   color: var(--warning);
 }

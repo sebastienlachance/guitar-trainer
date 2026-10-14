@@ -90,6 +90,14 @@
     <ng-container [ngTemplateOutlet]="tags" />
     <ng-container [ngTemplateOutlet]="prompt()" />
 
+    <!-- Tracked by its start, so the bar's animation starts over with every countdown. -->
+    @for (countdown of countdowns(); track countdown.startedAt) {
+      <div class="countdown" aria-hidden="true">
+        <span [style.animation-duration.ms]="countdown.ms"></span>
+      </div>
+      <p class="countdown-text muted">{{ countdown.ms / 1000 }} s to answer</p>
+    }
+
     @if (phase() === 'prompt' && drill.selfCheck) {
       <div class="actions">
         <button #primaryAction type="button" class="btn btn-primary" (click)="run.reveal()">
@@ -146,7 +154,9 @@
       <app-icon name="check" /> Correct, {{ responseSeconds() }}
     </p>
   } @else {
-    <p class="result wrong" role="status"><app-icon name="x" /> Not quite</p>
+    <p class="result wrong" role="status">
+      <app-icon name="x" /> {{ run.timedOut() ? "Time's up" : 'Not quite' }}
+    </p>
   }
 </ng-template>
 

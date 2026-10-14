@@ -1,8 +1,9 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { displayNoteName, parseNote } from '../../../core/music/notes';
 import { totals } from '../../../core/practice/stats';
-import { AccuracyGrid, accuracyCell } from '../../../core/ui/stats/accuracy-grid';
+import { Choice, SegmentedChoice } from '../../../core/ui/setup/segmented-choice';
+import { AccuracyGrid, accuracyCell, speedCell } from '../../../core/ui/stats/accuracy-grid';
 import { ResetStats } from '../../../core/ui/stats/reset-stats';
 import { SessionHistory } from '../../../core/ui/stats/session-history';
 import { StatsOverview } from '../../../core/ui/stats/stats-overview';
@@ -25,7 +26,15 @@ function describeCard(key: string): CardDescription | undefined {
 
 @Component({
   selector: 'app-stats-page',
-  imports: [RouterLink, StatsOverview, SessionHistory, AccuracyGrid, WeakestCards, ResetStats],
+  imports: [
+    RouterLink,
+    StatsOverview,
+    SessionHistory,
+    SegmentedChoice,
+    AccuracyGrid,
+    WeakestCards,
+    ResetStats,
+  ],
   templateUrl: './stats-page.html',
   host: { class: 'page' },
 })
@@ -40,9 +49,20 @@ export class StatsPage {
     label: displayNoteName(parseNote(name)),
   }));
 
-  /** Accuracy per root and chord type, for the chord types you selected or have practised. */
+  /** With the microphone every answer is right: speed is what shows progress. */
+  protected readonly measure = signal<'time' | 'accuracy'>('time');
+  protected readonly measures: Choice<'time' | 'accuracy'>[] = [
+    { value: 'time', label: 'Time' },
+    { value: 'accuracy', label: 'Accuracy' },
+  ];
+
+  /**
+   * Recent time or accuracy per root and chord type, for the chord types you selected or have
+   * practised. A cell covers every shape the chord was asked in.
+   */
   protected readonly grid = computed(() => {
     const stats = this.stats();
+    const byTime = this.measure() === 'time';
     const selected = this.session.settings().qualities;
     const practised = (id: string) => Object.keys(stats).some((key) => key.split('|')[1] === id);
     return CHORD_QUALITIES.filter(
@@ -51,12 +71,15 @@ export class StatsPage {
       id: quality.id,
       label: quality.symbol || 'major',
       title: quality.name,
-      cells: ROOTS.map((root) =>
-        accuracyCell(
-          root,
-          totals(stats, (key) => isChordKey(key, `${root}|${quality.id}`)),
-        ),
-      ),
+      cells: ROOTS.map((root) => {
+        const isCell = (key: string) => isChordKey(key, `${root}|${quality.id}`);
+        return byTime
+          ? speedCell(
+              root,
+              Object.entries(stats).flatMap(([key, card]) => (isCell(key) ? [card] : [])),
+            )
+          : accuracyCell(root, totals(stats, isCell));
+      }),
     }));
   });
 }

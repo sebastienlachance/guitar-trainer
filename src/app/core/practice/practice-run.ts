@@ -1,4 +1,4 @@
-import { DestroyRef, Signal, computed, inject, signal } from '@angular/core';
+import { DestroyRef, Signal, computed, effect, inject, signal, untracked } from '@angular/core';
 import { PracticeLog } from './practice-log';
 import { pickNextCard } from './scheduler';
 import { SessionRecord } from './session-log';
@@ -33,14 +33,27 @@ export interface PracticeRunOptions<C extends PracticeCard> {
   readonly onEnd?: () => void;
   /** Runs each time a new card is shown. */
   readonly onNext?: () => void;
+  /**
+   * Time to answer each card, or null for no limit. When it runs out, the card counts as a miss
+   * and the answer shows. The countdown stops while paused and starts over on resume.
+   */
+  readonly timeLimitMs?: Signal<number | null>;
+}
+
+/** A running countdown for the current card, for drawing it. */
+export interface Countdown {
+  /** Epoch milliseconds; a new value means a new countdown. */
+  readonly startedAt: number;
+  readonly ms: number;
 }
 
 /** Pause on a correct answer the app checked, before the next card. */
 export const AUTO_ADVANCE_MS = 1500;
 
 /**
- * The card-by-card flow every module shares: picking cards (favouring the ones you miss),
- * revealing, recording answers in the stats and the practice log, and the session around it.
+ * The card-by-card flow every module shares: picking cards (favouring the ones you miss or answer
+ * slowly), revealing, recording answers in the stats and the practice log, an optional time
+ * limit, and the session around it.
  * Create it as a field of a module service, since it injects the practice log.
  */
 export class PracticeRun<C extends PracticeCard> {
@@ -59,6 +72,10 @@ export class PracticeRun<C extends PracticeCard> {
    * confirmation. Null after any other way of moving on.
    */
   readonly movedOn = signal<{ readonly card: C; readonly responseMs: number } | null>(null);
+  /** Whether the current card's answer is a miss because the time limit ran out. */
+  readonly timedOut = signal(false);
+  /** The time limit counting down on the current card, if there is one. */
+  readonly countdown = signal<Countdown | null>(null);
   /** The session that just ended, for the summary; cleared when a new one starts. */
   readonly lastSession = signal<SessionRecord | null>(null);
   readonly paused: Signal<boolean> = this.log.paused;
@@ -75,11 +92,28 @@ export class PracticeRun<C extends PracticeCard> {
 
   private shownAt = 0;
   private advanceTimer: ReturnType<typeof setTimeout> | undefined;
+  /** Goes up with every card shown, even when the same card comes back (a one-card deck). */
+  private readonly cardsShown = signal(0);
 
   constructor(private readonly options: PracticeRunOptions<C>) {
     this.statsStore = new StatsStore(options.statsKey);
     this.stats = this.statsStore.stats;
     inject(DestroyRef).onDestroy(() => this.end());
+    const timeLimitMs = options.timeLimitMs;
+    if (timeLimitMs) {
+      effect((onCleanup) => {
+        const limit = timeLimitMs();
+        this.cardsShown();
+        const waiting = this.current() !== null && this.phase() === 'prompt' && !this.paused();
+        if (limit === null || !waiting) {
+          untracked(() => this.countdown.set(null));
+          return;
+        }
+        untracked(() => this.countdown.set({ startedAt: Date.now(), ms: limit }));
+        const timer = setTimeout(() => this.timeOut(), limit);
+        onCleanup(() => clearTimeout(timer));
+      });
+    }
   }
 
   get module(): string {
@@ -172,6 +206,7 @@ export class PracticeRun<C extends PracticeCard> {
   next(): void {
     clearTimeout(this.advanceTimer);
     this.movedOn.set(null);
+    this.timedOut.set(false);
     const previous = this.current();
     this.current.set(pickNextCard(this.options.deck(), this.stats(), previous?.key ?? null));
     this.phase.set('prompt');
@@ -179,6 +214,7 @@ export class PracticeRun<C extends PracticeCard> {
     this.lastCorrect.set(null);
     this.options.onNext?.();
     this.shownAt = Date.now();
+    this.cardsShown.update((count) => count + 1);
   }
 
   /** Something showed you're practising, such as a played note. */
@@ -190,8 +226,15 @@ export class PracticeRun<C extends PracticeCard> {
     this.statsStore.reset();
   }
 
+  private timeOut(): void {
+    if (this.phase() === 'prompt' && !this.paused()) {
+      this.timedOut.set(true);
+      this.resolve(false);
+    }
+  }
+
   private record(card: C, correct: boolean, responseMs: number): void {
     this.statsStore.record(card.key, { correct, responseMs, at: Date.now() });
-    this.log.recordAnswer(correct);
+    this.log.recordAnswer(correct, responseMs);
   }
 }

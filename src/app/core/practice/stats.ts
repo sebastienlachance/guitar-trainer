@@ -4,7 +4,14 @@ export interface CardStats {
   readonly totalResponseMs: number;
   /** Epoch milliseconds of the last attempt. */
   readonly lastSeen: number;
+  /** Times of the first correct answers, up to EARLY_TIMES: how fast you were then. */
+  readonly earlyMs?: readonly number[];
+  /** Times of the latest correct answers, up to RECENT_TIMES: how fast you are now. */
+  readonly recentMs?: readonly number[];
 }
+
+export const EARLY_TIMES = 3;
+export const RECENT_TIMES = 5;
 
 export type StatsByCard = Readonly<Record<string, CardStats>>;
 
@@ -20,6 +27,7 @@ export function recordResult(
   result: PracticeResult,
 ): StatsByCard {
   const previous = stats[cardKey] ?? { attempts: 0, correct: 0, totalResponseMs: 0, lastSeen: 0 };
+  const recent = previous.recentMs ?? [];
   return {
     ...stats,
     [cardKey]: {
@@ -27,8 +35,20 @@ export function recordResult(
       correct: previous.correct + (result.correct ? 1 : 0),
       totalResponseMs: previous.totalResponseMs + result.responseMs,
       lastSeen: result.at,
+      earlyMs: earlyTimes(previous, result),
+      recentMs: result.correct ? [...recent, result.responseMs].slice(-RECENT_TIMES) : recent,
     },
   };
+}
+
+/** Speed only counts correct answers: a miss says nothing about how fast you find the answer. */
+function earlyTimes(previous: CardStats, result: PracticeResult): readonly number[] {
+  if (previous.attempts > 0 && previous.earlyMs === undefined) {
+    // Saved before times were kept: its average so far stands in for its first answers.
+    return [averageResponseMs(previous)];
+  }
+  const early = previous.earlyMs ?? [];
+  return result.correct && early.length < EARLY_TIMES ? [...early, result.responseMs] : early;
 }
 
 export function accuracy(stats: Pick<CardStats, 'attempts' | 'correct'>): number {
@@ -37,6 +57,20 @@ export function accuracy(stats: Pick<CardStats, 'attempts' | 'correct'>): number
 
 export function averageResponseMs(stats: CardStats): number {
   return stats.attempts === 0 ? 0 : stats.totalResponseMs / stats.attempts;
+}
+
+function mean(values: readonly number[]): number {
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+/** How fast you answer the card now: your latest correct answers, or the overall average. */
+export function recentAverageMs(stats: CardStats): number {
+  return stats.recentMs?.length ? mean(stats.recentMs) : averageResponseMs(stats);
+}
+
+/** How fast you answered the card at first, or null when that wasn't kept. */
+export function earlyAverageMs(stats: CardStats): number | null {
+  return stats.earlyMs?.length ? mean(stats.earlyMs) : null;
 }
 
 /**
@@ -63,19 +97,28 @@ export function totals(
   return { attempts, correct };
 }
 
-/** Structural check for data read back from storage. */
+function isTimeList(value: unknown): boolean {
+  return value === undefined || (Array.isArray(value) && value.every((v) => typeof v === 'number'));
+}
+
+/** Structural check for data read back from storage, including data saved by older versions. */
 export function isStatsByCard(value: unknown): value is StatsByCard {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return false;
   }
-  return Object.values(value).every(
-    (card) =>
-      typeof card === 'object' &&
-      card !== null &&
+  return Object.values(value).every((card) => {
+    if (typeof card !== 'object' || card === null) {
+      return false;
+    }
+    const fields = card as Record<string, unknown>;
+    return (
       ['attempts', 'correct', 'totalResponseMs', 'lastSeen'].every(
-        (field) => typeof (card as Record<string, unknown>)[field] === 'number',
-      ),
-  );
+        (field) => typeof fields[field] === 'number',
+      ) &&
+      isTimeList(fields['earlyMs']) &&
+      isTimeList(fields['recentMs'])
+    );
+  });
 }
 
 /** Accuracy bands used to colour results: under 50%, under 80%, and 80% or more. */
@@ -90,4 +133,24 @@ export function accuracyBand(stats: Pick<CardStats, 'attempts' | 'correct'>): Ac
     return 'high';
   }
   return rate >= 0.5 ? 'mid' : 'low';
+}
+
+export type SpeedBand = 'none' | 'fast' | 'medium' | 'slow';
+
+/** Times that separate fast, medium and slow answers. */
+export interface SpeedLimits {
+  readonly fastMs: number;
+  readonly slowMs: number;
+}
+
+export const DEFAULT_SPEED_LIMITS: SpeedLimits = { fastMs: 2000, slowMs: 4000 };
+
+export function speedBand(ms: number | null, limits = DEFAULT_SPEED_LIMITS): SpeedBand {
+  if (ms === null) {
+    return 'none';
+  }
+  if (ms < limits.fastMs) {
+    return 'fast';
+  }
+  return ms <= limits.slowMs ? 'medium' : 'slow';
 }

@@ -93,3 +93,17 @@ test.describe('Microphone: strumming the asked chord', () => {
     await expect(page.getByRole('region', { name: 'Answer' })).toHaveCount(0);
   });
 });
+
+test.describe('Microphone: a chord not played in time', () => {
+  test.use({ tone: 'e3' });
+
+  test('counts as a miss and shows the answer', async ({ micPage: page }) => {
+    await seedSettings(page, 'triads', { ...CSUS4_ONLY, micMode: 'arpeggio', timeLimit: 5 });
+    await startSession(page, 'triads');
+    await expect(page.getByText('5 s limit')).toBeVisible();
+
+    await expect(page.getByText("Time's up")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('region', { name: 'Answer' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Next/ })).toBeVisible();
+  });
+});
