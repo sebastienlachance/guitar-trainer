@@ -1,5 +1,6 @@
 import { SessionRecord } from '../../practice/session-log';
-import { niceMax, progressPoints } from './progress-chart';
+import { progressPoints } from './progress-chart';
+import { niceMax } from './trend-chart';
 
 const MINUTE = 60_000;
 

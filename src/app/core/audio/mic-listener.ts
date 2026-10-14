@@ -1,7 +1,7 @@
 import { Service, signal } from '@angular/core';
 import { PitchDetector } from 'pitchy';
 import { chromaFromSpectrum } from './chroma';
-import { MicrophoneError, MicrophoneInput, openMicrophone } from './microphone';
+import { MicrophoneError, MicrophoneInput, createAnalyser, openMicrophone } from './microphone';
 import { DEFAULT_NOTE_STREAM_OPTIONS, NoteStream } from './note-stream';
 import { OnsetDetector } from './onsets';
 
@@ -86,7 +86,9 @@ export class MicListener {
     this.heard.set([]);
   }
 
-  private listen({ analyser, sampleRate }: MicrophoneInput, mode: ListenMode): void {
+  private listen(input: MicrophoneInput, mode: ListenMode): void {
+    const analyser = createAnalyser(input);
+    const sampleRate = input.sampleRate;
     const samples = new Float32Array(analyser.fftSize);
     const spectrum = new Float32Array(analyser.frequencyBinCount);
     const detector = PitchDetector.forFloat32Array(PITCH_WINDOW);

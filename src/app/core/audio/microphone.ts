@@ -1,5 +1,7 @@
+/** The open microphone, on its own audio clock: nodes added to `context` share its timing. */
 export interface MicrophoneInput {
-  readonly analyser: AnalyserNode;
+  readonly context: AudioContext;
+  readonly source: MediaStreamAudioSourceNode;
   readonly sampleRate: number;
   close(): void;
 }
@@ -9,6 +11,16 @@ export interface MicrophoneInput {
  * E string in the strum chroma. Pitch detection only reads the most recent part of the buffer.
  */
 const FFT_SIZE = 16384;
+
+/** An analyser on the microphone, for pitch detection and the strum chroma. */
+export function createAnalyser(input: MicrophoneInput): AnalyserNode {
+  const analyser = input.context.createAnalyser();
+  analyser.fftSize = FFT_SIZE;
+  // Smooths only the frequency data, so a strum's chroma settles instead of flickering.
+  analyser.smoothingTimeConstant = 0.6;
+  input.source.connect(analyser);
+  return analyser;
+}
 
 /**
  * Opens the microphone with the browser's voice processing turned off: echo cancellation, noise
@@ -28,13 +40,9 @@ export async function openMicrophone(): Promise<MicrophoneInput> {
   }
   const context = new AudioContext();
   await context.resume();
-  const analyser = context.createAnalyser();
-  analyser.fftSize = FFT_SIZE;
-  // Smooths only the frequency data, so a strum's chroma settles instead of flickering.
-  analyser.smoothingTimeConstant = 0.6;
-  context.createMediaStreamSource(stream).connect(analyser);
   return {
-    analyser,
+    context,
+    source: context.createMediaStreamSource(stream),
     sampleRate: context.sampleRate,
     close: () => {
       stream.getTracks().forEach((track) => track.stop());

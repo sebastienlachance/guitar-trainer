@@ -1,0 +1,52 @@
+<app-practice-frame [prompt]="prompt" />
+
+<ng-template #prompt>
+  @if (card(); as card) {
+    <div class="question" aria-live="polite">
+      <p class="ask muted">Play along</p>
+      <h1>
+        <span>{{ card.subdivision.name }}</span
+        >{{ ' ' }}<span class="tempo muted">{{ bpm() }} bpm</span>
+      </h1>
+      <p class="counting muted">{{ card.subdivision.counting }}</p>
+    </div>
+
+    <div class="beats" aria-hidden="true">
+      @for (count of counts; track count) {
+        <span class="beat" [class.first]="count === 1" [class.lit]="beat()?.count === count"></span>
+      }
+    </div>
+    @if (instruction()) {
+      <p class="instruction" aria-live="polite">{{ instruction() }}</p>
+    }
+
+    @if (run.phase() === 'prompt' && session.stage() === 'idle') {
+      <div class="actions">
+        <button type="button" class="btn btn-primary" data-autofocus (click)="session.play()">
+          Play
+        </button>
+      </div>
+    }
+
+    @if (session.result(); as result) {
+      <div class="result">
+        <app-take-strip [score]="result.score" [perBar]="perBar()" [description]="summary()" />
+        <p class="summary">{{ summary() }}</p>
+        <p class="ladder" [class.passed]="result.passed">{{ ladder() }}</p>
+        @if (result.leak) {
+          <p class="warning">
+            The tick is reaching the microphone: lower the volume, use headphones, or choose Light
+            only in setup.
+          </p>
+        }
+      </div>
+    }
+
+    @if (listener.errorMessage(); as error) {
+      <p class="warning">
+        {{ error }}{{ ' ' }}
+        <button type="button" class="link" (click)="listener.start()">Try again</button>
+      </p>
+    }
+  }
+</ng-template>

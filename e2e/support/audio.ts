@@ -18,9 +18,17 @@ export const TONES = {
   cSus4: [130.81, 174.61, 196.0],
 } as const;
 
+/** Steady plucks, for rhythm: a plucked A2 every `intervalMs`. */
+export const PLUCK_TRAINS = {
+  /** One pluck per beat at 80 bpm. 3 s holds exactly 4 beats, so the looping keeps time. */
+  plucks80: { frequency: 110, intervalMs: 750, seconds: 3 },
+} as const;
+
+export type Recording = keyof typeof TONES | keyof typeof PLUCK_TRAINS;
+
 /** Absolute path of a recording, as Chromium's fake-microphone flag needs. */
-export function tonePath(tone: keyof typeof TONES): string {
-  return resolve(AUDIO_DIR, `${tone}.wav`);
+export function recordingPath(name: Recording): string {
+  return resolve(AUDIO_DIR, `${name}.wav`);
 }
 
 /**
@@ -50,6 +58,29 @@ export function writeToneWav(
     );
     // Each note's harmonics peak just under 2; scaled so the mix stays at half of full scale.
     data.writeInt16LE(Math.round((sample / (2 * notes.length)) * 0.5 * 32767), index * 2);
+  }
+  writeFileSync(path, Buffer.concat([wavHeader(data.length), data]));
+}
+
+/**
+ * Plucks of one string at a steady interval, each decaying until the next restarts the string,
+ * starting at the very first sample so a loop of the file keeps the beat.
+ */
+export function writePlucksWav(
+  path: string,
+  frequency: number,
+  intervalMs: number,
+  seconds: number,
+): void {
+  const sampleCount = Math.round(SAMPLE_RATE * seconds);
+  const interval = Math.round((SAMPLE_RATE * intervalMs) / 1000);
+  const data = Buffer.alloc(sampleCount * 2);
+  for (let index = 0; index < sampleCount; index++) {
+    const time = (index % interval) / SAMPLE_RATE;
+    const tone =
+      Math.sin(2 * Math.PI * frequency * time) + 0.5 * Math.sin(4 * Math.PI * frequency * time);
+    const sample = 0.6 * Math.exp(-time / 0.25) * tone;
+    data.writeInt16LE(Math.round(sample * 0.5 * 32767), index * 2);
   }
   writeFileSync(path, Buffer.concat([wavHeader(data.length), data]));
 }

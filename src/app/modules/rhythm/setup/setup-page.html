@@ -1,0 +1,63 @@
+<h1 class="visually-hidden">Set up play along</h1>
+
+<section class="panel" aria-labelledby="calibration-title">
+  <h2 id="calibration-title">Calibration</h2>
+  <p class="hint">
+    Sound takes time to leave the speakers and reach the microphone. Strike once on each of 8 clicks
+    (after 4 to listen to) and the app measures that delay, so your timing is judged fairly.
+    Calibrate again after changing speakers, headphones or device.
+  </p>
+  <p class="calibration" role="status">
+    <span>{{ calibrationMessage().status }}</span>
+    @if (calibrationMessage().warning; as warning) {
+      <span class="warning">{{ warning }}</span>
+    }
+  </p>
+  <button
+    type="button"
+    class="btn"
+    [class.btn-primary]="settings().latencyMs === null"
+    [disabled]="calibrating()"
+    (click)="session.calibrate()"
+  >
+    {{ settings().latencyMs === null ? 'Calibrate' : 'Calibrate again' }}
+  </button>
+</section>
+
+<section class="panel">
+  <h2>What to play</h2>
+  <app-chip-toggles
+    label="Subdivisions"
+    [options]="subdivisionChips"
+    [selected]="settings().subdivisions"
+    (selectedChange)="update({ subdivisions: $event })"
+  />
+  <app-segmented-choice
+    label="Start at (bpm)"
+    [options]="tempoChoices"
+    [value]="settings().startTempo"
+    (valueChange)="update({ startTempo: $event })"
+  />
+  <app-segmented-choice
+    label="Take length"
+    [options]="barChoices"
+    [value]="settings().bars"
+    (valueChange)="update({ bars: $event })"
+  />
+  <p class="hint">
+    Any strike counts: strums, picked notes or muted chucks. Strike every subdivision, on the beat.
+  </p>
+</section>
+
+<section class="panel">
+  <h2>Metronome</h2>
+  <app-segmented-choice
+    label="Metronome"
+    [hideLabel]="true"
+    [options]="clickChoices"
+    [value]="settings().click"
+    (valueChange)="update({ click: $event })"
+  />
+</section>
+
+<app-setup-start />

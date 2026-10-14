@@ -194,6 +194,42 @@ test.describe('Phone width, progress', () => {
   });
 });
 
+test.describe('Phone width, play along', () => {
+  test.use({ viewport: { width: 375, height: 812 } });
+
+  test('play along pages fit the screen', async ({ page }) => {
+    const day = 24 * 60 * 60_000;
+    await seedSettings(page, 'rhythm', { subdivisions: ['eighth', 'sixteenth'], latencyMs: 40 });
+    await seedStorage(
+      page,
+      'rhythm:takes',
+      [70, 74, 78].map((bpm, index) => ({
+        subdivision: 'eighth',
+        bpm,
+        at: Date.now() - (3 - index) * day,
+        onTimePct: 90,
+        biasMs: 6,
+        spreadMs: 14,
+        meanAbsMs: 20 - index,
+        missed: 0,
+        passed: true,
+      })),
+    );
+
+    await page.goto('/#/rhythm');
+    await expect(page.getByRole('heading', { name: 'Calibration' })).toBeVisible();
+    await expectFitsWidth(page, 'Play along setup');
+
+    await startSession(page, 'rhythm');
+    await expect(page.getByRole('button', { name: 'Play' })).toBeVisible();
+    await expectFitsWidth(page, 'Play along practice');
+
+    await page.goto('/#/rhythm/stats');
+    await expect(page.getByRole('img', { name: /^Over 3 takes/ })).toBeVisible();
+    await expectFitsWidth(page, 'Play along stats');
+  });
+});
+
 test('a deep link opens the page directly', async ({ page }) => {
   await page.goto('/#/notes/stats');
 

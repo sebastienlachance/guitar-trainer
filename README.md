@@ -12,6 +12,8 @@ Practise guitar until the fretboard is automatic. Each kind of exercise is a **m
   minor, pentatonic, blues or one of the modes.
 - **Intervals in a scale:** a scale shape around its root. "Find the ♭3" and you tap it (or play
   it), or a note is marked and you name its interval.
+- **Play along:** rhythm. Strike every subdivision with the metronome, and see how early or late
+  each hit was; the tempo climbs as you get steadier.
 
 Adding a module is documented in
 [docs/adding-a-practice-module.md](docs/adding-a-practice-module.md).
@@ -81,6 +83,20 @@ Progress is saved in each browser, so a phone and a computer keep separate stats
 - After answering, every note shows its interval, a wrong tap says which interval it was, and the
   formula appears
 
+**Play along**
+
+- Quarter notes, eighth notes, triplets or sixteenth notes; 2- or 4-bar takes after a bar of
+  count-in
+- A tick and a light on each beat, or the light only
+- After each take: a strip of every hit (on the line is on the beat, above early, below late), the
+  share on time, your average early or late, your spread, and misses
+- Each subdivision climbs its own tempo ladder: a passed take (80% on time, at most 10% missed)
+  moves it up 4 bpm, two failed takes in a row move it down 4
+- **Calibrate first, once per device:** strike along with 8 clicks so the app can take off the
+  delay of your speakers and microphone. Speakers are fine: the tick is high-pitched and filtered
+  out of what the microphone times, and the app warns you if it still gets through
+- Stats: each subdivision's tempo now and best, and a chart of tempo or timing take after take
+
 **Every module**
 
 - **Sessions:** start a timed session and see the clock, the answers and your accuracy as you go.
@@ -137,6 +153,7 @@ src/app/
     identify/             identify notes: multiple choice
     scales/               identify scales: multiple choice over a scale position
     intervals/            intervals in a scale: tap, play or multiple choice in one module
+    rhythm/               play along: a metronome, timed strikes, a tempo ladder
   home/                   home screen
 docs/
   adding-a-practice-module.md
@@ -199,6 +216,8 @@ fretboard and stats follow from the intervals.
   also counts.
 - The browser's echo cancellation, noise suppression and auto gain are turned off, since they distort
   sustained instrument notes.
+- Rhythm timing reads the microphone sample by sample on the audio thread (an audio worklet), on the
+  same clock as the metronome, and times each strike to within about 3 ms.
 
 ## Deployment
 

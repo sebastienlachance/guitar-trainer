@@ -33,6 +33,12 @@ export const DEFAULT_ONSET_OPTIONS: OnsetOptions = {
 export class OnsetDetector {
   private recent: LevelFrame[] = [];
   private lastAttack = -Infinity;
+  private quietestBefore = 0;
+
+  /** The quietest recent level when the last attack was found: the sound it rose above. */
+  get baseline(): number {
+    return this.quietestBefore;
+  }
 
   constructor(private readonly options: OnsetOptions = DEFAULT_ONSET_OPTIONS) {}
 
@@ -50,6 +56,7 @@ export class OnsetDetector {
     const attack = before.length === 0 || frame.level >= this.options.rise * quietest;
     if (attack) {
       this.lastAttack = frame.time;
+      this.quietestBefore = before.length === 0 ? 0 : quietest;
     }
     return attack;
   }

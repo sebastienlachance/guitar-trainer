@@ -293,23 +293,26 @@ Build grid cells with `accuracyCell(id, totals(stats, (key) => …))`.
 
 ## 8. Shared building blocks
 
-| Need                                      | Use                                                                                                |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Show or answer on the neck                | `<app-fretboard [selectable] (picked) [cursorStart] [takesFocus] [highlightString]>`               |
-| Pick one answer from a few or many        | `<app-choice-buttons [options] [checked] [takesFocus] (chosen)>` in `core/ui/answer/`              |
-| Note name where any spelling is right     | `pitchClassNames()` ("C♯/D♭"), `commonNoteName()` ("D♭") in `core/music/notes.ts`                  |
-| The note at a string and fret             | `pitchClassAt()` in `core/fretboard/placement.ts`                                                  |
-| Scales and where to play them             | `SCALE_TYPES` in `core/music/scales.ts`; `scaleInPosition()`, `positionStarts()` in `placement.ts` |
-| Let people choose scales                  | `<app-scale-toggles [selected] (selectedChange)>` in `core/ui/setup/`                              |
-| A grid of how fast you answer             | `speedCell()` next to `accuracyCell()` in `core/ui/stats/accuracy-grid.ts`                         |
-| Name a scale in a sentence                | `scaleRootName()` ("G♯" minor, "A♭" major), `scaleNameInText()` in `core/music/scales.ts`          |
-| Notes shown for context only              | Fretboard dots of kind `'ghost'`: faint rings, labelled like the others                            |
-| Interval names                            | `displayInterval()` ("♭3"), `intervalLongName()` ("minor 3rd"), `intervalFromSemitones()`          |
-| Where a note or chord tone is on the neck | `findNotePositions()`, `findChordTones()`, `placeVoicing()` in `core/fretboard/placement.ts`       |
-| Spell notes, intervals, chords            | `core/music/notes.ts`, `intervals.ts`, `chords.ts`                                                 |
-| Listen to the guitar                      | `MicListener.start('notes')`, then `heard()`; `<app-mic-status>`                                   |
-| Words                                     | `plural()`, `percentCorrect()`, `capitalize()` in `core/ui/text.ts`                                |
-| Save something                            | `loadJson()` / `saveJson()` in `core/practice/storage.ts`                                          |
+| Need                                      | Use                                                                                                  |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Show or answer on the neck                | `<app-fretboard [selectable] (picked) [cursorStart] [takesFocus] [highlightString]>`                 |
+| Pick one answer from a few or many        | `<app-choice-buttons [options] [checked] [takesFocus] (chosen)>` in `core/ui/answer/`                |
+| Note name where any spelling is right     | `pitchClassNames()` ("C♯/D♭"), `commonNoteName()` ("D♭") in `core/music/notes.ts`                    |
+| The note at a string and fret             | `pitchClassAt()` in `core/fretboard/placement.ts`                                                    |
+| Scales and where to play them             | `SCALE_TYPES` in `core/music/scales.ts`; `scaleInPosition()`, `positionStarts()` in `placement.ts`   |
+| Let people choose scales                  | `<app-scale-toggles [selected] (selectedChange)>` in `core/ui/setup/`                                |
+| A grid of how fast you answer             | `speedCell()` next to `accuracyCell()` in `core/ui/stats/accuracy-grid.ts`                           |
+| Name a scale in a sentence                | `scaleRootName()` ("G♯" minor, "A♭" major), `scaleNameInText()` in `core/music/scales.ts`            |
+| Notes shown for context only              | Fretboard dots of kind `'ghost'`: faint rings, labelled like the others                              |
+| Interval names                            | `displayInterval()` ("♭3"), `intervalLongName()` ("minor 3rd"), `intervalFromSemitones()`            |
+| Where a note or chord tone is on the neck | `findNotePositions()`, `findChordTones()`, `placeVoicing()` in `core/fretboard/placement.ts`         |
+| Spell notes, intervals, chords            | `core/music/notes.ts`, `intervals.ts`, `chords.ts`                                                   |
+| Listen to the guitar                      | `MicListener.start('notes')`, then `heard()`; `<app-mic-status>`                                     |
+| Time strikes, play a metronome            | `RhythmListener` (`strikes()`, `now()`), `Metronome.play()`, `scoreTake()` in `core/audio/timing.ts` |
+| Show a rhythm take, chart a value         | `<app-take-strip>`; `<app-trend-chart>` in `core/ui/stats/`                                          |
+| Keep a result on screen after a pass      | `PracticeRun` option `advanceAfterCorrect: false`                                                    |
+| Words                                     | `plural()`, `percentCorrect()`, `capitalize()` in `core/ui/text.ts`                                  |
+| Save something                            | `loadJson()` / `saveJson()` in `core/practice/storage.ts`                                            |
 
 ### Multiple choice
 

@@ -38,6 +38,11 @@ export interface PracticeRunOptions<C extends PracticeCard> {
    * and the answer shows. The countdown stops while paused and starts over on resume.
    */
   readonly timeLimitMs?: Signal<number | null>;
+  /**
+   * Moves on by itself after a correct checked answer (the default). Turn it off when the result
+   * is worth reading, like a rhythm take's timing; Next then moves on, as after a wrong answer.
+   */
+  readonly advanceAfterCorrect?: boolean;
 }
 
 /** A running countdown for the current card, for drawing it. */
@@ -183,7 +188,7 @@ export class PracticeRun<C extends PracticeCard> {
     this.responseMs.set(responseMs);
     this.lastCorrect.set(correct);
     this.phase.set('answered');
-    if (correct) {
+    if (correct && this.options.advanceAfterCorrect !== false) {
       this.advanceTimer = setTimeout(() => this.next(), AUTO_ADVANCE_MS);
     }
   }

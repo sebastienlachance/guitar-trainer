@@ -45,19 +45,24 @@ routing, storage, focus or the microphone changed.
     - stats, the session log (`PracticeLog`), storage, `saved-settings.ts`
   - `audio/`: `MicListener` (played notes or a live spectrum, plus a strum count), pitch and chord
     matching, `OnsetDetector` (string strikes: counts strums, and lets a re-picked note count again)
+  - `audio/` for rhythm: `RhythmListener` (strike times on the audio clock, through
+    `public/worklets/block-forwarder.js` and `AttackTimer`), `Metronome`, `timing.ts` (grid,
+    scoring, calibration, leak check)
   - `ui/`:
     - `practice-frame/`: session bar, start/pause/summary screens, answer buttons, keys, focus, the
       time-limit bar
     - `module-shell.ts`
     - `setup/`, `stats/` (including the progress chart) and `answer/` (multiple-choice buttons)
       building blocks
-    - `mic-status.ts`, `icon.ts`, `text.ts`, `update-banner.ts` (offers a reload for a new version)
+    - `mic-status.ts`, `icon.ts`, `text.ts`, `update-banner.ts` (offers a reload for a new version),
+      `take-strip.ts` (a rhythm take, hit by hit)
   - `build-info.ts`: the deployed commit, set at build time through `define`
 - `src/app/modules/<name>/`: one practice module each, registered in `modules/registry.ts`.
   `notes/` is the reference implementation. `identify/` and `scales/` show multiple choice.
   `triads/` shows a self-check module with an answer template and mic matching. `intervals/` mixes
   tap, mic and multiple-choice questions in one module, and gives a card a new root each time it
-  comes up (picked in `onNext`).
+  comes up (picked in `onNext`). `rhythm/` plays along with a metronome; it keeps extra storage
+  (`rhythm:levels`, `rhythm:takes`) next to its stats.
 - `docs/adding-a-practice-module.md`: how to add a module. Follow it.
 - `e2e/`: Playwright smoke tests. `support/` holds the helpers, the one-card decks, the
   generator for the fake microphone's recordings and the static server for the Pages-style build.
@@ -137,8 +142,10 @@ routing, storage, focus or the microphone changed.
 - Prefer one-card decks set through settings. When settings can't narrow the deck to one card
   (like identify scales), fix `Math.random` at 0 so the deck's first card comes up:
   `vi.spyOn(Math, 'random').mockReturnValue(0)` in component tests, `pickFirstCard()` in e2e.
-- Microphone logic (`note-stream.ts`, `matchers.ts`, `chroma.ts`) is pure: test it with synthetic
-  input, not audio.
+- Microphone logic (`note-stream.ts`, `matchers.ts`, `chroma.ts`, `attack-timer.ts`, `timing.ts`)
+  is pure: test it with synthetic input, not audio.
+- Test-only helpers shared by several specs go in `*.testing.ts` files (like
+  `modules/rhythm/rhythm.testing.ts`): the app build leaves them out, the spec build takes them in.
 - End-to-end tests (`e2e/*.e2e.ts`) are only for what jsdom can't check:
   - real layout and phone width
   - real clicks on the fretboard
@@ -193,6 +200,14 @@ routing, storage, focus or the microphone changed.
   prompt on the owner's screen, and service workers don't work in it. Check mic and PWA flows in
   Playwright (fake microphone flags, as in `e2e/microphone.e2e.ts`); for a look at the screen,
   write a throwaway spec that saves `page.screenshot()` outside the repo, then delete it.
+- **Rhythm timing:**
+  - The metronome and the strike timing must use the **same audio context**: compare times on
+    `RhythmListener.now()`, never `Date.now()` or `performance.now()`.
+  - The worklet is plain JavaScript in `public/worklets/` (loaded by URL, cached by the service
+    worker through `ngsw-config.json`); keep its logic in TypeScript, in `AttackTimer`.
+  - The fake microphone's recording starts at a random moment relative to the metronome: e2e tests
+    can check steadiness (spread) but not being on time. Calibration averages offsets as positions
+    within the beat, so a constant offset near half a beat doesn't split in two.
 - **One-off crashes:** a build or test run occasionally dies with a V8 "Fatal error … unreachable
   code" or a Vitest worker crash. Run it again before investigating.
 - **Line endings:** on Windows, `prettier --check` can also flag files whose only difference is CRLF
@@ -222,13 +237,16 @@ routing, storage, focus or the microphone changed.
 
 ## Where things stand (2026-10-14)
 
-- **Modules:** triads, fretboard notes, identify notes, identify scales, intervals in a scale. Live
+- **Modules:** triads, fretboard notes, identify notes, identify scales, intervals in a scale,
+  play along (rhythm). Live
   at https://sebastienlachance.github.io/guitar-trainer/ as an installable PWA.
 - **Recently added:**
   - stats measure progress by speed (progress chart, speed grid, slow cards come up more)
   - an optional time limit in triads with the mic
   - mic successes in triads move straight to the next chord (strums must be fresh)
   - whole-neck notes prompts can be played into the mic, string by string
+  - play along: a metronome and strike timing to about 3 ms (through the fake mic), calibration,
+    a tempo ladder per subdivision; not yet tried by the owner with a real guitar and speakers
 - **Tested by the owner:** triads in strum mode, on a computer. Not yet confirmed on a real guitar:
   single-note detection (fretboard notes, intervals, triads arpeggio), phones, iPhone Safari.
 - **No task in progress.** Ideas mentioned but not requested: more modules, Tauri packaging.

@@ -1,0 +1,103 @@
+.question {
+  text-align: center;
+  padding: 16px 0 8px;
+}
+
+.ask {
+  font-size: 13px;
+  margin: 0 0 4px;
+}
+
+h1 {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0 12px;
+  font-size: clamp(28px, 8vw, 40px);
+}
+
+.tempo {
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.counting {
+  margin: 4px 0 0;
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+/* The light: four beats, the first larger; the current one glows. */
+.beats {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  margin: 18px 0 6px;
+}
+
+.beat {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  transition: background-color 120ms ease-out;
+}
+
+.beat.first {
+  width: 36px;
+  height: 36px;
+}
+
+.beat.lit {
+  background: var(--accent);
+  border-color: var(--accent);
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beat {
+    transition: none;
+  }
+}
+
+.instruction {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 15px;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.result {
+  margin-top: 18px;
+}
+
+.summary {
+  margin: 10px 0 0;
+  font-size: 14px;
+  text-align: center;
+}
+
+.ladder {
+  margin: 6px 0 0;
+  font-size: 15px;
+  text-align: center;
+  color: var(--warning);
+}
+
+.ladder.passed {
+  color: var(--success);
+}
+
+.warning {
+  margin: 10px 0 0;
+  font-size: 13px;
+  text-align: center;
+  color: var(--warning);
+}

@@ -12,6 +12,7 @@ function createRun(
     onEnd?: () => void;
     timeLimitMs?: Signal<number | null>;
     deck?: { key: string }[];
+    advanceAfterCorrect?: boolean;
   } = {},
 ) {
   return TestBed.runInInjectionContext(
@@ -24,6 +25,7 @@ function createRun(
         onStart: options.onStart,
         onEnd: options.onEnd,
         timeLimitMs: options.timeLimitMs,
+        advanceAfterCorrect: options.advanceAfterCorrect,
       }),
   );
 }
@@ -110,6 +112,18 @@ describe('PracticeRun', () => {
     run.reveal();
     run.selfCheck(true);
     expect(run.movedOn()).toBeNull();
+  });
+
+  it('can keep a correct answer on screen until Next', () => {
+    const run = createRun({ advanceAfterCorrect: false });
+    run.start();
+    const card = run.current();
+
+    run.resolve(true);
+    vi.advanceTimersByTime(10 * AUTO_ADVANCE_MS);
+
+    expect(run.phase()).toBe('answered');
+    expect(run.current()).toBe(card);
   });
 
   it('waits for Next after a wrong checked answer', () => {

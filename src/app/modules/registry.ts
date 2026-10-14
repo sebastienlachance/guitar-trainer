@@ -45,4 +45,11 @@ export const MODULES: readonly TrainerModule[] = [
     description: 'Find or name the ♭3, 5 or ♭7 in a scale shape, around its root.',
     loadRoutes: () => import('./intervals/intervals.routes').then((m) => m.INTERVALS_ROUTES),
   },
+  {
+    path: 'rhythm',
+    title: 'Play along',
+    description:
+      'Strum with the metronome, quarters to sixteenths: see how early or late each hit is.',
+    loadRoutes: () => import('./rhythm/rhythm.routes').then((m) => m.RHYTHM_ROUTES),
+  },
 ];
