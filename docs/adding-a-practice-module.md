@@ -308,6 +308,7 @@ Build grid cells with `accuracyCell(id, totals(stats, (key) => …))`.
 | Where a note or chord tone is on the neck | `findNotePositions()`, `findChordTones()`, `placeVoicing()` in `core/fretboard/placement.ts`         |
 | Spell notes, intervals, chords            | `core/music/notes.ts`, `intervals.ts`, `chords.ts`                                                   |
 | Listen to the guitar                      | `MicListener.start('notes')`, then `heard()`; `<app-mic-status>`                                     |
+| Let people choose the input (mic, cable)  | `<app-input-picker>` in the setup's microphone section; listeners open `AudioInputs.deviceToOpen()`  |
 | Time strikes, play a metronome            | `RhythmListener` (`strikes()`, `now()`), `Metronome.play()`, `scoreTake()` in `core/audio/timing.ts` |
 | Show a rhythm take, chart a value         | `<app-take-strip>`; `<app-trend-chart>` in `core/ui/stats/`                                          |
 | Keep a result on screen after a pass      | `PracticeRun` option `advanceAfterCorrect: false`                                                    |

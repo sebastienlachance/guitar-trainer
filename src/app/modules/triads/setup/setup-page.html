@@ -103,6 +103,9 @@
       (valueChange)="update({ timeLimit: $event })"
     />
   }
+  @if (settings().micMode !== 'off') {
+    <app-input-picker />
+  }
 </section>
 
 <app-setup-start />

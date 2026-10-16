@@ -16,6 +16,8 @@ export interface RhythmSettings {
   readonly click: ClickMode;
   /** Delay from the metronome to your strike as the mic hears it, measured by calibration. */
   readonly latencyMs: number | null;
+  /** The input calibration measured ('default' or an input id): another one has another delay. */
+  readonly latencyInput: string | null;
 }
 
 export const DEFAULT_SETTINGS: RhythmSettings = {
@@ -24,6 +26,7 @@ export const DEFAULT_SETTINGS: RhythmSettings = {
   bars: 4,
   click: 'sound',
   latencyMs: null,
+  latencyInput: null,
 };
 
 /** Calibration results outside this range mean something went wrong, not a real delay. */
@@ -34,6 +37,7 @@ export function sanitizeSettings(saved: unknown): RhythmSettings {
   const raw = savedFields(saved);
   const defaults = DEFAULT_SETTINGS;
   const latency = raw['latencyMs'];
+  const latencyInput = raw['latencyInput'];
   return {
     subdivisions: pickList(raw['subdivisions'], SUBDIVISION_IDS, defaults.subdivisions),
     startTempo: pickOne(raw['startTempo'], START_TEMPO_CHOICES, defaults.startTempo),
@@ -43,5 +47,6 @@ export function sanitizeSettings(saved: unknown): RhythmSettings {
       typeof latency === 'number' && latency >= LATENCY_RANGE.min && latency <= LATENCY_RANGE.max
         ? latency
         : null,
+    latencyInput: typeof latencyInput === 'string' ? latencyInput : null,
   };
 }

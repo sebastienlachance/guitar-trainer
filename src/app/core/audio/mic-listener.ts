@@ -1,6 +1,7 @@
-import { Service, signal } from '@angular/core';
+import { Service, inject, signal } from '@angular/core';
 import { PitchDetector } from 'pitchy';
 import { chromaFromSpectrum } from './chroma';
+import { AudioInputs } from './audio-inputs';
 import { MicrophoneError, MicrophoneInput, createAnalyser, openMicrophone } from './microphone';
 import { DEFAULT_NOTE_STREAM_OPTIONS, NoteStream } from './note-stream';
 import { OnsetDetector } from './onsets';
@@ -24,6 +25,8 @@ const FRAME_MS = 30;
 /** Turns the microphone into played notes, plus a live chroma vector in spectrum mode. */
 @Service()
 export class MicListener {
+  private readonly inputs = inject(AudioInputs);
+
   readonly status = signal<ListenerStatus>('off');
   readonly errorMessage = signal<string | null>(null);
   /** Played notes as MIDI numbers, oldest first. */
@@ -48,7 +51,7 @@ export class MicListener {
     this.status.set('starting');
     this.errorMessage.set(null);
     try {
-      const input = await openMicrophone();
+      const input = await openMicrophone(this.inputs.deviceToOpen());
       if (session !== this.session) {
         input.close();
         return;

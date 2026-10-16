@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { ChipOption, ChipToggles } from '../../../core/ui/setup/chip-toggles';
+import { InputPicker } from '../../../core/ui/setup/input-picker';
 import { ScaleToggles } from '../../../core/ui/setup/scale-toggles';
 import { Choice, SegmentedChoice } from '../../../core/ui/setup/segmented-choice';
 import { SetupStart } from '../../../core/ui/setup/setup-start';
@@ -15,7 +16,7 @@ import {
 
 @Component({
   selector: 'app-intervals-setup-page',
-  imports: [ChipToggles, ScaleToggles, SegmentedChoice, SetupStart],
+  imports: [ChipToggles, InputPicker, ScaleToggles, SegmentedChoice, SetupStart],
   templateUrl: './setup-page.html',
   host: { class: 'page' },
 })

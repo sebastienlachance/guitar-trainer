@@ -7,6 +7,7 @@ import {
   parseNote,
 } from '../../../core/music/notes';
 import { ChipOption, ChipToggles } from '../../../core/ui/setup/chip-toggles';
+import { InputPicker } from '../../../core/ui/setup/input-picker';
 import { Choice, SegmentedChoice } from '../../../core/ui/setup/segmented-choice';
 import { SetupStart } from '../../../core/ui/setup/setup-start';
 import { NotesSession } from '../notes-session';
@@ -14,7 +15,7 @@ import { MAX_FRET_CHOICES, NotesMicMode, NotesSettings, PromptKind } from '../se
 
 @Component({
   selector: 'app-notes-setup-page',
-  imports: [ChipToggles, SegmentedChoice, SetupStart],
+  imports: [ChipToggles, InputPicker, SegmentedChoice, SetupStart],
   templateUrl: './setup-page.html',
   host: { class: 'page' },
 })

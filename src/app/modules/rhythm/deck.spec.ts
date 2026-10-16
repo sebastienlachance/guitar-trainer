@@ -19,13 +19,24 @@ describe('rhythm deck', () => {
   });
 
   it('asks for calibration before the first session', () => {
-    expect(settingsProblems(DEFAULT_SETTINGS)).toEqual([
+    expect(settingsProblems(DEFAULT_SETTINGS, 'default')).toEqual([
       'Calibrate the timing first, in setup. It takes 15 seconds.',
     ]);
-    expect(settingsProblems({ ...DEFAULT_SETTINGS, latencyMs: 40 })).toEqual([]);
-    expect(settingsProblems({ ...DEFAULT_SETTINGS, latencyMs: 40, subdivisions: [] })).toEqual([
-      'Pick at least one subdivision.',
+    expect(settingsProblems({ ...DEFAULT_SETTINGS, latencyMs: 40 }, 'default')).toEqual([]);
+    expect(
+      settingsProblems({ ...DEFAULT_SETTINGS, latencyMs: 40, subdivisions: [] }, 'default'),
+    ).toEqual(['Pick at least one subdivision.']);
+  });
+
+  it('asks to calibrate again after switching to another input', () => {
+    const calibrated = { ...DEFAULT_SETTINGS, latencyMs: 40, latencyInput: 'default' };
+
+    expect(settingsProblems(calibrated, 'rocksmith')).toEqual([
+      'The input changed since you calibrated: calibrate again, in setup.',
     ]);
+    expect(settingsProblems({ ...calibrated, latencyInput: 'rocksmith' }, 'rocksmith')).toEqual([]);
+    // Saved before inputs could be chosen: measured on the default microphone.
+    expect(settingsProblems({ ...calibrated, latencyInput: null }, 'default')).toEqual([]);
   });
 
   it('keeps a saved latency only when it is plausible', () => {

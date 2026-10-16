@@ -55,6 +55,9 @@
     [value]="settings().micMode"
     (valueChange)="update({ micMode: $event })"
   />
+  @if (settings().micMode !== 'off') {
+    <app-input-picker />
+  }
 </section>
 
 <app-setup-start />

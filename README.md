@@ -92,9 +92,9 @@ Progress is saved in each browser, so a phone and a computer keep separate stats
   share on time, your average early or late, your spread, and misses
 - Each subdivision climbs its own tempo ladder: a passed take (80% on time, at most 10% missed)
   moves it up 4 bpm, two failed takes in a row move it down 4
-- **Calibrate first, once per device:** strike along with 8 clicks so the app can take off the
-  delay of your speakers and microphone. Speakers are fine: the tick is high-pitched and filtered
-  out of what the microphone times, and the app warns you if it still gets through
+- **Calibrate first, once per device and input:** strike along with 8 clicks so the app can take
+  off the delay of your speakers and microphone. Speakers are fine: the tick is high-pitched and
+  filtered out of what the microphone times, and the app warns you if it still gets through
 - Stats: each subdivision's tempo now and best, and a chart of tempo or timing take after take
 
 **Every module**
@@ -204,6 +204,11 @@ fretboard and stats follow from the intervals.
 
 ## Microphone notes
 
+- **Choose the input** in setup, in every module that listens: the default microphone, or another
+  one such as a Rocksmith Real Tone cable, which hears no room noise and nothing from the speakers.
+  Browsers only name the inputs once the microphone has been allowed, so setup offers to allow it
+  first. The choice holds for every module; while the chosen input is unplugged, the default
+  microphone is used. Play along asks you to calibrate again after a change of input.
 - Single notes (triads arpeggio mode, fretboard notes) use the McLeod pitch method
   ([pitchy](https://github.com/ianprime0509/pitchy)). A note counts once it holds steady for about
   70 ms; a moment where the pitch blurs or slips an octave doesn't restart it. Striking the string

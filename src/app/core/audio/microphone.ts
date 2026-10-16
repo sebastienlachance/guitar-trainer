@@ -22,19 +22,21 @@ export function createAnalyser(input: MicrophoneInput): AnalyserNode {
   return analyser;
 }
 
+/** Echo cancellation, noise suppression and auto gain are tuned for speech; they smear notes. */
+const RAW_AUDIO = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+
 /**
- * Opens the microphone with the browser's voice processing turned off: echo cancellation, noise
- * suppression and auto gain are tuned for speech and smear sustained instrument notes.
+ * Opens a sound input with the browser's voice processing turned off: `deviceId` for a chosen one
+ * (see `AudioInputs`), null for the default microphone. A chosen input that isn't there any more
+ * falls back to the default.
  */
-export async function openMicrophone(): Promise<MicrophoneInput> {
+export async function openMicrophone(deviceId: string | null = null): Promise<MicrophoneInput> {
   if (!navigator.mediaDevices?.getUserMedia) {
     throw new MicrophoneError('The microphone needs a secure page (https or localhost).');
   }
   let stream: MediaStream;
   try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
-    });
+    stream = await requestAudio(deviceId);
   } catch (error) {
     throw new MicrophoneError(describeAccessError(error));
   }
@@ -49,6 +51,23 @@ export async function openMicrophone(): Promise<MicrophoneInput> {
       void context.close();
     },
   };
+}
+
+async function requestAudio(deviceId: string | null): Promise<MediaStream> {
+  if (deviceId === null) {
+    return navigator.mediaDevices.getUserMedia({ audio: RAW_AUDIO });
+  }
+  try {
+    return await navigator.mediaDevices.getUserMedia({
+      audio: { ...RAW_AUDIO, deviceId: { exact: deviceId } },
+    });
+  } catch (error) {
+    const name = error instanceof DOMException ? error.name : '';
+    if (name === 'OverconstrainedError' || name === 'NotFoundError') {
+      return navigator.mediaDevices.getUserMedia({ audio: RAW_AUDIO });
+    }
+    throw error;
+  }
 }
 
 export class MicrophoneError extends Error {}

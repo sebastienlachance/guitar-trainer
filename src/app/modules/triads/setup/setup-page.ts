@@ -4,6 +4,7 @@ import { chordSymbol } from '../../../core/music/chords';
 import { displayNoteName, parseNote } from '../../../core/music/notes';
 import { inversionName } from '../../../core/music/voicings';
 import { ChipOption, ChipToggles } from '../../../core/ui/setup/chip-toggles';
+import { InputPicker } from '../../../core/ui/setup/input-picker';
 import { Choice, SegmentedChoice } from '../../../core/ui/setup/segmented-choice';
 import { SetupStart } from '../../../core/ui/setup/setup-start';
 import { CHORD_QUALITIES, NATURAL_ROOTS, ROOTS, isFourNote } from '../catalog';
@@ -30,7 +31,7 @@ function qualityChips(fourNote: boolean): ChipOption<string>[] {
 
 @Component({
   selector: 'app-setup-page',
-  imports: [ChipToggles, SegmentedChoice, SetupStart],
+  imports: [ChipToggles, InputPicker, SegmentedChoice, SetupStart],
   templateUrl: './setup-page.html',
   styleUrl: './setup-page.css',
   host: { class: 'page' },

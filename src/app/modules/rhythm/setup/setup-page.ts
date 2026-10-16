@@ -1,6 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 import { RhythmListener } from '../../../core/audio/rhythm-listener';
 import { ChipOption, ChipToggles } from '../../../core/ui/setup/chip-toggles';
+import { InputPicker } from '../../../core/ui/setup/input-picker';
 import { Choice, SegmentedChoice } from '../../../core/ui/setup/segmented-choice';
 import { SetupStart } from '../../../core/ui/setup/setup-start';
 import { SUBDIVISIONS } from '../deck';
@@ -9,7 +10,7 @@ import { BAR_CHOICES, ClickMode, RhythmSettings, START_TEMPO_CHOICES } from '../
 
 @Component({
   selector: 'app-rhythm-setup-page',
-  imports: [ChipToggles, SegmentedChoice, SetupStart],
+  imports: [ChipToggles, InputPicker, SegmentedChoice, SetupStart],
   templateUrl: './setup-page.html',
   styles: `
     .calibration {

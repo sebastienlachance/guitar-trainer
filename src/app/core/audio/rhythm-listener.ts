@@ -1,5 +1,6 @@
-import { Service, signal } from '@angular/core';
+import { Service, inject, signal } from '@angular/core';
 import { AttackTimer } from './attack-timer';
+import { AudioInputs } from './audio-inputs';
 import { ListenerStatus } from './mic-listener';
 import { MicrophoneError, MicrophoneInput, openMicrophone } from './microphone';
 
@@ -19,6 +20,8 @@ const DETECTION_CUTOFF_HZ = 1500;
  */
 @Service()
 export class RhythmListener {
+  private readonly inputs = inject(AudioInputs);
+
   readonly status = signal<ListenerStatus>('off');
   readonly errorMessage = signal<string | null>(null);
   /** Strike times in seconds on `now()`'s clock, oldest first. */
@@ -46,7 +49,7 @@ export class RhythmListener {
     this.status.set('starting');
     this.errorMessage.set(null);
     try {
-      const input = await openMicrophone();
+      const input = await openMicrophone(this.inputs.deviceToOpen());
       await this.listen(input);
       if (session !== this.session) {
         input.close();

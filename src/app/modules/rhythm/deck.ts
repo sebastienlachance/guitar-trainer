@@ -42,14 +42,23 @@ export function buildDeck(settings: RhythmSettings): RhythmCard[] {
   );
 }
 
-/** Problems that stop a practice session from starting, in plain words. */
-export function settingsProblems(settings: RhythmSettings): string[] {
+/** The input key calibration records for the default microphone. */
+export const DEFAULT_INPUT = 'default';
+
+/**
+ * Problems that stop a practice session from starting, in plain words. `input` is the input
+ * that will be listened to: a delay measured on another one doesn't apply to it.
+ */
+export function settingsProblems(settings: RhythmSettings, input: string): string[] {
   const problems: string[] = [];
   if (settings.subdivisions.length === 0) {
     problems.push('Pick at least one subdivision.');
   }
   if (settings.latencyMs === null) {
     problems.push('Calibrate the timing first, in setup. It takes 15 seconds.');
+  } else if ((settings.latencyInput ?? DEFAULT_INPUT) !== input) {
+    // Calibrations from before inputs could be chosen were made with the default microphone.
+    problems.push('The input changed since you calibrated: calibrate again, in setup.');
   }
   return problems;
 }

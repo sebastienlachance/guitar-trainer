@@ -1,4 +1,5 @@
 import { Provider, Service, computed, inject, signal } from '@angular/core';
+import { AudioInputs } from '../../core/audio/audio-inputs';
 import { Click, Metronome, clickSchedule } from '../../core/audio/metronome';
 import { RhythmListener } from '../../core/audio/rhythm-listener';
 import {
@@ -15,6 +16,7 @@ import { PracticeRun } from '../../core/practice/practice-run';
 import { loadJson, saveJson } from '../../core/practice/storage';
 import { plural } from '../../core/ui/text';
 import {
+  DEFAULT_INPUT,
   Level,
   Levels,
   RhythmCard,
@@ -72,6 +74,7 @@ export type CalibrationState =
 export class RhythmSession implements Drill {
   private readonly listener = inject(RhythmListener);
   private readonly metronome = inject(Metronome);
+  private readonly inputs = inject(AudioInputs);
 
   readonly title = 'Play along';
   readonly unit = 'take';
@@ -79,7 +82,9 @@ export class RhythmSession implements Drill {
 
   readonly settings = signal<RhythmSettings>(sanitizeSettings(loadJson(SETTINGS_KEY)));
   readonly deck = computed(() => buildDeck(this.settings()));
-  readonly problems = computed(() => settingsProblems(this.settings()));
+  /** The input that will be listened to, as calibration records it. */
+  private readonly input = computed(() => this.inputs.deviceToOpen() ?? DEFAULT_INPUT);
+  readonly problems = computed(() => settingsProblems(this.settings(), this.input()));
 
   readonly levels = signal<Levels>(loadLevels());
   readonly takes = signal<readonly TakeRecord[]>(loadTakes());
@@ -177,7 +182,10 @@ export class RhythmSession implements Drill {
       if (result.matched < CALIBRATION_MIN_HEARD) {
         this.calibration.set({ stage: 'failed', heard: result.matched });
       } else {
-        this.updateSettings({ latencyMs: Math.round(result.latencyMs) });
+        this.updateSettings({
+          latencyMs: Math.round(result.latencyMs),
+          latencyInput: this.input(),
+        });
         this.calibration.set({
           stage: 'done',
           result,

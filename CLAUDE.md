@@ -44,7 +44,9 @@ routing, storage, focus or the microphone changed.
     - `Drill`: the contract a module provides
     - stats, the session log (`PracticeLog`), storage, `saved-settings.ts`
   - `audio/`: `MicListener` (played notes or a live spectrum, plus a strum count), pitch and chord
-    matching, `OnsetDetector` (string strikes: counts strums, and lets a re-picked note count again)
+    matching, `OnsetDetector` (string strikes: counts strums, and lets a re-picked note count again),
+    `AudioInputs` (the chosen sound input, such as a guitar cable, shared by every module and
+    saved under `audio:input`; both listeners open it)
   - `audio/` for rhythm: `RhythmListener` (strike times on the audio clock, through
     `public/worklets/block-forwarder.js` and `AttackTimer`), `Metronome`, `timing.ts` (grid,
     scoring, calibration, leak check)
@@ -52,8 +54,8 @@ routing, storage, focus or the microphone changed.
     - `practice-frame/`: session bar, start/pause/summary screens, answer buttons, keys, focus, the
       time-limit bar
     - `module-shell.ts`
-    - `setup/`, `stats/` (including the progress chart) and `answer/` (multiple-choice buttons)
-      building blocks
+    - `setup/` (including `input-picker.ts`), `stats/` (including the progress chart) and
+      `answer/` (multiple-choice buttons) building blocks
     - `mic-status.ts`, `icon.ts`, `text.ts`, `update-banner.ts` (offers a reload for a new version),
       `take-strip.ts` (a rhythm take, hit by hit)
   - `build-info.ts`: the deployed commit, set at build time through `define`
@@ -90,7 +92,8 @@ routing, storage, focus or the microphone changed.
     settings signal. No Angular forms.
 - Storage:
   - go through `loadJson()` / `saveJson()` only
-  - keys are `<module>:settings` and `<module>:stats`, under the `guitar-trainer:v1:` prefix
+  - keys are `<module>:settings` and `<module>:stats`, under the `guitar-trainer:v1:` prefix;
+    `audio:input` holds the input every module listens to
   - stats are keyed by card key: never change a module's key format without migrating saved data
 - Keep the app self-contained, since the PWA's offline cache and a later Tauri build depend on it:
   - hash routing (`withHashLocation()`)
@@ -205,6 +208,8 @@ routing, storage, focus or the microphone changed.
     `RhythmListener.now()`, never `Date.now()` or `performance.now()`.
   - The worklet is plain JavaScript in `public/worklets/` (loaded by URL, cached by the service
     worker through `ngsw-config.json`); keep its logic in TypeScript, in `AttackTimer`.
+  - A calibration only holds for the input it was measured on: the rhythm settings record it
+    (`latencyInput`), and a change of input asks for a new calibration.
   - The fake microphone's recording starts at a random moment relative to the metronome: e2e tests
     can check steadiness (spread) but not being on time. Calibration averages offsets as positions
     within the beat, so a constant offset near half a beat doesn't split in two.
@@ -247,6 +252,8 @@ routing, storage, focus or the microphone changed.
   - whole-neck notes prompts can be played into the mic, string by string
   - play along: a metronome and strike timing to about 3 ms (through the fake mic), calibration,
     a tempo ladder per subdivision; not yet tried by the owner with a real guitar and speakers
+  - an input picker in every listening module's setup, for a guitar cable such as the Rocksmith
+    Real Tone cable; not yet tried by the owner with the cable
 - **Tested by the owner:** triads in strum mode, on a computer. Not yet confirmed on a real guitar:
   single-note detection (fretboard notes, intervals, triads arpeggio), phones, iPhone Safari.
   On a real guitar (2026-10-16), triads missed D at the 12th fret of the 4th string: nothing was
