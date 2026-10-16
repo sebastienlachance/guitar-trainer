@@ -44,6 +44,41 @@ describe('NoteStream', () => {
     expect(play(stream, frames)).toEqual([60, 65, 67]);
   });
 
+  it('keeps counting a held note through one unclear frame', () => {
+    const stream = new NoteStream();
+    const blurred = { frequency: hz(62), clarity: 0.6, level: 0.1, time: 30 };
+
+    const notes = play(stream, [frame(62, 0), blurred, frame(62, 60), frame(62, 90)]);
+
+    expect(notes).toEqual([62]);
+  });
+
+  it('keeps counting a held note through a momentary octave slip', () => {
+    const stream = new NoteStream();
+
+    expect(play(stream, [frame(62, 0), frame(50, 30), frame(62, 60), frame(62, 90)])).toEqual([62]);
+  });
+
+  it('starts over when the gap lasts, or a different note comes', () => {
+    const blurred = (time: number) => ({ frequency: 0, clarity: 0, level: 0.1, time });
+    const longGap = play(new NoteStream(), [frame(62, 0), blurred(30), blurred(60), frame(62, 90)]);
+    const newNote = play(new NoteStream(), [
+      frame(62, 0),
+      frame(64, 30),
+      frame(62, 60),
+      frame(62, 90),
+    ]);
+
+    expect(longGap).toEqual([]);
+    expect(newNote).toEqual([]);
+  });
+
+  it('hears a softly played note', () => {
+    const stream = new NoteStream();
+
+    expect(play(stream, [frame(62, 0, 0.007), frame(62, 90, 0.007)])).toEqual([62]);
+  });
+
   it('counts a re-picked note again right away after a new attack', () => {
     const stream = new NoteStream();
     const first = play(stream, [frame(55, 0), frame(55, 120)]);

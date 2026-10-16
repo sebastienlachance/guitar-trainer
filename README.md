@@ -206,8 +206,8 @@ fretboard and stats follow from the intervals.
 
 - Single notes (triads arpeggio mode, fretboard notes) use the McLeod pitch method
   ([pitchy](https://github.com/ianprime0509/pitchy)). A note counts once it holds steady for about
-  100 ms. Striking the string again counts the same note again right away; a note left ringing
-  counts once.
+  70 ms; a moment where the pitch blurs or slips an octave doesn't restart it. Striking the string
+  again counts the same note again right away; a note left ringing counts once.
 - Strum mode folds the spectrum into 12 pitch classes and compares it with the chord. Overtones make
   it less reliable; adjust **Strictness** in setup if it's too picky or too lenient.
 - In strum mode, only a strum made after the chord appeared counts: the last chord, still ringing,

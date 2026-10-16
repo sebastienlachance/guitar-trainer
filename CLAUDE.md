@@ -235,7 +235,7 @@ routing, storage, focus or the microphone changed.
   `playwright install --with-deps` without warning. Move to a newer image on purpose, in its own
   commit, once Playwright supports it.
 
-## Where things stand (2026-10-14)
+## Where things stand (2026-10-16)
 
 - **Modules:** triads, fretboard notes, identify notes, identify scales, intervals in a scale,
   play along (rhythm). Live
@@ -249,4 +249,7 @@ routing, storage, focus or the microphone changed.
     a tempo ladder per subdivision; not yet tried by the owner with a real guitar and speakers
 - **Tested by the owner:** triads in strum mode, on a computer. Not yet confirmed on a real guitar:
   single-note detection (fretboard notes, intervals, triads arpeggio), phones, iPhone Safari.
+  On a real guitar (2026-10-16), triads missed D at the 12th fret of the 4th string: nothing was
+  heard. `NoteStream` was loosened in response (a 45 ms grace for an unclear frame or an octave
+  slip, clarity 0.85, 70 ms steady, level 0.006); not yet rechecked by the owner.
 - **No task in progress.** Ideas mentioned but not requested: more modules, Tauri packaging.

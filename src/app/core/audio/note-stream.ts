@@ -16,12 +16,22 @@ export interface NoteStreamOptions {
   readonly minLevel: number;
   /** How long a pitch must hold before it counts as a played note. */
   readonly stableMs: number;
+  /**
+   * A note being held survives a gap this short: a frame where the pitch is unclear, or jumps an
+   * octave (a common detection slip), before it comes back.
+   */
+  readonly graceMs: number;
 }
 
+/**
+ * Tuned on a real guitar: a note high on a thick string (the D string at fret 12) dies away
+ * quickly and blurs for a moment as the open string rings along, so stricter values missed it.
+ */
 export const DEFAULT_NOTE_STREAM_OPTIONS: NoteStreamOptions = {
-  minClarity: 0.9,
-  minLevel: 0.01,
-  stableMs: 100,
+  minClarity: 0.85,
+  minLevel: 0.006,
+  stableMs: 70,
+  graceMs: 45,
 };
 
 /** Lowest and highest fundamentals a guitar in standard tuning produces (E2 to about fret 22 on high E). */
@@ -38,7 +48,7 @@ export function frequencyToMidi(frequency: number): number {
  * `rearm()` (a new attack), so a sustained note counts once while a re-picked one counts twice.
  */
 export class NoteStream {
-  private candidate: { midi: number; since: number } | null = null;
+  private candidate: { midi: number; since: number; lastSeen: number } | null = null;
   private lastReported: number | null = null;
 
   constructor(private readonly options: NoteStreamOptions = DEFAULT_NOTE_STREAM_OPTIONS) {}
@@ -60,20 +70,34 @@ export class NoteStream {
       return null;
     }
     const inRange = frame.frequency >= MIN_GUITAR_HZ && frame.frequency <= MAX_GUITAR_HZ;
-    if (frame.clarity < this.options.minClarity || !inRange) {
+    const midi =
+      frame.clarity >= this.options.minClarity && inRange ? frequencyToMidi(frame.frequency) : null;
+    if (this.candidate && midi !== this.candidate.midi && this.isSlip(midi, frame.time)) {
+      return null;
+    }
+    if (midi === null) {
       this.candidate = null;
       return null;
     }
-    const midi = frequencyToMidi(frame.frequency);
     if (this.candidate?.midi !== midi) {
-      this.candidate = { midi, since: frame.time };
+      this.candidate = { midi, since: frame.time, lastSeen: frame.time };
       return null;
     }
+    this.candidate.lastSeen = frame.time;
     const held = frame.time - this.candidate.since >= this.options.stableMs;
     if (held && midi !== this.lastReported) {
       this.lastReported = midi;
       return midi;
     }
     return null;
+  }
+
+  /** An unclear frame or an octave jump, soon after the held note was last heard. */
+  private isSlip(midi: number | null, time: number): boolean {
+    const candidate = this.candidate;
+    if (!candidate || time - candidate.lastSeen > this.options.graceMs) {
+      return false;
+    }
+    return midi === null || Math.abs(midi - candidate.midi) % 12 === 0;
   }
 }
