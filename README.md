@@ -23,7 +23,9 @@ Practise guitar until the fretboard is automatic. Each kind of exercise is a **m
 - **Progressions:** play a chord progression with the metronome, each chord on its beat, faster as
   it gets clean.
 
-There's also a **tuner**, on the home screen.
+There's also a **tuner**, a button at the top of the home screen. The home screen groups the
+modules (know the neck; chords; rhythm, ear and technique), marks the ones that listen through the
+microphone, and offers to pick up where you left off, with your practice time this week.
 
 Adding a module is documented in
 [docs/adding-a-practice-module.md](docs/adding-a-practice-module.md).

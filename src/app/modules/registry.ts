@@ -1,4 +1,14 @@
 import { LoadChildren } from '@angular/router';
+import { IconName } from '../core/ui/icon';
+
+/** The groups the home screen sorts the modules into, in the order it shows them. */
+export const MODULE_GROUPS = [
+  { id: 'neck', title: 'Know the neck' },
+  { id: 'chords', title: 'Chords' },
+  { id: 'rhythm', title: 'Rhythm, ear and technique' },
+] as const;
+
+export type ModuleGroup = (typeof MODULE_GROUPS)[number]['id'];
 
 /**
  * A practice module: one kind of exercise, listed on the home screen. To add one, follow
@@ -9,7 +19,12 @@ export interface TrainerModule {
   /** URL segment, e.g. "triads" for #/triads. */
   readonly path: string;
   readonly title: string;
+  /** A few words under the title on the home screen's tile. */
   readonly description: string;
+  readonly group: ModuleGroup;
+  readonly icon: IconName;
+  /** Whether it can listen through the microphone, marked on its tile. */
+  readonly listens: boolean;
   readonly loadRoutes: LoadChildren;
 }
 
@@ -17,63 +32,91 @@ export const MODULES: readonly TrainerModule[] = [
   {
     path: 'triads',
     title: 'Triads',
-    description:
-      'Name a chord, play it: triads, sus chords, sixths and sevenths on every string set.',
+    description: 'Name it, play it, on every string set',
+    group: 'chords',
+    icon: 'chord',
+    listens: true,
     loadRoutes: () => import('./triads/triads.routes').then((m) => m.TRIADS_ROUTES),
   },
   {
     path: 'notes',
     title: 'Fretboard notes',
-    description: 'Find any note on any string, by tapping the fretboard or playing it.',
+    description: 'Find any note: tap it or play it',
+    group: 'neck',
+    icon: 'neck',
+    listens: true,
     loadRoutes: () => import('./notes/notes.routes').then((m) => m.NOTES_ROUTES),
   },
   {
     path: 'identify',
     title: 'Identify notes',
-    description: 'A dot on the neck: name the note, from four choices or all twelve.',
+    description: 'Name the note on the neck',
+    group: 'neck',
+    icon: 'name-note',
+    listens: false,
     loadRoutes: () => import('./identify/identify.routes').then((m) => m.IDENTIFY_ROUTES),
   },
   {
     path: 'scales',
     title: 'Identify scales',
-    description: 'A scale in one hand position, root marked: major, minor, pentatonics or modes?',
+    description: 'Name the scale from its shape',
+    group: 'neck',
+    icon: 'scale-shape',
+    listens: false,
     loadRoutes: () => import('./scales/scales.routes').then((m) => m.SCALES_ROUTES),
   },
   {
     path: 'intervals',
     title: 'Intervals in a scale',
-    description: 'Find or name the ♭3, 5 or ♭7 in a scale shape, around its root.',
+    description: 'Find the ♭3, 5 or ♭7 around a root',
+    group: 'neck',
+    icon: 'interval',
+    listens: true,
     loadRoutes: () => import('./intervals/intervals.routes').then((m) => m.INTERVALS_ROUTES),
   },
   {
     path: 'rhythm',
     title: 'Play along',
-    description:
-      'Strum with the metronome, quarters to sixteenths: see how early or late each hit is.',
+    description: 'Subdivisions and strumming patterns',
+    group: 'rhythm',
+    icon: 'metronome',
+    listens: true,
     loadRoutes: () => import('./rhythm/rhythm.routes').then((m) => m.RHYTHM_ROUTES),
   },
   {
     path: 'changes',
     title: 'Chord changes',
-    description: 'Two chords, one minute: the microphone counts every clean change.',
+    description: 'Two chords, one minute',
+    group: 'chords',
+    icon: 'swap',
+    listens: true,
     loadRoutes: () => import('./changes/changes.routes').then((m) => m.CHANGES_ROUTES),
   },
   {
     path: 'playback',
     title: 'Play it back',
-    description: 'Hear an interval or a short melody, then find it on the guitar and play it.',
+    description: 'Hear it, then find it on the neck',
+    group: 'rhythm',
+    icon: 'ear',
+    listens: true,
     loadRoutes: () => import('./playback/playback.routes').then((m) => m.PLAYBACK_ROUTES),
   },
   {
     path: 'bends',
     title: 'Bends',
-    description: 'Bend a note up to its target and hold it there, in tune to the cent.',
+    description: 'Bend in tune, and hold it',
+    group: 'rhythm',
+    icon: 'bend',
+    listens: true,
     loadRoutes: () => import('./bends/bends.routes').then((m) => m.BENDS_ROUTES),
   },
   {
     path: 'progressions',
     title: 'Progressions',
-    description: 'Play G D Em C and friends with the metronome, each chord on its beat.',
+    description: 'Each chord on its beat',
+    group: 'chords',
+    icon: 'progression',
+    listens: true,
     loadRoutes: () =>
       import('./progressions/progressions.routes').then((m) => m.PROGRESSIONS_ROUTES),
   },

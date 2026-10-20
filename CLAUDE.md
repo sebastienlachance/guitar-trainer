@@ -64,7 +64,8 @@ routing, storage, focus or the microphone changed.
     - `mic-status.ts`, `icon.ts`, `text.ts`, `update-banner.ts` (offers a reload for a new version),
       `take-strip.ts` (a rhythm take, hit by hit)
   - `build-info.ts`: the deployed commit, set at build time through `define`
-- `src/app/modules/<name>/`: one practice module each, registered in `modules/registry.ts`.
+- `src/app/modules/<name>/`: one practice module each, registered in `modules/registry.ts` with
+  its home screen group, icon and whether it listens.
   `notes/` is the reference implementation. `identify/` and `scales/` show multiple choice.
   `triads/` shows a self-check module with an answer template and mic matching. `intervals/` mixes
   tap, mic and multiple-choice questions in one module, and gives a card a new root each time it
@@ -79,7 +80,9 @@ routing, storage, focus or the microphone changed.
   pure). `progressions/` times strikes with `RhythmListener` (the metronome's clock, deaf to its
   tick) and checks which chord each sounds like with `MicListener`'s spectrum, both open at once.
 - `src/app/tuner/`: the tuner, a page of its own (no sessions or stats, so not a module), linked
-  from the home page.
+  from the home page's header.
+- `src/app/home/`: the home screen: the modules in groups of tiles, and "pick up where you left
+  off" with this week's practice, from the session log (`recent.ts`, pure).
 - `docs/adding-a-practice-module.md`: how to add a module. Follow it. `docs/ideas.md`: features
   worth building next.
 - `e2e/`: Playwright smoke tests. `support/` holds the helpers, the one-card decks, the
@@ -285,6 +288,8 @@ routing, storage, focus or the microphone changed.
     detector); answering through the fake mic works; not yet tried by the owner with speakers
   - strumming patterns in play along, bends and progressions (2026-10-20): checked through the
     fake mic with generated recordings; not yet tried by the owner on a real guitar
+  - the home screen redesigned (2026-10-20): grouped tiles with icons, the tuner in the header,
+    "pick up where you left off" and this week's practice from the session log
 - **Tested by the owner:** triads in strum mode, on a computer. Not yet confirmed on a real guitar:
   single-note detection (fretboard notes, intervals, triads arpeggio), phones, iPhone Safari.
   On a real guitar (2026-10-16), triads missed D at the 12th fret of the 4th string: nothing was

@@ -209,8 +209,11 @@ export const SCALES_ROUTES: Routes = [
 ```ts
 {
   path: 'scales',
-  title: 'Scales',
-  description: 'Name the scale from its pattern on the neck.',
+  title: 'Identify scales',
+  description: 'Name the scale from its shape', // a few words, under the title on its tile
+  group: 'neck', // the home screen's group: 'neck', 'chords' or 'rhythm' (MODULE_GROUPS)
+  icon: 'scale-shape', // a line icon from core/ui/icon.ts: add one there if none fits
+  listens: false, // true marks the tile with a microphone
   loadRoutes: () => import('./scales/scales.routes').then((m) => m.SCALES_ROUTES),
 },
 ```

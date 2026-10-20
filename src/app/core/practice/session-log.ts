@@ -146,7 +146,8 @@ export function isSessionRecords(value: unknown): value is SessionRecord[] {
 
 const pad = (value: number) => String(value).padStart(2, '0');
 
-function startOfDay(time: number): number {
+/** Midnight, local time, of the day `time` falls on. */
+export function startOfDay(time: number): number {
   const day = new Date(time);
   day.setHours(0, 0, 0, 0);
   return day.getTime();
