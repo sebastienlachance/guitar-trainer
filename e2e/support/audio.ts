@@ -26,7 +26,20 @@ export const PLUCK_TRAINS = {
   plucks80: { frequency: 110, intervalMs: 750, seconds: 3 },
 } as const;
 
-export type Recording = keyof typeof TONES | keyof typeof PLUCK_TRAINS;
+/** Chords struck in turn, each ringing until the next: for chord changes. */
+export const SEQUENCES = {
+  /** An open C (C3 E3 G3 C4 E4), then an open G (G2 B2 D3 G3 B3 G4), a second apart. */
+  changesCG: {
+    chords: [
+      [130.81, 164.81, 196.0, 261.63, 329.63],
+      [98.0, 123.47, 146.83, 196.0, 246.94, 392.0],
+    ],
+    intervalMs: 1000,
+    seconds: 2,
+  },
+} as const;
+
+export type Recording = keyof typeof TONES | keyof typeof PLUCK_TRAINS | keyof typeof SEQUENCES;
 
 /** Absolute path of a recording, as Chromium's fake-microphone flag needs. */
 export function recordingPath(name: Recording): string {
@@ -82,6 +95,35 @@ export function writePlucksWav(
     const tone =
       Math.sin(2 * Math.PI * frequency * time) + 0.5 * Math.sin(4 * Math.PI * frequency * time);
     const sample = 0.6 * Math.exp(-time / 0.25) * tone;
+    data.writeInt16LE(Math.round(sample * 0.5 * 32767), index * 2);
+  }
+  writeFileSync(path, Buffer.concat([wavHeader(data.length), data]));
+}
+
+/**
+ * Each chord (or note) in turn, every `intervalMs`, each decaying until the next. Starts at the
+ * very first sample, so a loop of the file keeps the pattern.
+ */
+export function writeSequenceWav(
+  path: string,
+  chords: readonly (readonly number[])[],
+  intervalMs: number,
+  seconds: number,
+): void {
+  const sampleCount = Math.round(SAMPLE_RATE * seconds);
+  const interval = Math.round((SAMPLE_RATE * intervalMs) / 1000);
+  const data = Buffer.alloc(sampleCount * 2);
+  for (let index = 0; index < sampleCount; index++) {
+    const notes = chords[Math.floor(index / interval) % chords.length];
+    const time = (index % interval) / SAMPLE_RATE;
+    const tone = notes.reduce(
+      (sum, frequency) =>
+        sum +
+        Math.sin(2 * Math.PI * frequency * time) +
+        0.3 * Math.sin(4 * Math.PI * frequency * time),
+      0,
+    );
+    const sample = (0.6 * Math.exp(-time / 0.35) * tone) / notes.length;
     data.writeInt16LE(Math.round(sample * 0.5 * 32767), index * 2);
   }
   writeFileSync(path, Buffer.concat([wavHeader(data.length), data]));

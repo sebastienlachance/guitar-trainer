@@ -52,4 +52,10 @@ export const MODULES: readonly TrainerModule[] = [
       'Strum with the metronome, quarters to sixteenths: see how early or late each hit is.',
     loadRoutes: () => import('./rhythm/rhythm.routes').then((m) => m.RHYTHM_ROUTES),
   },
+  {
+    path: 'changes',
+    title: 'Chord changes',
+    description: 'Two chords, one minute: the microphone counts every clean change.',
+    loadRoutes: () => import('./changes/changes.routes').then((m) => m.CHANGES_ROUTES),
+  },
 ];

@@ -101,6 +101,10 @@ test.describe('Microphone: a whole-neck prompt', () => {
     await startSession(page, 'notes');
     await expect(page.getByText(/play E on string 5 \(A\)/)).toBeVisible();
 
-    await expect(correctResult(page)).toBeVisible({ timeout: 10_000 });
+    // "Correct" shows for 1.5 s before the card comes back; a busy machine can check too
+    // seldom to see it. The count of answers stays.
+    await expect(page.getByRole('region', { name: 'Session' })).toContainText(/1 note\s*100%/, {
+      timeout: 10_000,
+    });
   });
 });

@@ -14,6 +14,8 @@ Practise guitar until the fretboard is automatic. Each kind of exercise is a **m
   it), or a note is marked and you name its interval.
 - **Play along:** rhythm. Strike every subdivision with the metronome, and see how early or late
   each hit was; the tempo climbs as you get steadier.
+- **Chord changes:** two chords, one minute. The microphone counts every clean change, and a chart
+  shows the count climbing week after week.
 
 There's also a **tuner**, on the home screen.
 
@@ -99,6 +101,18 @@ Progress is saved in each browser, so a phone and a computer keep separate stats
   filtered out of what the microphone times, and the app warns you if it still gets through
 - Stats: each subdivision's tempo now and best, and a chart of tempo or timing take after take
 
+**Chord changes**
+
+- Open chords C, G, D, A, E, Am, Em, Dm and F; every pair of the chords you pick is a card
+- Takes of 30 seconds, 1 or 2 minutes after a count of 3, with the chord to play shown large in a
+  ring of the time left
+- Counted by the microphone (a fresh strum that sounds like the next chord; any shape of it
+  counts, so barre chords too) or by a tap per change (**Space**)
+- After a take: the changes, how they compare with your best for the pair, the seconds per
+  change, and a chart of changes a minute. A take that ties or beats your best counts as a pass,
+  so the pairs you aren't speeding up on come up most
+- Stats: each pair's best and last changes a minute, and its progress chart
+
 **Tuner**
 
 - The note you play, how many cents it's off (A = 440), and which way to turn the peg of its
@@ -167,6 +181,7 @@ src/app/
     scales/               identify scales: multiple choice over a scale position
     intervals/            intervals in a scale: tap, play or multiple choice in one module
     rhythm/               play along: a metronome, timed strikes, a tempo ladder
+    changes/              chord changes: one-minute changes, counted by the microphone
   home/                   home screen
   tuner/                  the tuner page
 docs/

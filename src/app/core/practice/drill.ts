@@ -17,4 +17,9 @@ export abstract class Drill {
   abstract readonly tags: Signal<readonly string[]>;
   /** True when you reveal the answer and judge yourself; false when the app checks your answer. */
   abstract readonly selfCheck: boolean;
+  /**
+   * True when the prompt shows the outcome of an answer itself, such as a count of chord changes:
+   * the practice frame then leaves out its "Correct" / "Not quite" line.
+   */
+  readonly ownResult?: boolean;
 }

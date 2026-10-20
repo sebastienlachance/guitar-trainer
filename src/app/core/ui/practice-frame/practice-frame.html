@@ -106,7 +106,9 @@
       </div>
     }
     @if (!answer() && phase() === 'answered') {
-      <ng-container [ngTemplateOutlet]="result" />
+      @if (!drill.ownResult) {
+        <ng-container [ngTemplateOutlet]="result" />
+      }
       <ng-container [ngTemplateOutlet]="nextButton" />
     }
   </section>

@@ -1,0 +1,102 @@
+<app-practice-frame [prompt]="prompt" />
+
+<ng-template #prompt>
+  @if (card(); as card) {
+    <div class="question" aria-live="polite">
+      <p class="ask muted">Change between</p>
+      <h1>
+        {{ card.first.name }}
+        <span class="arrows" aria-hidden="true">⇄</span>
+        <span class="visually-hidden">and</span>
+        {{ card.second.name }}
+      </h1>
+      @if (session.stage() === 'idle' && !session.result()) {
+        <p class="muted">{{ bestText() }}</p>
+      }
+    </div>
+
+    @switch (session.stage()) {
+      @case ('idle') {
+        @if (run.phase() === 'prompt') {
+          <div class="actions">
+            <button type="button" class="btn btn-primary" data-autofocus (click)="session.start()">
+              Start <kbd>Space</kbd>
+            </button>
+          </div>
+          <p class="hint center">
+            A count of {{ countInLength }} first, to get your hand on the {{ card.first.name }}.
+            @if (settings().count === 'tap') {
+              Then press Space or the button each time you land a chord.
+            }
+          </p>
+        }
+      }
+      @case ('count-in') {
+        <p class="count-in" aria-live="assertive">{{ session.countIn() }}</p>
+        <p class="center muted">Get ready on the {{ session.target()?.name }}</p>
+      }
+      @case ('running') {
+        <div class="ring">
+          <svg viewBox="0 0 200 200" aria-hidden="true">
+            <circle class="track" cx="100" cy="100" [attr.r]="ringRadius" />
+            <circle
+              class="left"
+              cx="100"
+              cy="100"
+              [attr.r]="ringRadius"
+              [attr.stroke-dasharray]="ringLength"
+              [attr.stroke-dashoffset]="ringOffset()"
+            />
+          </svg>
+          <div class="inside">
+            <p class="now">{{ session.target()?.name }}</p>
+            <p class="then muted">
+              then <strong>{{ next()?.name }}</strong>
+            </p>
+          </div>
+        </div>
+        <p class="center muted">{{ timeLeft() }} left</p>
+        <p class="tally">
+          <strong>{{ session.changes() }}</strong>
+          {{ session.changes() === 1 ? 'change' : 'changes' }}
+        </p>
+        @if (settings().count === 'tap') {
+          <div class="actions">
+            <button
+              type="button"
+              class="btn btn-primary tap"
+              data-autofocus
+              (click)="session.tap()"
+            >
+              Landed it <kbd>Space</kbd>
+            </button>
+          </div>
+        }
+      }
+    }
+
+    @if (session.result(); as result) {
+      <div class="result" aria-live="polite">
+        <p class="total">{{ resultText() }}</p>
+        <p class="verdict" [class.passed]="result.passed">{{ verdict() }}</p>
+        @if (pace()) {
+          <p class="muted center">{{ pace() }}</p>
+        }
+        <app-trend-chart
+          [points]="points()"
+          [describe]="describePoint"
+          pointNoun="takes"
+          empty="Your changes a minute show here after a couple of takes."
+        />
+      </div>
+    }
+
+    @if (settings().count === 'mic' && session.stage() !== 'idle') {
+      <app-mic-status
+        hint="strum the chord shown"
+        [showHeard]="false"
+        [spectrumFor]="session.target()?.pitchClasses ?? null"
+      />
+    }
+  }
+</ng-template>

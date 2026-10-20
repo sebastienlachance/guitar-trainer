@@ -65,10 +65,13 @@ routing, storage, focus or the microphone changed.
   `triads/` shows a self-check module with an answer template and mic matching. `intervals/` mixes
   tap, mic and multiple-choice questions in one module, and gives a card a new root each time it
   comes up (picked in `onNext`). `rhythm/` plays along with a metronome; it keeps extra storage
-  (`rhythm:levels`, `rhythm:takes`) next to its stats.
+  (`rhythm:levels`, `rhythm:takes`) next to its stats. `changes/` counts chord changes in a timed
+  take (strum matching from the mic's spectrum mode, or a tap per change), keeps its takes in
+  `changes:takes`, and shows its own result (`ownResult`, so the frame leaves out "Correct").
 - `src/app/tuner/`: the tuner, a page of its own (no sessions or stats, so not a module), linked
   from the home page.
-- `docs/adding-a-practice-module.md`: how to add a module. Follow it.
+- `docs/adding-a-practice-module.md`: how to add a module. Follow it. `docs/ideas.md`: features
+  worth building next.
 - `e2e/`: Playwright smoke tests. `support/` holds the helpers, the one-card decks, the
   generator for the fake microphone's recordings and the static server for the Pages-style build.
 - PWA: `ngsw-config.json`, `public/manifest.webmanifest`, `public/icons/`.
@@ -247,7 +250,7 @@ routing, storage, focus or the microphone changed.
 ## Where things stand (2026-10-20)
 
 - **Modules:** triads, fretboard notes, identify notes, identify scales, intervals in a scale,
-  play along (rhythm). Live
+  play along (rhythm), chord changes. Live
   at https://sebastienlachance.github.io/guitar-trainer/ as an installable PWA.
 - **Recently added:**
   - stats measure progress by speed (progress chart, speed grid, slow cards come up more)
@@ -260,9 +263,13 @@ routing, storage, focus or the microphone changed.
     Real Tone cable; not yet tried by the owner with the cable
   - a tuner (home page): reads an A2 20 cents flat as −20 through the fake mic, steady within a
     cent; not yet tried by the owner on a real guitar
+  - chord changes: counts every change of a synthetic C/G strum recording through the fake mic;
+    not yet tried by the owner on a real guitar
 - **Tested by the owner:** triads in strum mode, on a computer. Not yet confirmed on a real guitar:
   single-note detection (fretboard notes, intervals, triads arpeggio), phones, iPhone Safari.
   On a real guitar (2026-10-16), triads missed D at the 12th fret of the 4th string: nothing was
   heard. `NoteStream` was loosened in response (a 45 ms grace for an unclear frame or an octave
   slip, clarity 0.85, 70 ms steady, level 0.006); not yet rechecked by the owner.
-- **No task in progress.** Ideas mentioned but not requested: more modules, Tauri packaging.
+- **In progress:** Play it back (ear training on the guitar), plan agreed 2026-10-20 (see
+  `docs/ideas.md`).
+- **Ideas** worth building, and small follow-ups: `docs/ideas.md`.

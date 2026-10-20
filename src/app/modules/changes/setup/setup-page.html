@@ -1,0 +1,37 @@
+<h1 class="visually-hidden">Set up chord changes</h1>
+
+<section class="panel">
+  <h2>Chords</h2>
+  <app-chip-toggles
+    label="Chords"
+    [hideLabel]="true"
+    [options]="chordChips"
+    [selected]="settings().chords"
+    (selectedChange)="update({ chords: $event })"
+  />
+  <p class="hint">
+    Every pair of the chords you pick is a card. {{ pairs() }} The pairs you aren't speeding up on
+    come up most.
+  </p>
+</section>
+
+<section class="panel">
+  <h2>Each take</h2>
+  <app-segmented-choice
+    label="Length"
+    [options]="lengthChoices"
+    [value]="settings().seconds"
+    (valueChange)="update({ seconds: $event })"
+  />
+  <app-segmented-choice
+    label="Count with"
+    [options]="countChoices"
+    [value]="settings().count"
+    (valueChange)="update({ count: $event })"
+  />
+  @if (settings().count === 'mic') {
+    <app-input-picker />
+  }
+</section>
+
+<app-setup-start />

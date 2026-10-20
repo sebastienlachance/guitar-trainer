@@ -1,0 +1,56 @@
+<h1 class="visually-hidden">Chord changes stats</h1>
+
+@if (rows().length > 0) {
+  <section class="panel">
+    <h2>Changes a minute</h2>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Pair</th>
+            <th scope="col">Best</th>
+            <th scope="col">Last</th>
+            <th scope="col">Takes</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.key) {
+            <tr>
+              <th scope="row">{{ row.name }}</th>
+              <td>{{ row.best }}</td>
+              <td>{{ row.last }}</td>
+              <td>{{ row.count }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Progress</h2>
+    @if (pairChoices().length > 1) {
+      <app-segmented-choice
+        label="Pair"
+        [hideLabel]="true"
+        [options]="pairChoices()"
+        [value]="charted()"
+        (valueChange)="charted.set($event)"
+      />
+    }
+    <app-trend-chart
+      [points]="points()"
+      [describe]="describe"
+      pointNoun="takes"
+      empty="A couple more takes and your progress shows here."
+    />
+  </section>
+} @else {
+  <section class="panel">
+    <h2>No takes yet</h2>
+    <p class="muted">Your changes a minute, pair by pair, show up here once you've played.</p>
+    <a routerLink="../practice" class="btn btn-primary">Go to practice</a>
+  </section>
+}
+
+<app-session-history />
