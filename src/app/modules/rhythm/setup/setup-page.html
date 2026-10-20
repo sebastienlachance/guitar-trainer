@@ -33,6 +33,12 @@
     [selected]="settings().subdivisions"
     (selectedChange)="update({ subdivisions: $event })"
   />
+  <app-chip-toggles
+    label="Strumming patterns"
+    [options]="patternChips"
+    [selected]="settings().patterns"
+    (selectedChange)="update({ patterns: $event })"
+  />
   <app-segmented-choice
     label="Start at (bpm)"
     [options]="tempoChoices"
@@ -47,6 +53,8 @@
   />
   <p class="hint">
     Any strike counts: strums, picked notes or muted chucks. Strike every subdivision, on the beat.
+    In a pattern, D and U say which way to strum; the app hears when you strum, not which way, and a
+    strike in a rest counts against the take.
   </p>
 </section>
 

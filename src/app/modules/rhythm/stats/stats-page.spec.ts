@@ -38,6 +38,7 @@ describe('Rhythm StatsPage', () => {
         take('eighth', 74, 24, true, 2 * day),
         take('eighth', 78, 26, false, 3 * day),
         take('quarter', 80, 15, true, 4 * day),
+        take('pattern:campfire', 70, 20, true, 5 * day),
       ]),
     );
     localStorage.setItem(
@@ -54,6 +55,7 @@ describe('Rhythm StatsPage', () => {
     expect(screen.getByRole('row', { name: /^Eighth notes/ })).toHaveTextContent(
       /78 bpm.*74 bpm.*26 ms.*3/,
     );
+    expect(screen.getByRole('row', { name: /^Campfire/ })).toHaveTextContent(/70 bpm.*20 ms.*1/);
     // The chart starts on the subdivision played last: a single take is not a line yet.
     expect(
       screen.getByText('A couple more takes and your progress shows here.'),

@@ -4,7 +4,7 @@ import { ChipOption, ChipToggles } from '../../../core/ui/setup/chip-toggles';
 import { InputPicker } from '../../../core/ui/setup/input-picker';
 import { Choice, SegmentedChoice } from '../../../core/ui/setup/segmented-choice';
 import { SetupStart } from '../../../core/ui/setup/setup-start';
-import { SUBDIVISIONS } from '../deck';
+import { PATTERNS, SUBDIVISIONS, patternBeats } from '../deck';
 import { RhythmSession } from '../rhythm-session';
 import { BAR_CHOICES, ClickMode, RhythmSettings, START_TEMPO_CHOICES } from '../settings';
 
@@ -37,10 +37,16 @@ export class SetupPage {
     title: subdivision.counting,
   }));
 
+  protected readonly patternChips: ChipOption<string>[] = PATTERNS.map((pattern) => ({
+    value: pattern.id,
+    label: `${pattern.name}: ${patternBeats(pattern)}`,
+    title: `${pattern.grid.name}: D a down stroke, U an up stroke, a dot a rest`,
+  }));
+
   protected readonly tempoChoices: Choice<number>[] = START_TEMPO_CHOICES.map((bpm) => ({
     value: bpm,
     label: String(bpm),
-    hint: 'Where each subdivision starts. A passed take moves it up 4 bpm; two missed takes in a row move it down 4.',
+    hint: 'Where each subdivision and pattern starts. A passed take moves it up 4 bpm; two missed takes in a row move it down 4.',
   }));
 
   protected readonly barChoices: Choice<number>[] = BAR_CHOICES.map((bars) => ({

@@ -8,26 +8,23 @@ import {
   clickLeak,
   estimateLatency,
   hitGap,
-  passes,
   scoreTake,
 } from '../../core/audio/timing';
 import { Drill } from '../../core/practice/drill';
 import { PracticeRun } from '../../core/practice/practice-run';
+import { Level, Levels, isLevels, levelOf, nextLevel } from '../../core/practice/tempo-ladder';
 import { loadJson, saveJson } from '../../core/practice/storage';
 import { plural } from '../../core/ui/text';
 import {
   DEFAULT_INPUT,
-  Level,
-  Levels,
   RhythmCard,
   TAKES_KEPT,
   TakeRecord,
   buildDeck,
-  isLevels,
   isTakes,
-  levelOf,
-  nextLevel,
   settingsProblems,
+  struckSlots,
+  takePasses,
   takeRecord,
 } from './deck';
 import { RhythmSettings, sanitizeSettings } from './settings';
@@ -67,8 +64,9 @@ export type CalibrationState =
   | { readonly stage: 'failed'; readonly heard: number };
 
 /**
- * The play-along rhythm module: strike every subdivision with the metronome, and see how early
- * or late each hit was. Each subdivision climbs its own tempo ladder. The app checks the take.
+ * The play-along rhythm module: strike every subdivision with the metronome, or the strokes of a
+ * strumming pattern, and see how early or late each hit was. Each subdivision and pattern climbs
+ * its own tempo ladder. The app checks the take.
  */
 @Service({ autoProvided: false })
 export class RhythmSession implements Drill {
@@ -115,9 +113,10 @@ export class RhythmSession implements Drill {
   });
 
   readonly tags = computed(() => {
-    const { subdivisions, bars, click } = this.settings();
+    const { subdivisions, patterns, bars, click } = this.settings();
     return [
-      plural(subdivisions.length, 'subdivision'),
+      ...(subdivisions.length > 0 ? [plural(subdivisions.length, 'subdivision')] : []),
+      ...(patterns.length > 0 ? [plural(patterns.length, 'pattern')] : []),
       plural(bars, 'bar'),
       click === 'sound' ? 'Tick and light' : 'Light only',
     ];
@@ -213,14 +212,15 @@ export class RhythmSession implements Drill {
     const strikes = this.listener.strikes();
     // Strikes reach the microphone `latencyMs` after they're played; scoring takes that off.
     const takeBegins = take[0].time - gap / 2 + latencyMs / 1000;
-    const takeStrikes = strikes.filter((strike) => strike >= takeBegins);
-    const score = scoreTake(
-      take.map((click) => click.time),
-      takeStrikes,
-      latencyMs,
-      gap,
-    );
-    const passed = passes(score);
+    const takeEnds = take[take.length - 1].time + gap / 2 + latencyMs / 1000;
+    const takeStrikes = strikes.filter((strike) => strike >= takeBegins && strike < takeEnds);
+    // A pattern is scored on its strokes; a strike in one of its rests matches none of them.
+    const struck = struckSlots(card);
+    const expected = take
+      .filter((_, index) => struck[index % struck.length])
+      .map((click) => click.time);
+    const score = scoreTake(expected, takeStrikes, latencyMs, gap);
+    const passed = takePasses(score, card, this.settings().bars);
     const level = this.levelFor(card);
     const next = nextLevel(level, passed);
     this.levels.update((levels) => ({ ...levels, [card.key]: next }));
@@ -244,7 +244,7 @@ export class RhythmSession implements Drill {
   }
 
   private levelFor(card: RhythmCard): Level {
-    return levelOf(this.levels(), card, this.settings().startTempo);
+    return levelOf(this.levels(), card.key, this.settings().startTempo);
   }
 
   /** Starts the microphone if needed; the audio context once it listens, else null. */

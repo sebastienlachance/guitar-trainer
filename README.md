@@ -93,11 +93,15 @@ Progress is saved in each browser, so a phone and a computer keep separate stats
 
 - Quarter notes, eighth notes, triplets or sixteenth notes; 2- or 4-bar takes after a bar of
   count-in
+- **Strumming patterns:** Campfire (D· DU ·U DU), Pop, Off-beat, Gallop (sixteenths) and Shuffle
+  (triplets). Strums are checked on the pattern's strokes, and a strike in a rest counts against
+  the take: at most one per two bars to pass. D and U say which way to strum; the app hears when
+  you strum, not which way
 - A tick and a light on each beat, or the light only
 - After each take: a strip of every hit (on the line is on the beat, above early, below late), the
   share on time, your average early or late, your spread, and misses
-- Each subdivision climbs its own tempo ladder: a passed take (80% on time, at most 10% missed)
-  moves it up 4 bpm, two failed takes in a row move it down 4
+- Each subdivision and pattern climbs its own tempo ladder: a passed take (80% on time, at most 10%
+  missed) moves it up 4 bpm, two failed takes in a row move it down 4
 - **Calibrate first, once per device and input:** strike along with 8 clicks so the app can take
   off the delay of your speakers and microphone. Speakers are fine: the tick is high-pitched and
   filtered out of what the microphone times, and the app warns you if it still gets through

@@ -3,10 +3,11 @@ import { RouterLink } from '@angular/router';
 import { Choice, SegmentedChoice } from '../../../core/ui/setup/segmented-choice';
 import { SessionHistory } from '../../../core/ui/stats/session-history';
 import { TrendChart, TrendPoint } from '../../../core/ui/stats/trend-chart';
-import { SUBDIVISIONS, levelOf } from '../deck';
+import { levelOf } from '../../../core/practice/tempo-ladder';
+import { ALL_CARDS, cardName } from '../deck';
 import { RhythmSession } from '../rhythm-session';
 
-/** Takes on the chart: enough for weeks of practice of one subdivision. */
+/** Takes on the chart: enough for weeks of practice of one subdivision or pattern. */
 const CHARTED = 40;
 
 type Measure = 'tempo' | 'timing';
@@ -48,26 +49,20 @@ export class StatsPage {
   private readonly session = inject(RhythmSession);
   protected readonly takes = this.session.takes;
 
-  /** The subdivisions you've played, in the usual order. */
+  /** The subdivisions and patterns you've played, in the usual order. */
   protected readonly played = computed(() =>
-    SUBDIVISIONS.filter((subdivision) =>
-      this.takes().some((take) => take.subdivision === subdivision.id),
-    ),
+    ALL_CARDS.filter((card) => this.takes().some((take) => take.subdivision === card.key)),
   );
 
-  /** Where each played subdivision stands: its tempo now, the best it passed, its last timing. */
+  /** Where each played card stands: its tempo now, the best it passed, its last timing. */
   protected readonly rows = computed(() =>
-    this.played().map((subdivision) => {
-      const takes = this.takes().filter((take) => take.subdivision === subdivision.id);
+    this.played().map((card) => {
+      const takes = this.takes().filter((take) => take.subdivision === card.key);
       const passedTempos = takes.filter((take) => take.passed).map((take) => take.bpm);
-      const level = levelOf(
-        this.session.levels(),
-        { key: subdivision.id, subdivision },
-        this.session.settings().startTempo,
-      );
+      const level = levelOf(this.session.levels(), card.key, this.session.settings().startTempo);
       return {
-        id: subdivision.id,
-        name: subdivision.name,
+        id: card.key,
+        name: cardName(card),
         now: `${level.bpm} bpm`,
         best: passedTempos.length > 0 ? `${Math.max(...passedTempos)} bpm` : '–',
         timing: `${takes[takes.length - 1].meanAbsMs} ms`,
@@ -77,7 +72,7 @@ export class StatsPage {
   );
 
   protected readonly subdivisionChoices = computed((): Choice<string>[] =>
-    this.played().map((subdivision) => ({ value: subdivision.id, label: subdivision.name })),
+    this.played().map((card) => ({ value: card.key, label: cardName(card) })),
   );
 
   /** The subdivision on the chart: the one played last, until you pick another. */

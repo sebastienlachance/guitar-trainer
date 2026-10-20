@@ -314,6 +314,7 @@ Build grid cells with `accuracyCell(id, totals(stats, (key) => …))`.
 | Time strikes, play a metronome            | `RhythmListener` (`strikes()`, `now()`), `Metronome.play()`, `scoreTake()` in `core/audio/timing.ts` |
 | Show a rhythm take, chart a value         | `<app-take-strip>`; `<app-trend-chart>` in `core/ui/stats/`                                          |
 | Keep a result on screen after a pass      | `PracticeRun` option `advanceAfterCorrect: false`                                                    |
+| A tempo that climbs with passed takes     | `nextLevel()`, `levelOf()` in `core/practice/tempo-ladder.ts`                                        |
 | Show your own result instead of "Correct" | `ownResult = true` on the session (see `modules/changes/`)                                           |
 | Words                                     | `plural()`, `percentCorrect()`, `capitalize()` in `core/ui/text.ts`                                  |
 | Save something                            | `loadJson()` / `saveJson()` in `core/practice/storage.ts`                                            |

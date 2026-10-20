@@ -7,7 +7,7 @@
       <table>
         <thead>
           <tr>
-            <th scope="col">Subdivision</th>
+            <th scope="col">Rhythm</th>
             <th scope="col">Now</th>
             <th scope="col">Best passed</th>
             <th scope="col">Last timing</th>
@@ -34,7 +34,7 @@
     <div class="choices">
       @if (subdivisionChoices().length > 1) {
         <app-segmented-choice
-          label="Subdivision"
+          label="Rhythm"
           [hideLabel]="true"
           [options]="subdivisionChoices()"
           [value]="charted()"
@@ -60,7 +60,7 @@
   <section class="panel">
     <h2>No takes yet</h2>
     <p class="muted">
-      Your tempo and timing per subdivision show up here once you've played along.
+      Your tempo and timing per subdivision and pattern show up here once you've played along.
     </p>
     <a routerLink="../practice" class="btn btn-primary">Go to practice</a>
   </section>

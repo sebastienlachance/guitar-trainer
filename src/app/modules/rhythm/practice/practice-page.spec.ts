@@ -15,8 +15,11 @@ const QUARTERS_AT_60 = {
   latencyMs: 30,
 };
 
-async function playTake(strikesAfterClicks: (clicks: number[]) => number[]) {
-  saveRhythmSettings(QUARTERS_AT_60);
+async function playTake(
+  strikesAfterClicks: (clicks: number[]) => number[],
+  settings: object = QUARTERS_AT_60,
+) {
+  saveRhythmSettings(settings);
   const audio = fakeRhythmAudio();
   await render(PracticePage, {
     providers: [...provideRhythm(), provideRouter([]), ...audio.providers],
@@ -55,6 +58,45 @@ describe('Rhythm PracticePage', () => {
 
     expect(screen.getByText(/On time 50% .* 4 missed/)).toBeInTheDocument();
     expect(screen.getByText('Not yet. Try again at 60 bpm.')).toBeInTheDocument();
+  });
+
+  describe('a strumming pattern', () => {
+    /** Campfire at 60 bpm, 2 bars: eighth-note slots, struck on D.DU.UDU. */
+    const CAMPFIRE = { ...QUARTERS_AT_60, subdivisions: [], patterns: ['campfire'] };
+    const STRUCK = [true, false, true, true, false, true, true, true];
+
+    /** Strikes on the pattern's strokes, 30 ms late (the latency), plus some in its rests. */
+    function strokesAnd(restSlots: number[]) {
+      return (clicks: number[]) => {
+        const take = clicks.slice(4);
+        return [
+          ...take.filter((_, index) => STRUCK[index % 8]),
+          ...restSlots.map((index) => take[index]),
+        ]
+          .map((time) => time + 0.03)
+          .sort((a, b) => a - b);
+      };
+    }
+
+    it('is scored on its strokes, with its rests shown in the strip', async () => {
+      await playTake(strokesAnd([1]), CAMPFIRE);
+
+      expect(screen.getByRole('heading', { name: /Campfire/ })).toBeInTheDocument();
+      expect(
+        screen.getByText(/^On time 100% .* 1 strike in a rest$/, { selector: '.summary' }),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Passed. Next time: 64 bpm.')).toBeInTheDocument();
+      expect(screen.getAllByTitle('A rest')).toHaveLength(4);
+    });
+
+    it('fails a take with strikes in more than one rest per two bars', async () => {
+      await playTake(strokesAnd([1, 12]), CAMPFIRE);
+
+      expect(
+        screen.getByText(/2 strikes in a rest$/, { selector: '.summary' }),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Not yet. Try again at 60 bpm.')).toBeInTheDocument();
+    });
   });
 
   it('warns when the tick reaches the microphone during the count-in', async () => {

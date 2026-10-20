@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { render, screen } from '@testing-library/angular';
+import userEvent from '@testing-library/user-event';
 import { STORAGE_PREFIX } from '../../../core/practice/storage';
 import { RhythmSession, provideRhythm } from '../rhythm-session';
 import { fakeRhythmAudio } from '../rhythm.testing';
@@ -32,6 +33,26 @@ describe('Rhythm SetupPage', () => {
 
     expect(screen.getByText('Not calibrated yet.')).toBeInTheDocument();
     expect(screen.getByText(/Calibrate the timing first/)).toBeInTheDocument();
+  });
+
+  it('offers strumming patterns as cards of their own', async () => {
+    localStorage.setItem(
+      STORAGE_PREFIX + 'rhythm:settings',
+      JSON.stringify({ subdivisions: [], latencyMs: 30, latencyInput: 'default' }),
+    );
+    const user = userEvent.setup();
+    await render(SetupPage, {
+      providers: [...provideRhythm(), provideRouter([]), ...fakeRhythmAudio().providers],
+    });
+    expect(screen.getByText('Pick at least one subdivision or pattern.')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Campfire/ }));
+
+    expect(screen.queryByText('Pick at least one subdivision or pattern.')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Campfire: D· DU ·U DU' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
   });
 
   it('measures and saves the delay from the clicks to your strikes', async () => {

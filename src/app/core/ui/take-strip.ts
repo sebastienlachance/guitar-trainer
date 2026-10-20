@@ -4,9 +4,21 @@ import { TakeScore } from '../audio/timing';
 /** How far from the line a hit's mark can go, as a share of half the strip's height. */
 const REACH = 0.9;
 
+interface Mark {
+  readonly rest: boolean;
+  /** Where the mark sits, as a share of the height; null for a miss or a rest. */
+  readonly top: number | null;
+  readonly onTime: boolean;
+  readonly title: string;
+  readonly barStart: boolean;
+}
+
+const REST = { rest: true, top: null, onTime: false, title: 'A rest' };
+
 /**
  * A rhythm take at a glance: one mark per hit, left to right. On the line is right on the beat,
- * above is early, below is late; the shaded band is on time. ✕ marks a missed hit.
+ * above is early, below is late; the shaded band is on time. ✕ marks a missed hit, and a dot a
+ * rest of a strumming pattern.
  */
 @Component({
   selector: 'app-take-strip',
@@ -15,7 +27,9 @@ const REACH = 0.9;
       <div class="band" [style.height.%]="bandHeight()"></div>
       @for (hit of marks(); track $index) {
         <span class="hit" [class.bar-start]="hit.barStart" [attr.title]="hit.title">
-          @if (hit.top === null) {
+          @if (hit.rest) {
+            <span class="rest" aria-hidden="true">·</span>
+          } @else if (hit.top === null) {
             <span class="missed" aria-hidden="true">✕</span>
           } @else {
             <span class="mark" [class.off]="!hit.onTime" [style.top.%]="hit.top"></span>
@@ -23,7 +37,12 @@ const REACH = 0.9;
         </span>
       }
     </div>
-    <p class="legend muted">Above the line: early · below: late · ✕ missed</p>
+    <p class="legend muted">
+      Above the line: early · below: late · ✕ missed
+      @if (slots()) {
+        · a dot is a rest
+      }
+    </p>
   `,
   styles: `
     .strip {
@@ -66,6 +85,13 @@ const REACH = 0.9;
     .mark.off {
       background: var(--warning);
     }
+    .rest {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--text-muted);
+    }
     .missed {
       position: absolute;
       top: 50%;
@@ -84,6 +110,11 @@ export class TakeStrip {
   readonly score = input.required<TakeScore>();
   /** Hits in a bar, to mark where bars start. */
   readonly perBar = input.required<number>();
+  /**
+   * For a strumming pattern: the slots of one bar, true where a stroke is played and false for a
+   * rest. Rests then show between the hits.
+   */
+  readonly slots = input<readonly boolean[] | null>(null);
   /** The take in words, for screen readers. */
   readonly description = input.required<string>();
 
@@ -94,11 +125,10 @@ export class TakeStrip {
     () => (this.score().toleranceMs / this.scaleMs()) * REACH * 100,
   );
 
-  protected readonly marks = computed(() =>
+  private readonly hitMarks = computed(() =>
     this.score().hits.map((hit, index) => {
-      const barStart = index > 0 && index % this.perBar() === 0;
       if (hit.offsetMs === null) {
-        return { barStart, top: null, onTime: false, title: `Hit ${index + 1}: missed` };
+        return { rest: false, top: null, onTime: false, title: `Hit ${index + 1}: missed` };
       }
       const offset = hit.offsetMs;
       const reach = Math.max(-1, Math.min(1, offset / this.scaleMs()));
@@ -107,11 +137,32 @@ export class TakeStrip {
           ? 'on the beat'
           : `${Math.round(Math.abs(offset))} ms ${offset > 0 ? 'late' : 'early'}`;
       return {
-        barStart,
+        rest: false,
         top: 50 + reach * REACH * 50,
         onTime: Math.abs(offset) <= this.score().toleranceMs,
         title: `Hit ${index + 1}: ${words}`,
       };
     }),
   );
+
+  protected readonly marks = computed(() => {
+    const hits = this.hitMarks();
+    const slots = this.slots();
+    if (!slots) {
+      return hits.map((hit, index) => ({
+        ...hit,
+        barStart: index > 0 && index % this.perBar() === 0,
+      }));
+    }
+    const bars = Math.round(hits.length / Math.max(1, slots.filter(Boolean).length));
+    const marks: Mark[] = [];
+    let next = 0;
+    for (let bar = 0; bar < bars; bar++) {
+      for (const [slot, struck] of slots.entries()) {
+        const barStart = bar > 0 && slot === 0;
+        marks.push(struck ? { ...hits[next++], barStart } : { ...REST, barStart });
+      }
+    }
+    return marks;
+  });
 }

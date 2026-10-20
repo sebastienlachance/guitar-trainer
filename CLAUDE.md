@@ -43,6 +43,7 @@ routing, storage, focus or the microphone changed.
     - `PracticeRun`: the card flow
     - `Drill`: the contract a module provides
     - stats, the session log (`PracticeLog`), storage, `saved-settings.ts`
+    - `tempo-ladder.ts`: a tempo per card that climbs with passed takes (play along)
   - `audio/`: `MicListener` (played notes, a live spectrum plus a strum count, or the exact pitch
     for the tuner), pitch and chord matching, `tuner.ts` (cents, string advice, smoothing),
     `OnsetDetector` (string strikes: counts strums, and lets a re-picked note count again),
@@ -65,10 +66,11 @@ routing, storage, focus or the microphone changed.
   `notes/` is the reference implementation. `identify/` and `scales/` show multiple choice.
   `triads/` shows a self-check module with an answer template and mic matching. `intervals/` mixes
   tap, mic and multiple-choice questions in one module, and gives a card a new root each time it
-  comes up (picked in `onNext`). `rhythm/` plays along with a metronome; it keeps extra storage
-  (`rhythm:levels`, `rhythm:takes`) next to its stats. `changes/` counts chord changes in a timed
-  take (strum matching from the mic's spectrum mode, or a tap per change), keeps its takes in
-  `changes:takes`, and shows its own result (`ownResult`, so the frame leaves out "Correct").
+  comes up (picked in `onNext`). `rhythm/` plays along with a metronome, every hit of a
+  subdivision or the strokes of a strumming pattern (rests are slots left out); it keeps extra
+  storage (`rhythm:levels`, `rhythm:takes`) next to its stats. `changes/` counts chord changes in
+  a timed take (strum matching from the mic's spectrum mode, or a tap per change), keeps its takes
+  in `changes:takes`, and shows its own result (`ownResult`, so the frame leaves out "Correct").
   `playback/` plays a phrase through the speakers and checks it played back; it is self-check,
   with the mic resolving a card like triads, and picks new notes for a card in `onNext`.
 - `src/app/tuner/`: the tuner, a page of its own (no sessions or stats, so not a module), linked
@@ -256,7 +258,7 @@ routing, storage, focus or the microphone changed.
 ## Where things stand (2026-10-20)
 
 - **Modules:** triads, fretboard notes, identify notes, identify scales, intervals in a scale,
-  play along (rhythm), chord changes, play it back. Live
+  play along (rhythm, with strumming patterns), chord changes, play it back. Live
   at https://sebastienlachance.github.io/guitar-trainer/ as an installable PWA.
 - **Recently added:**
   - stats measure progress by speed (progress chart, speed grid, slow cards come up more)
@@ -273,6 +275,8 @@ routing, storage, focus or the microphone changed.
     not yet tried by the owner on a real guitar
   - play it back: the plucked sound is in tune within a cent (unit test through the pitch
     detector); answering through the fake mic works; not yet tried by the owner with speakers
+  - strumming patterns in play along (2026-10-20): checked through the fake mic; not yet tried
+    by the owner on a real guitar
 - **Tested by the owner:** triads in strum mode, on a computer. Not yet confirmed on a real guitar:
   single-note detection (fretboard notes, intervals, triads arpeggio), phones, iPhone Safari.
   On a real guitar (2026-10-16), triads missed D at the 12th fret of the 4th string: nothing was

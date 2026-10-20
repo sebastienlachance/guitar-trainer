@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { seedSettings } from './support/app';
+import { expectFitsWidth, seedSettings } from './support/app';
 import { test } from './support/microphone';
 
 /**
@@ -43,4 +43,27 @@ test('a take is scored hit by hit and moves the tempo ladder', async ({ micPage:
   await expect(page.getByRole('img', { name: /^On time/ })).toBeVisible();
   await expect(page.getByText(/^(Passed|Not yet)\./)).toBeVisible();
   await expect(page.getByRole('button', { name: /Next/ })).toBeVisible();
+});
+
+test('a strumming pattern take shows its rests, on a phone', async ({ micPage: page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  // Calibrated already: the plucks of the recording are quarter notes, not the pattern.
+  await seedSettings(page, 'rhythm', {
+    ...QUARTERS_AT_80,
+    subdivisions: [],
+    patterns: ['gallop'],
+    latencyMs: 0,
+    latencyInput: 'default',
+  });
+
+  await page.goto('/#/rhythm/practice');
+  await page.getByRole('button', { name: 'Start session' }).click();
+  await expect(page.getByRole('heading', { name: /Gallop/ })).toBeVisible();
+  await expectFitsWidth(page, 'A pattern of sixteenths');
+  await page.getByRole('button', { name: 'Play' }).click();
+
+  await expect(page.getByText(/^On time \d+%/)).toBeVisible({ timeout: 20_000 });
+  // Two bars of gallop (D·DU four times a bar): a rest in each beat.
+  await expect(page.getByTitle('A rest')).toHaveCount(8);
+  await expectFitsWidth(page, 'A pattern take');
 });

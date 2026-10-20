@@ -6,7 +6,15 @@ exists).
 
 ## Planned
 
-Nothing yet: pick from below.
+- **Bend trainer.** The app names a bend ("bend the G on string 3 a whole step, to A") and can
+  play the target; a needle shows how close the bend gets in cents and whether you hold it there.
+  Bending flat is the most common intonation problem in lead playing. Reuses the tuner's pitch
+  reading (`PitchSmoother`), `PhrasePlayer` for the target, and the onset detector to tell a bend
+  (one pick, the pitch rising) from simply fretting the target note.
+- **Progressions in time.** Enter a progression (G D Em C, a bar each) and play it with the
+  metronome; the microphone checks that each chord lands on its beat, and a tempo ladder climbs
+  as it gets clean. The step from drills to songs. Reuses strum matching from chord changes and
+  the metronome; new is timing strums against the metronome's clock.
 
 ## Later
 
@@ -23,11 +31,29 @@ Nothing yet: pick from below.
 - **Back up and move progress.** Everything lives in one browser: a phone and a computer keep
   separate stats, and clearing site data loses it all. Export everything under the storage prefix
   to a file, and import it elsewhere (with a check of the format version).
+- **Metronome page.** A metronome on its own, like the tuner: tempo, beats per bar, accents, tap
+  tempo, and a speed trainer that adds a few bpm every few bars. Reuses `Metronome` and its
+  light.
+- **Hear the changes.** The app plays a short progression (I–IV–V, I–vi–IV–V, ii–V–I) with
+  strummed chords; you name it, or play it back. Play it back with chords: reuses `PhrasePlayer`
+  (strummed chords would be plucks of each chord tone, a few milliseconds apart) and strum
+  matching.
+- **Reading music.** A note on a staff; you play it. Learns to read notation with the note
+  detection the app already has; new is drawing the staff and the ledger lines in SVG.
+- **Voice leading.** The app shows a triad shape, then names the next chord of a progression; you
+  play its closest shape, moving as few fingers as possible. Builds on the triads catalog and
+  shapes, with arpeggio matching.
+- **Daily warm-up.** A guided 10 to 15 minutes chaining modules with timers: tune, chord changes,
+  a few notes, a round of play it back. Goes with the practice calendar.
+- **Record and listen back.** Record a take and hear it straight away: the quickest way to notice
+  timing and buzzing notes. `MediaRecorder` on the open microphone; recordings kept only for the
+  session, or saved in IndexedDB if asked.
 
 ## Small follow-ups
 
 - **Play along:**
   - merge Next and Play into one click after a take
+  - light the current slot of a strumming pattern as it plays (only the beats light today)
   - set `ownResult` on its session: the frame's "Correct, 20 s" line under a take's own result
     says little
 - **Tuner:**

@@ -29,6 +29,8 @@ export class RhythmListener {
 
   private input: MicrophoneInput | null = null;
   private session = 0;
+  /** The start in progress, so a second caller waits for the same one. */
+  private starting: Promise<void> | null = null;
 
   /** The audio clock, in seconds: schedule the metronome and read strikes against it. */
   now(): number {
@@ -40,11 +42,19 @@ export class RhythmListener {
     return this.input?.context ?? null;
   }
 
-  /** Starts listening, or keeps listening if already started. */
-  async start(): Promise<void> {
-    if (this.status() === 'listening' || this.status() === 'starting') {
-      return;
+  /**
+   * Starts listening, or keeps listening if already started. Resolves once listening (or failed),
+   * also for a caller that comes while the microphone is still opening.
+   */
+  start(): Promise<void> {
+    if (this.status() === 'listening') {
+      return Promise.resolve();
     }
+    this.starting ??= this.open().finally(() => (this.starting = null));
+    return this.starting;
+  }
+
+  private async open(): Promise<void> {
     const session = ++this.session;
     this.status.set('starting');
     this.errorMessage.set(null);

@@ -5,10 +5,22 @@
     <div class="question" aria-live="polite">
       <p class="ask muted">Play along</p>
       <h1>
-        <span>{{ card.subdivision.name }}</span
+        <span>{{ name() }}</span
         >{{ ' ' }}<span class="tempo muted">{{ bpm() }} bpm</span>
       </h1>
-      <p class="counting muted">{{ card.subdivision.counting }}</p>
+      @if (card.pattern) {
+        <div class="pattern" aria-hidden="true" [style.--slots]="strokes().length">
+          @for (count of slotCounts(); track $index) {
+            <span class="count">{{ count }}</span>
+          }
+          @for (stroke of strokes(); track $index) {
+            <span class="stroke" [class.rest]="stroke === '·'">{{ stroke }}</span>
+          }
+        </div>
+        <p class="visually-hidden">{{ strokeWords() }}</p>
+      } @else {
+        <p class="counting muted">{{ card.subdivision.counting }}</p>
+      }
     </div>
 
     <div class="beats" aria-hidden="true">
@@ -30,7 +42,12 @@
 
     @if (session.result(); as result) {
       <div class="result">
-        <app-take-strip [score]="result.score" [perBar]="perBar()" [description]="summary()" />
+        <app-take-strip
+          [score]="result.score"
+          [perBar]="perBar()"
+          [slots]="slots()"
+          [description]="summary()"
+        />
         <p class="summary">{{ summary() }}</p>
         <p class="ladder" [class.passed]="result.passed">{{ ladder() }}</p>
         @if (result.leak) {

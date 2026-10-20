@@ -28,6 +28,32 @@ h1 {
   letter-spacing: 1px;
 }
 
+/* A strumming pattern: the count above, the strokes below, one column per slot. */
+.pattern {
+  display: grid;
+  grid-template-columns: repeat(var(--slots), minmax(0, 1fr));
+  gap: 2px 3px;
+  max-width: 420px;
+  margin: 10px auto 0;
+}
+
+.count {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.stroke {
+  padding: 4px 0;
+  border-radius: 4px;
+  background: var(--raised);
+  font-weight: 500;
+}
+
+.stroke.rest {
+  background: none;
+  color: var(--text-muted);
+}
+
 /* The light: four beats, the first larger; the current one glows. */
 .beats {
   display: flex;
