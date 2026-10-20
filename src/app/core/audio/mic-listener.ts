@@ -38,8 +38,9 @@ export class MicListener {
   /** Pitch-class energy of what is sounding now, or null during silence. Spectrum mode only. */
   readonly chroma = signal<readonly number[] | null>(null);
   /**
-   * How many strums (sudden attacks) have been heard. Spectrum mode only. It only goes up: compare
-   * with a count taken earlier to know whether you strummed since, which a ringing chord doesn't.
+   * How many attacks (strums, or picks) have been heard, in spectrum and pitch modes. It only goes
+   * up: compare with a count taken earlier to know whether you struck since, which a ringing
+   * chord or a bend doesn't.
    */
   readonly strums = signal(0);
   /** The steadied pitch sounding now, or the last one while it fades. Pitch mode only. */
@@ -112,11 +113,17 @@ export class MicListener {
       const window = samples.subarray(samples.length - PITCH_WINDOW);
       const level = rootMeanSquare(window);
       const [frequency, clarity] = detector.findPitch(window, sampleRate);
+      const attack = onsets.push({ level, time });
+      if (attack && mode !== 'notes') {
+        this.strums.update((count) => count + 1);
+      }
       if (mode === 'pitch') {
+        if (attack) {
+          smoother.restart();
+        }
         this.pitch.set(smoother.push({ frequency, clarity, level, time }));
         return;
       }
-      const attack = onsets.push({ level, time });
       if (attack) {
         notes.rearm();
       }
@@ -125,9 +132,6 @@ export class MicListener {
         this.heard.update((heard) => [...heard, note].slice(-HEARD_LIMIT));
       }
       if (mode === 'spectrum') {
-        if (attack) {
-          this.strums.update((count) => count + 1);
-        }
         analyser.getFloatFrequencyData(spectrum);
         const sounding = level >= DEFAULT_NOTE_STREAM_OPTIONS.minLevel;
         this.chroma.set(sounding ? chromaFromSpectrum(spectrum, sampleRate) : null);

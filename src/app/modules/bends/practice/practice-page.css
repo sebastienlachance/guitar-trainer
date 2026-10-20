@@ -1,0 +1,103 @@
+.question {
+  text-align: center;
+  padding: 16px 0 4px;
+}
+
+.ask {
+  font-size: 13px;
+  margin: 0 0 4px;
+}
+
+h1 {
+  font-size: clamp(28px, 8vw, 40px);
+}
+
+.where {
+  margin: 4px 0 12px;
+}
+
+/* The bend over time: pitch up, time across; the band is in tune. */
+.trace {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  margin: 12px auto 0;
+}
+
+.band {
+  fill: var(--success-surface);
+}
+
+.target {
+  stroke: var(--success);
+  stroke-dasharray: 4 3;
+}
+
+.start {
+  stroke: var(--border-strong);
+  stroke-dasharray: 4 3;
+}
+
+.trace text {
+  font-size: 11px;
+  text-anchor: end;
+}
+
+.target-label {
+  fill: var(--success);
+}
+
+.start-label {
+  fill: var(--text-muted);
+}
+
+.curve {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.curve.held {
+  stroke: var(--success);
+}
+
+.verdict {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0 0;
+  font-weight: 500;
+  color: var(--danger);
+}
+
+.verdict.held {
+  color: var(--success);
+}
+
+.tip {
+  margin: 4px 0 0;
+  text-align: center;
+  font-size: 14px;
+}
+
+.tip.warning {
+  color: var(--warning);
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+kbd {
+  font: inherit;
+  font-size: 12px;
+  padding: 0 5px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  opacity: 0.7;
+}

@@ -44,7 +44,14 @@ export const SEQUENCES = {
   eToGSharp: { chords: [[82.41], [103.83]], intervalMs: 600, seconds: 1.2 },
 } as const;
 
-export type Recording = keyof typeof TONES | keyof typeof PLUCK_TRAINS | keyof typeof SEQUENCES;
+/** A note picked, then bent up: it holds, glides up, and holds at the top until the next pick. */
+export const BENDS = {
+  /** C4 bent a whole step to D4: fret 5 of the G string. */
+  bendCtoD: { from: 261.63, to: 293.66, seconds: 2 },
+} as const;
+
+export type Recording =
+  keyof typeof TONES | keyof typeof PLUCK_TRAINS | keyof typeof SEQUENCES | keyof typeof BENDS;
 
 /** Absolute path of a recording, as Chromium's fake-microphone flag needs. */
 export function recordingPath(name: Recording): string {
@@ -130,6 +137,26 @@ export function writeSequenceWav(
     );
     const sample = (0.6 * Math.exp(-time / 0.35) * tone) / notes.length;
     data.writeInt16LE(Math.round(sample * 0.5 * 32767), index * 2);
+  }
+  writeFileSync(path, Buffer.concat([wavHeader(data.length), data]));
+}
+
+/**
+ * A bend: `from` for 0.3 s, a glide to `to` over 0.3 s, then `to` until the end. Starts at the
+ * very first sample with a pick, so each loop of the file is a new bend.
+ */
+export function writeBendWav(path: string, from: number, to: number, seconds: number): void {
+  const sampleCount = Math.round(SAMPLE_RATE * seconds);
+  const data = Buffer.alloc(sampleCount * 2);
+  let phase = 0;
+  for (let index = 0; index < sampleCount; index++) {
+    const time = index / SAMPLE_RATE;
+    const glide = Math.min(1, Math.max(0, (time - 0.3) / 0.3));
+    const frequency = from * (to / from) ** glide;
+    phase += (2 * Math.PI * frequency) / SAMPLE_RATE;
+    const tone = Math.sin(phase) + 0.5 * Math.sin(2 * phase) + 0.25 * Math.sin(3 * phase);
+    const sample = 0.35 * Math.exp(-time / 1.5) * tone;
+    data.writeInt16LE(Math.round(sample * 32767), index * 2);
   }
   writeFileSync(path, Buffer.concat([wavHeader(data.length), data]));
 }

@@ -119,6 +119,16 @@ describe('PitchSmoother', () => {
     expect(smoother.push(frame(0, 90 + HOLD_MS + FRAME_MS, { level: 0 }))).toBeNull();
   });
 
+  it('reads a note picked again afresh, without the one before it', () => {
+    const smoother = new PitchSmoother();
+    play(smoother, [110, 110, 110, 110, 110, 110, 110]);
+
+    smoother.restart();
+
+    expect(smoother.push(frame(146.8, 210))).toMatchObject({ frequency: 110, fading: false });
+    expect(play(smoother, [146.8, 146.8, 146.8, 146.8], 240)).toMatchObject({ frequency: 146.8 });
+  });
+
   it('reads the next note afresh once the last one has faded', () => {
     const smoother = new PitchSmoother();
     play(smoother, [110, 110, 110, 110]);

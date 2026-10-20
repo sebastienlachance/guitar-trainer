@@ -1,0 +1,81 @@
+<app-practice-frame [prompt]="prompt" />
+
+<ng-template #prompt>
+  @if (bend()) {
+    <div class="question" aria-live="polite">
+      <p class="ask muted">Bend a {{ size() }}</p>
+      <h1>{{ startName() }} → {{ targetName() }}</h1>
+      <p class="where muted">{{ where() }} · pick once, then push</p>
+    </div>
+
+    <app-fretboard [dots]="dots()" [description]="description()" />
+
+    <svg class="trace" [attr.viewBox]="'0 0 ' + width + ' ' + height" aria-hidden="true">
+      <rect
+        class="band"
+        [attr.x]="left"
+        [attr.y]="bandTop()"
+        [attr.width]="width - left"
+        [attr.height]="bandHeight()"
+      />
+      <line
+        class="target"
+        [attr.x1]="left"
+        [attr.x2]="width"
+        [attr.y1]="targetY()"
+        [attr.y2]="targetY()"
+      />
+      <line
+        class="start"
+        [attr.x1]="left"
+        [attr.x2]="width"
+        [attr.y1]="startY()"
+        [attr.y2]="startY()"
+      />
+      <text class="target-label" [attr.x]="left - 6" [attr.y]="targetY() + 4">
+        {{ targetName() }}
+      </text>
+      <text class="start-label" [attr.x]="left - 6" [attr.y]="startY() + 4">{{ startName() }}</text>
+      @if (curve()) {
+        <polyline
+          class="curve"
+          [class.held]="verdict()?.kind === 'held'"
+          [class.missed]="verdict()?.kind === 'missed'"
+          [attr.points]="curve()"
+        />
+      }
+    </svg>
+
+    @if (verdict(); as verdict) {
+      <p class="verdict" [class.held]="verdict.kind === 'held'" role="status">
+        @if (verdict.kind === 'held') {
+          <app-icon name="check" />
+        }
+        {{ verdictText() }}
+      </p>
+      @if (tip()) {
+        <p class="tip muted">{{ tip() }}</p>
+      }
+    } @else if (session.fretted()) {
+      <p class="tip warning" role="status">
+        That was the {{ targetName() }} fretted: pick the {{ startName() }} and bend up to it.
+      </p>
+    }
+
+    <div class="actions">
+      <button
+        type="button"
+        class="btn"
+        [disabled]="session.playing()"
+        (click)="session.hearTarget()"
+      >
+        <app-icon name="play" /> {{ session.playing() ? 'Playing…' : 'Hear the target' }}
+        <kbd>T</kbd>
+      </button>
+    </div>
+
+    @if (run.phase() === 'prompt') {
+      <app-mic-status [hint]="'pick the ' + startName() + ' and bend'" [showHeard]="false" />
+    }
+  }
+</ng-template>

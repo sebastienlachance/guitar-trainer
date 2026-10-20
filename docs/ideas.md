@@ -6,11 +6,6 @@ exists).
 
 ## Planned
 
-- **Bend trainer.** The app names a bend ("bend the G on string 3 a whole step, to A") and can
-  play the target; a needle shows how close the bend gets in cents and whether you hold it there.
-  Bending flat is the most common intonation problem in lead playing. Reuses the tuner's pitch
-  reading (`PitchSmoother`), `PhrasePlayer` for the target, and the onset detector to tell a bend
-  (one pick, the pitch rising) from simply fretting the target note.
 - **Progressions in time.** Enter a progression (G D Em C, a bar each) and play it with the
   metronome; the microphone checks that each chord lands on its beat, and a tempo ladder climbs
   as it gets clean. The step from drills to songs. Reuses strum matching from chord changes and

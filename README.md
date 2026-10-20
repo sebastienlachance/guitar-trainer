@@ -18,6 +18,8 @@ Practise guitar until the fretboard is automatic. Each kind of exercise is a **m
   shows the count climbing week after week.
 - **Play it back:** ear training on the guitar. The app plays an interval or a short melody and
   gives its first note; you find the rest on the neck and play it.
+- **Bends:** bend a note up a half step, a whole step or a step and a half, and hold it in tune;
+  the bend draws as you play it.
 
 There's also a **tuner**, on the home screen.
 
@@ -133,6 +135,18 @@ Progress is saved in each browser, so a phone and a computer keep separate stats
 - The answer shows the notes, their scale degrees, and one way to play them
 - Stats: accuracy per interval going up and down, and the phrases to practise more
 
+**Bends**
+
+- Bends of a half step, a whole step or a step and a half, on the four highest strings, from the
+  5th fret up to the 12th or 17th; each bend starts on a new fret
+- The app plays the target pitch first (or when you press **T**), and the neck shows where it would
+  be fretted
+- A bend is one pick on the fretted note, then the pitch rising. In tune means within 10 cents of
+  the target for half a second; otherwise the app says how far flat or sharp the top of the bend
+  was. Playing the target fretted doesn't count, and the app says so
+- The pitch of the bend draws as you play it, against the band that's in tune
+- Stats: how often bends hold in tune, per string and size
+
 **Tuner**
 
 - The note you play, how many cents it's off (A = 440), and which way to turn the peg of its
@@ -203,6 +217,7 @@ src/app/
     rhythm/               play along: a metronome, timed strikes, a tempo ladder
     changes/              chord changes: one-minute changes, counted by the microphone
     playback/             play it back: ear training, answered on the guitar
+    bends/                bends: pitch held in tune, read like the tuner
   home/                   home screen
   tuner/                  the tuner page
 docs/

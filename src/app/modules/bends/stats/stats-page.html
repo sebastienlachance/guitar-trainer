@@ -1,0 +1,24 @@
+<h1 class="visually-hidden">Bends stats</h1>
+
+<app-stats-overview />
+<app-session-history />
+
+@if (hasAnswers()) {
+  <section class="panel">
+    <h2>Held in tune</h2>
+    <app-accuracy-grid [columns]="sizes" [rows]="grid()" rowHeader="String" />
+  </section>
+
+  <section class="panel">
+    <h2>Practise these more</h2>
+    <app-weakest-cards [describe]="describeCard" />
+  </section>
+
+  <app-reset-stats />
+} @else {
+  <section class="panel">
+    <h2>No bends yet</h2>
+    <p class="muted">How often your bends hold in tune, per string and size, shows up here.</p>
+    <a routerLink="../practice" class="btn btn-primary">Go to practice</a>
+  </section>
+}

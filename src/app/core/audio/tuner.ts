@@ -109,6 +109,15 @@ export class PitchSmoother {
   private noteStart: number | null = null;
   private last: { frequency: number; time: number } | null = null;
 
+  /**
+   * The string was picked again: the readings start afresh, as for a new note, so the attack and
+   * the note before it don't blend into the new one. The last reading shows meanwhile.
+   */
+  restart(): void {
+    this.recent = [];
+    this.noteStart = null;
+  }
+
   push(frame: PitchFrame): TunerPitch | null {
     const { time } = frame;
     if (isClear(frame)) {

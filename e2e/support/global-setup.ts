@@ -1,10 +1,12 @@
 import { mkdirSync } from 'node:fs';
 import {
   AUDIO_DIR,
+  BENDS,
   PLUCK_TRAINS,
   SEQUENCES,
   TONES,
   recordingPath,
+  writeBendWav,
   writePlucksWav,
   writeSequenceWav,
   writeToneWav,
@@ -23,6 +25,9 @@ export default function globalSetup(): void {
       train.intervalMs,
       train.seconds,
     );
+  }
+  for (const [name, bend] of Object.entries(BENDS)) {
+    writeBendWav(recordingPath(name as keyof typeof BENDS), bend.from, bend.to, bend.seconds);
   }
   for (const [name, sequence] of Object.entries(SEQUENCES)) {
     writeSequenceWav(

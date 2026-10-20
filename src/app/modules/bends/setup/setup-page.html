@@ -1,0 +1,40 @@
+<h1 class="visually-hidden">Set up bends</h1>
+
+<section class="panel">
+  <h2>Bends</h2>
+  <app-chip-toggles
+    label="Strings"
+    [options]="stringChips"
+    [selected]="settings().strings"
+    (selectedChange)="update({ strings: $event })"
+  />
+  <app-chip-toggles
+    label="Sizes"
+    [options]="sizeChips"
+    [selected]="settings().sizes"
+    (selectedChange)="update({ sizes: $event })"
+  />
+  <app-segmented-choice
+    label="Starting frets"
+    [options]="fretChoices"
+    [value]="settings().maxFret"
+    (valueChange)="update({ maxFret: $event })"
+  />
+</section>
+
+<section class="panel">
+  <h2>Listening</h2>
+  <app-segmented-choice
+    label="The target"
+    [options]="targetChoices"
+    [value]="settings().target"
+    (valueChange)="update({ target: $event })"
+  />
+  <p class="hint">
+    In tune means within {{ inTuneCents }} cents of the target, held for half a second. Pick once,
+    then bend: playing the target note fretted doesn't count.
+  </p>
+  <app-input-picker />
+</section>
+
+<app-setup-start />

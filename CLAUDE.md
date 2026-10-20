@@ -73,6 +73,8 @@ routing, storage, focus or the microphone changed.
   in `changes:takes`, and shows its own result (`ownResult`, so the frame leaves out "Correct").
   `playback/` plays a phrase through the speakers and checks it played back; it is self-check,
   with the mic resolving a card like triads, and picks new notes for a card in `onNext`.
+  `bends/` follows a bend with the tuner's pitch reading and the mic's attack count (`BendJudge`,
+  pure).
 - `src/app/tuner/`: the tuner, a page of its own (no sessions or stats, so not a module), linked
   from the home page.
 - `docs/adding-a-practice-module.md`: how to add a module. Follow it. `docs/ideas.md`: features
@@ -186,8 +188,9 @@ routing, storage, focus or the microphone changed.
 - **Covered windows:** browsers pause `requestAnimationFrame` while the window is covered.
   Anything that must keep running, like mic analysis, uses a timer.
 - **Sound and the microphone:** the mic hears the speakers. A module that plays sound must ignore
-  what the mic hears meanwhile: Play it back clears the heard notes when its phrase ends; play
-  along filters the tick out by frequency and warns of a leak.
+  what the mic hears meanwhile: Play it back clears the heard notes when its phrase ends, Bends
+  skips the picks heard while the target plays, and play along filters the tick out by frequency
+  and warns of a leak.
 - **Microphone:** `getUserMedia` needs https or localhost. Keep echo cancellation, noise
   suppression and auto gain off (`core/audio/microphone.ts`); they distort instrument notes.
 - **Fretboard cursor:** pass `cursorStart` as a new object for each question, or the keyboard
@@ -258,7 +261,7 @@ routing, storage, focus or the microphone changed.
 ## Where things stand (2026-10-20)
 
 - **Modules:** triads, fretboard notes, identify notes, identify scales, intervals in a scale,
-  play along (rhythm, with strumming patterns), chord changes, play it back. Live
+  play along (rhythm, with strumming patterns), chord changes, play it back, bends. Live
   at https://sebastienlachance.github.io/guitar-trainer/ as an installable PWA.
 - **Recently added:**
   - stats measure progress by speed (progress chart, speed grid, slow cards come up more)
@@ -275,8 +278,8 @@ routing, storage, focus or the microphone changed.
     not yet tried by the owner on a real guitar
   - play it back: the plucked sound is in tune within a cent (unit test through the pitch
     detector); answering through the fake mic works; not yet tried by the owner with speakers
-  - strumming patterns in play along (2026-10-20): checked through the fake mic; not yet tried
-    by the owner on a real guitar
+  - strumming patterns in play along and bends (2026-10-20): checked through the fake mic with
+    generated recordings; not yet tried by the owner on a real guitar
 - **Tested by the owner:** triads in strum mode, on a computer. Not yet confirmed on a real guitar:
   single-note detection (fretboard notes, intervals, triads arpeggio), phones, iPhone Safari.
   On a real guitar (2026-10-16), triads missed D at the 12th fret of the 4th string: nothing was
