@@ -1,4 +1,4 @@
-import { ChordQuality, chordSymbol, spellChord } from './chords';
+import { ChordQuality, chordSymbol, parseChordSymbol, spellChord } from './chords';
 import { IntervalName, intervalFromSemitones, intervalLongName } from './intervals';
 import { displayNoteName, midiToName, noteName, parseNote, pitchClassOf } from './notes';
 import { scaleNameInText, scaleRootName, scaleTypeById } from './scales';
@@ -49,6 +49,26 @@ describe('spellChord', () => {
 
   it('builds a display symbol from root and quality', () => {
     expect(chordSymbol(parseNote('Bb'), quality('m7b5', 'm7♭5', []))).toBe('B♭m7♭5');
+  });
+});
+
+describe('parseChordSymbol', () => {
+  it('reads a root and a common chord type', () => {
+    expect(parseChordSymbol('G')).toEqual({ id: 'G', name: 'G', pitchClasses: [7, 11, 2] });
+    expect(parseChordSymbol('F#m')).toEqual({ id: 'F#m', name: 'F♯m', pitchClasses: [6, 9, 1] });
+    expect(parseChordSymbol('B♭7')).toEqual({
+      id: 'Bb7',
+      name: 'B♭7',
+      pitchClasses: [10, 2, 5, 8],
+    });
+    expect(parseChordSymbol(' Cmaj7 ')?.pitchClasses).toEqual([0, 4, 7, 11]);
+    expect(parseChordSymbol('Am7')?.pitchClasses).toEqual([9, 0, 4, 7]);
+  });
+
+  it('turns down anything else', () => {
+    ['H', 'g', 'Cmaj9', 'C#b', 'Gsus4', ''].forEach((text) =>
+      expect(parseChordSymbol(text)).toBeNull(),
+    );
   });
 });
 

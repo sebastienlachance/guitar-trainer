@@ -1,0 +1,59 @@
+<h1 class="visually-hidden">Set up progressions</h1>
+
+<section class="panel">
+  <h2>Progressions</h2>
+  <app-chip-toggles
+    label="Progressions"
+    [hideLabel]="true"
+    [options]="presetChips"
+    [selected]="settings().presets"
+    (selectedChange)="update({ presets: $event })"
+  />
+  <label class="group-label" for="custom-progression">Your own</label>
+  <input
+    id="custom-progression"
+    class="custom"
+    type="text"
+    autocomplete="off"
+    spellcheck="false"
+    placeholder="E A B7 A"
+    [value]="settings().custom"
+    (input)="setCustom($event)"
+  />
+  @if (customProblem(); as problem) {
+    <p class="warning" role="status">{{ problem }}</p>
+  } @else {
+    <p class="hint">
+      Up to {{ maxChords }} chords separated by spaces: any root, then nothing, m, 7, maj7 or m7.
+    </p>
+  }
+</section>
+
+<section class="panel">
+  <h2>Each take</h2>
+  <app-segmented-choice
+    label="Each chord lasts"
+    [options]="beatsChoices"
+    [value]="settings().beatsPerChord"
+    (valueChange)="update({ beatsPerChord: $event })"
+  />
+  <app-segmented-choice
+    label="Start at (bpm)"
+    [options]="tempoChoices"
+    [value]="settings().startTempo"
+    (valueChange)="update({ startTempo: $event })"
+  />
+  <app-segmented-choice
+    label="Metronome"
+    [options]="clickChoices"
+    [value]="settings().click"
+    (valueChange)="update({ click: $event })"
+  />
+  <p class="hint">
+    A chord is on the beat from a quarter beat early to half a beat late: wide enough for the delay
+    of speakers and microphone, so there's nothing to calibrate.
+  </p>
+  <app-input-picker />
+</section>
+
+<app-setup-start />

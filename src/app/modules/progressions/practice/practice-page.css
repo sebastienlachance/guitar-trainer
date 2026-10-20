@@ -1,0 +1,166 @@
+.question {
+  text-align: center;
+  padding: 16px 0 4px;
+}
+
+.ask {
+  font-size: 13px;
+  margin: 0 0 4px;
+}
+
+h1 {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0 12px;
+  font-size: clamp(26px, 8vw, 36px);
+}
+
+.tempo {
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.now {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 72px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.then {
+  margin: 4px 0 0;
+  text-align: center;
+}
+
+.then strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* The light: four beats, the first larger; the current one glows. */
+.beats {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin: 14px 0 6px;
+}
+
+.beat {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+}
+
+.beat.first {
+  width: 32px;
+  height: 32px;
+}
+
+.beat.lit {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.instruction {
+  margin: 4px 0 0;
+  text-align: center;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* The chords of a time through, each with how it landed. */
+.chords {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chords li {
+  display: grid;
+  justify-items: center;
+  padding: 8px 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+}
+
+.chords .name {
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.chords .words {
+  min-height: 1.2em;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.chords .now {
+  border-color: var(--accent);
+}
+
+.chords .on-time {
+  border-color: var(--success);
+  background: var(--success-surface);
+}
+
+.chords .late {
+  border-color: var(--warning);
+}
+
+.chords .missed {
+  border-color: var(--danger);
+  background: var(--danger-surface);
+}
+
+.center {
+  text-align: center;
+}
+
+.small {
+  font-size: 13px;
+  margin: 6px 0 0;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+kbd {
+  font: inherit;
+  font-size: 12px;
+  padding: 0 5px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  opacity: 0.7;
+}
+
+.summary {
+  margin: 12px 0 0;
+  text-align: center;
+}
+
+.ladder {
+  margin: 4px 0 0;
+  text-align: center;
+  color: var(--danger);
+  font-weight: 500;
+}
+
+.ladder.passed {
+  color: var(--accent);
+}
+
+.warning {
+  margin: 12px 0 0;
+  color: var(--warning);
+}

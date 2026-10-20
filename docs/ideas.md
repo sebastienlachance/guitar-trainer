@@ -6,10 +6,7 @@ exists).
 
 ## Planned
 
-- **Progressions in time.** Enter a progression (G D Em C, a bar each) and play it with the
-  metronome; the microphone checks that each chord lands on its beat, and a tempo ladder climbs
-  as it gets clean. The step from drills to songs. Reuses strum matching from chord changes and
-  the metronome; new is timing strums against the metronome's clock.
+Nothing yet: pick from below.
 
 ## Later
 

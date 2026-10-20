@@ -70,4 +70,11 @@ export const MODULES: readonly TrainerModule[] = [
     description: 'Bend a note up to its target and hold it there, in tune to the cent.',
     loadRoutes: () => import('./bends/bends.routes').then((m) => m.BENDS_ROUTES),
   },
+  {
+    path: 'progressions',
+    title: 'Progressions',
+    description: 'Play G D Em C and friends with the metronome, each chord on its beat.',
+    loadRoutes: () =>
+      import('./progressions/progressions.routes').then((m) => m.PROGRESSIONS_ROUTES),
+  },
 ];

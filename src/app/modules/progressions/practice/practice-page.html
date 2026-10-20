@@ -1,0 +1,96 @@
+<app-practice-frame [prompt]="prompt" />
+
+<ng-template #prompt>
+  @if (card(); as card) {
+    <div class="question" aria-live="polite">
+      <p class="ask muted">{{ kind() }}</p>
+      <h1>
+        <span>{{ chords() }}</span
+        >{{ ' ' }}<span class="tempo muted">{{ bpm() }} bpm</span>
+      </h1>
+    </div>
+
+    @if (now(); as now) {
+      <p class="now">{{ now.chord }}</p>
+      <p class="then muted">
+        @if (now.next) {
+          then <strong>{{ now.next }}</strong>
+        } @else {
+          the last one
+        }
+      </p>
+    }
+
+    @if (session.stage() !== 'idle') {
+      <div class="beats" aria-hidden="true">
+        @for (count of counts; track count) {
+          <span
+            class="beat"
+            [class.first]="count === 1"
+            [class.lit]="beat()?.count === count"
+          ></span>
+        }
+      </div>
+    }
+    @if (session.stage() === 'count-in') {
+      <p class="instruction" aria-live="polite">Listen…</p>
+    }
+
+    @for (row of rows(); track row.label) {
+      <ol class="chords" [attr.aria-label]="row.label">
+        @for (chord of row.chords; track $index) {
+          <li
+            [class.on-time]="chord.outcome === 'on-time'"
+            [class.late]="chord.outcome === 'late'"
+            [class.missed]="chord.outcome === 'missed'"
+            [class.now]="chord.now"
+          >
+            <span class="name">{{ chord.name }}</span>
+            <span class="words">{{ chord.words }}</span>
+          </li>
+        }
+      </ol>
+    }
+    @if (session.stage() === 'playing') {
+      <p class="center muted small">{{ pass() }}</p>
+    }
+
+    @if (run.phase() === 'prompt' && session.stage() === 'idle') {
+      <ol class="chords" aria-label="The chords">
+        @for (chord of card.chords; track $index) {
+          <li>
+            <span class="name">{{ chord.name }}</span>
+          </li>
+        }
+      </ol>
+      <p class="hint center">
+        A bar of count-in, then twice through. Strum each chord on its first beat; strum as you like
+        after it.
+      </p>
+      <div class="actions">
+        <button type="button" class="btn btn-primary" data-autofocus (click)="session.play()">
+          Play <kbd>Space</kbd>
+        </button>
+      </div>
+    }
+
+    @if (session.result(); as result) {
+      <p class="summary">{{ summary() }}</p>
+      <p class="ladder" [class.passed]="result.passed">{{ ladder() }}</p>
+    }
+
+    @if (run.phase() === 'prompt') {
+      <app-mic-status
+        hint="strum each chord on its first beat"
+        [showHeard]="false"
+        [spectrumFor]="spectrumFor()"
+      />
+    }
+    @if (listener.errorMessage(); as error) {
+      <p class="warning">
+        {{ error }}{{ ' ' }}
+        <button type="button" class="link" (click)="listener.start()">Try again</button>
+      </p>
+    }
+  }
+</ng-template>

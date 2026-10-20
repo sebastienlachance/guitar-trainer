@@ -1,38 +1,15 @@
-import { ChordQuality, chordSymbol, spellChord } from '../../core/music/chords';
-import { parseNote, pitchClassOf } from '../../core/music/notes';
+import { SymbolChord, parseChordSymbol } from '../../core/music/chords';
 import { PracticeCard } from '../../core/practice/practice-run';
 import { CHORD_IDS, ChangesSettings, CountMode } from './settings';
 
-/** A chord to change to. The microphone hears its notes, so any shape of it counts. */
-export interface OpenChord {
-  /** Stable id used in storage keys, e.g. "Am". */
-  readonly id: string;
-  /** As written, e.g. "Am". */
-  readonly name: string;
-  readonly pitchClasses: readonly number[];
-}
-
-const MAJOR: ChordQuality = { id: 'major', symbol: '', name: 'Major', intervals: ['1', '3', '5'] };
-const MINOR: ChordQuality = {
-  id: 'minor',
-  symbol: 'm',
-  name: 'Minor',
-  intervals: ['1', 'b3', '5'],
-};
-
-function openChord(id: string): OpenChord {
-  const minor = id.endsWith('m');
-  const root = parseNote(minor ? id.slice(0, -1) : id);
-  const quality = minor ? MINOR : MAJOR;
-  return {
-    id,
-    name: chordSymbol(root, quality),
-    pitchClasses: spellChord(root, quality).map((tone) => pitchClassOf(tone.note)),
-  };
-}
+/**
+ * A chord to change to; its id is its symbol, e.g. "Am". The microphone hears its notes, so any
+ * shape of it counts.
+ */
+export type OpenChord = SymbolChord;
 
 /** The chords of the first position, as most players learn them. */
-export const OPEN_CHORDS: readonly OpenChord[] = CHORD_IDS.map(openChord);
+export const OPEN_CHORDS: readonly OpenChord[] = CHORD_IDS.map((id) => parseChordSymbol(id)!);
 
 /** Two chords to change between. */
 export interface PairCard extends PracticeCard {

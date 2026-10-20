@@ -1,0 +1,58 @@
+<h1 class="visually-hidden">Progressions stats</h1>
+
+@if (rows().length > 0) {
+  <section class="panel">
+    <h2>Where you are</h2>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Progression</th>
+            <th scope="col">Now</th>
+            <th scope="col">Best passed</th>
+            <th scope="col">Last take</th>
+            <th scope="col">Takes</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.key) {
+            <tr>
+              <th scope="row">{{ row.name }}</th>
+              <td>{{ row.now }}</td>
+              <td>{{ row.best }}</td>
+              <td>{{ row.last }}</td>
+              <td>{{ row.count }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Tempo</h2>
+    @if (choices().length > 1) {
+      <app-segmented-choice
+        label="Progression"
+        [hideLabel]="true"
+        [options]="choices()"
+        [value]="charted()"
+        (valueChange)="charted.set($event)"
+      />
+    }
+    <app-trend-chart
+      [points]="points()"
+      [describe]="describe"
+      pointNoun="takes"
+      empty="A couple more takes and your progress shows here."
+    />
+  </section>
+} @else {
+  <section class="panel">
+    <h2>No takes yet</h2>
+    <p class="muted">The tempo of each progression shows up here once you've played it.</p>
+    <a routerLink="../practice" class="btn btn-primary">Go to practice</a>
+  </section>
+}
+
+<app-session-history />

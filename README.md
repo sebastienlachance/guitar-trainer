@@ -20,6 +20,8 @@ Practise guitar until the fretboard is automatic. Each kind of exercise is a **m
   gives its first note; you find the rest on the neck and play it.
 - **Bends:** bend a note up a half step, a whole step or a step and a half, and hold it in tune;
   the bend draws as you play it.
+- **Progressions:** play a chord progression with the metronome, each chord on its beat, faster as
+  it gets clean.
 
 There's also a **tuner**, on the home screen.
 
@@ -147,6 +149,19 @@ Progress is saved in each browser, so a phone and a computer keep separate stats
 - The pitch of the bend draws as you play it, against the band that's in tune
 - Stats: how often bends hold in tune, per string and size
 
+**Progressions**
+
+- Ready-made progressions (G D Em C, C G Am F, Am F C G, A D E A, D A Bm G), or your own: up to
+  eight chords, any root, major, m, 7, maj7 or m7
+- A bar of count-in, then twice through, a bar or two beats per chord; a tick and a light, or the
+  light only
+- A chord is on the beat when a strum that sounds like it comes from a quarter beat early to half
+  a beat late: wide enough for the delay of speakers and microphone, so there's nothing to
+  calibrate. Strum as you like after it
+- After a take: each chord on time, late or missed, and the tempo ladder: 7 chords in 8 on time
+  move it up 4 bpm, two failed takes in a row move it down 4
+- Stats: each progression's tempo now and best, and a chart of tempo take after take
+
 **Tuner**
 
 - The note you play, how many cents it's off (A = 440), and which way to turn the peg of its
@@ -218,6 +233,7 @@ src/app/
     changes/              chord changes: one-minute changes, counted by the microphone
     playback/             play it back: ear training, answered on the guitar
     bends/                bends: pitch held in tune, read like the tuner
+    progressions/         progressions: chords on the beat, with the metronome
   home/                   home screen
   tuner/                  the tuner page
 docs/
