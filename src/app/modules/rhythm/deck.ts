@@ -131,6 +131,12 @@ export function settingsProblems(settings: RhythmSettings, input: string): strin
   } else if ((settings.latencyInput ?? DEFAULT_INPUT) !== input) {
     // Calibrations from before inputs could be chosen were made with the default microphone.
     problems.push('The input changed since you calibrated: calibrate again, in setup.');
+  } else if ((settings.latencyClick ?? 'sound') !== settings.click) {
+    problems.push(
+      settings.click === 'light'
+        ? 'You calibrated with the tick: calibrate again with the light only, in setup.'
+        : 'You calibrated with the light only: calibrate again with the tick, in setup.',
+    );
   }
   return problems;
 }

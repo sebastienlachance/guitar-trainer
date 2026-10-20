@@ -17,7 +17,8 @@ export type StatsByCard = Readonly<Record<string, CardStats>>;
 
 export interface PracticeResult {
   readonly correct: boolean;
-  readonly responseMs: number;
+  /** Null when the answer's time means nothing, such as a take's: the times stay as they were. */
+  readonly responseMs: number | null;
   readonly at: number;
 }
 
@@ -28,27 +29,31 @@ export function recordResult(
 ): StatsByCard {
   const previous = stats[cardKey] ?? { attempts: 0, correct: 0, totalResponseMs: 0, lastSeen: 0 };
   const recent = previous.recentMs ?? [];
+  const timed = result.correct ? result.responseMs : null;
   return {
     ...stats,
     [cardKey]: {
       attempts: previous.attempts + 1,
       correct: previous.correct + (result.correct ? 1 : 0),
-      totalResponseMs: previous.totalResponseMs + result.responseMs,
+      totalResponseMs: previous.totalResponseMs + (result.responseMs ?? 0),
       lastSeen: result.at,
-      earlyMs: earlyTimes(previous, result),
-      recentMs: result.correct ? [...recent, result.responseMs].slice(-RECENT_TIMES) : recent,
+      earlyMs: earlyTimes(previous, timed),
+      recentMs: timed === null ? recent : [...recent, timed].slice(-RECENT_TIMES),
     },
   };
 }
 
-/** Speed only counts correct answers: a miss says nothing about how fast you find the answer. */
-function earlyTimes(previous: CardStats, result: PracticeResult): readonly number[] {
+/**
+ * Speed only counts correct answers (`correctMs`, null for a miss or an untimed answer): a miss
+ * says nothing about how fast you find the answer.
+ */
+function earlyTimes(previous: CardStats, correctMs: number | null): readonly number[] {
   if (previous.attempts > 0 && previous.earlyMs === undefined) {
     // Saved before times were kept: its average so far stands in for its first answers.
     return [averageResponseMs(previous)];
   }
   const early = previous.earlyMs ?? [];
-  return result.correct && early.length < EARLY_TIMES ? [...early, result.responseMs] : early;
+  return correctMs !== null && early.length < EARLY_TIMES ? [...early, correctMs] : early;
 }
 
 export function accuracy(stats: Pick<CardStats, 'attempts' | 'correct'>): number {

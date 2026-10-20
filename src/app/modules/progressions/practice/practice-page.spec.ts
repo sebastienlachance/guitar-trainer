@@ -7,7 +7,7 @@ import { LitBeat, Metronome } from '../../../core/audio/metronome';
 import { MicListener } from '../../../core/audio/mic-listener';
 import { RhythmListener } from '../../../core/audio/rhythm-listener';
 import { STORAGE_PREFIX } from '../../../core/practice/storage';
-import { CHORD_CHECK_MS, ProgressionsSession, provideProgressions } from '../progressions-session';
+import { CHORD_CHECKS_MS, ProgressionsSession, provideProgressions } from '../progressions-session';
 import { ProgressionsSettings } from '../settings';
 import { PracticePage } from './practice-page';
 
@@ -64,22 +64,28 @@ async function practise(settings: Partial<ProgressionsSettings> = G_D_EM_C_AT_60
   session.run.start();
   TestBed.tick();
 
-  /** A strum `offset` seconds after a chord's first beat, sounding like `notes` (that chord by default). */
-  const strum = (slot: number, offset: number, notes?: readonly number[]) => {
+  /** The spectrum sounds like these pitch classes from now on. */
+  const sound = (pitchClasses: readonly number[]) =>
+    audio.mic.chroma.set(Array.from({ length: 12 }, (_, pc) => +pitchClasses.includes(pc)));
+  /** A strike `offset` seconds after a chord's first beat, sounding like `notes` (that chord by default). */
+  const strike = (slot: number, offset: number, notes?: readonly number[]) => {
     const time = session.slots()[slot].time + offset;
     vi.advanceTimersByTime(Math.max(0, (time - Date.now() / 1000) * 1000));
-    const pitchClasses = notes ?? session.slots()[slot].chord.pitchClasses;
-    audio.mic.chroma.set(Array.from({ length: 12 }, (_, pc) => +pitchClasses.includes(pc)));
+    sound(notes ?? session.slots()[slot].chord.pitchClasses);
     audio.strikes.update((strikes) => [...strikes, time]);
     TestBed.tick();
-    vi.advanceTimersByTime(CHORD_CHECK_MS);
+  };
+  /** A strike, then the time for every read of which chord it sounds like. */
+  const strum = (slot: number, offset: number, notes?: readonly number[]) => {
+    strike(slot, offset, notes);
+    vi.advanceTimersByTime(Math.max(...CHORD_CHECKS_MS));
     TestBed.tick();
   };
   const finish = () => {
     vi.advanceTimersByTime(40_000);
     TestBed.tick();
   };
-  return { ...audio, session, strum, finish };
+  return { ...audio, session, sound, strike, strum, finish };
 }
 
 function savedLevels() {
@@ -127,6 +133,24 @@ describe('Progressions PracticePage', () => {
     );
     expect(screen.getByRole('list', { name: 'Second time through' })).toHaveTextContent(
       /C\s*missed/,
+    );
+  });
+
+  it('lands a chord whose sound settles a moment after the strike', async () => {
+    const { session, sound, strike, strum, finish } = await practise();
+    await session.play();
+    const [G, D] = session.slots().map((slot) => slot.chord.pitchClasses);
+    strum(0, 0.1);
+
+    // D is struck, but the spectrum still holds the G before it at the first read.
+    strike(1, 0.1, G);
+    vi.advanceTimersByTime(CHORD_CHECKS_MS[0] + 50);
+    sound(D);
+    vi.advanceTimersByTime(Math.max(...CHORD_CHECKS_MS));
+    finish();
+
+    expect(screen.getByRole('list', { name: 'First time through' })).toHaveTextContent(
+      /G\s*on time\s*D\s*on time/,
     );
   });
 

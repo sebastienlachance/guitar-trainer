@@ -1,7 +1,7 @@
 import { DestroyRef, Signal, computed, effect, inject, signal, untracked } from '@angular/core';
 import { PracticeLog } from './practice-log';
 import { pickNextCard } from './scheduler';
-import { SessionRecord } from './session-log';
+import { IDLE_LIMIT_MS, SessionRecord } from './session-log';
 import { StatsStore } from './stats-store';
 
 export interface PracticeCard {
@@ -43,6 +43,12 @@ export interface PracticeRunOptions<C extends PracticeCard> {
    * is worth reading, like a rhythm take's timing; Next then moves on, as after a wrong answer.
    */
   readonly advanceAfterCorrect?: boolean;
+  /**
+   * Whether the time to answer says how well you know a card (the default). Turn it off when an
+   * answer takes a set time, like a take: answers then record no time, and cards come up by
+   * their misses alone.
+   */
+  readonly timesAnswers?: boolean;
 }
 
 /** A running countdown for the current card, for drawing it. */
@@ -68,7 +74,10 @@ export class PracticeRun<C extends PracticeCard> {
   readonly stats: StatsStore['stats'];
   readonly current = signal<C | null>(null);
   readonly phase = signal<PracticePhase>('prompt');
-  /** Time from the prompt to the reveal or to the checked answer. */
+  /**
+   * Time from the prompt to the reveal or to the checked answer, pauses left out; null when the
+   * run doesn't time answers.
+   */
   readonly responseMs = signal<number | null>(null);
   /** Result of the last answer the app checked; null after a self-checked one. */
   readonly lastCorrect = signal<boolean | null>(null);
@@ -76,7 +85,7 @@ export class PracticeRun<C extends PracticeCard> {
    * The card answered by `resolveAndMoveOn()`, while the next one is on screen, for a brief
    * confirmation. Null after any other way of moving on.
    */
-  readonly movedOn = signal<{ readonly card: C; readonly responseMs: number } | null>(null);
+  readonly movedOn = signal<{ readonly card: C; readonly responseMs: number | null } | null>(null);
   /** Whether the current card's answer is a miss because the time limit ran out. */
   readonly timedOut = signal(false);
   /** The time limit counting down on the current card, if there is one. */
@@ -96,6 +105,8 @@ export class PracticeRun<C extends PracticeCard> {
   });
 
   private shownAt = 0;
+  /** The session's paused time when the card was shown: answer times leave pauses out. */
+  private pausedBeforeShown = 0;
   private advanceTimer: ReturnType<typeof setTimeout> | undefined;
   /** Goes up with every card shown, even when the same card comes back (a one-card deck). */
   private readonly cardsShown = signal(0);
@@ -133,6 +144,10 @@ export class PracticeRun<C extends PracticeCard> {
     return this.options.problems();
   }
 
+  get timesAnswers(): boolean {
+    return this.options.timesAnswers !== false;
+  }
+
   /** Starts a timed session; returns false when the settings leave nothing to practise. */
   start(): boolean {
     this.end();
@@ -141,7 +156,7 @@ export class PracticeRun<C extends PracticeCard> {
       return false;
     }
     this.options.onStart?.();
-    this.log.start(this.options.module);
+    this.log.start(this.options.module, this.timesAnswers);
     this.next();
     return true;
   }
@@ -160,7 +175,7 @@ export class PracticeRun<C extends PracticeCard> {
   reveal(): void {
     if (this.phase() === 'prompt') {
       this.log.touch();
-      this.responseMs.set(Date.now() - this.shownAt);
+      this.responseMs.set(this.timeOnCard());
       this.phase.set('revealed');
     }
   }
@@ -169,7 +184,7 @@ export class PracticeRun<C extends PracticeCard> {
   selfCheck(correct: boolean): void {
     const card = this.current();
     if (card && this.phase() === 'revealed') {
-      this.record(card, correct, this.responseMs() ?? 0);
+      this.record(card, correct, this.responseMs());
       this.next();
     }
   }
@@ -183,7 +198,7 @@ export class PracticeRun<C extends PracticeCard> {
     if (!card || this.phase() !== 'prompt') {
       return;
     }
-    const responseMs = Date.now() - this.shownAt;
+    const responseMs = this.timeOnCard();
     this.record(card, correct, responseMs);
     this.responseMs.set(responseMs);
     this.lastCorrect.set(correct);
@@ -202,7 +217,7 @@ export class PracticeRun<C extends PracticeCard> {
     if (!card || this.phase() !== 'prompt') {
       return;
     }
-    const responseMs = Date.now() - this.shownAt;
+    const responseMs = this.timeOnCard();
     this.record(card, true, responseMs);
     this.next();
     this.movedOn.set({ card, responseMs });
@@ -213,12 +228,17 @@ export class PracticeRun<C extends PracticeCard> {
     this.movedOn.set(null);
     this.timedOut.set(false);
     const previous = this.current();
-    this.current.set(pickNextCard(this.options.deck(), this.stats(), previous?.key ?? null));
+    this.current.set(
+      pickNextCard(this.options.deck(), this.stats(), previous?.key ?? null, {
+        bySpeed: this.timesAnswers,
+      }),
+    );
     this.phase.set('prompt');
     this.responseMs.set(null);
     this.lastCorrect.set(null);
     this.options.onNext?.();
     this.shownAt = Date.now();
+    this.pausedBeforeShown = this.log.pausedMsUntil(this.shownAt);
     this.cardsShown.update((count) => count + 1);
   }
 
@@ -238,7 +258,20 @@ export class PracticeRun<C extends PracticeCard> {
     }
   }
 
-  private record(card: C, correct: boolean, responseMs: number): void {
+  /**
+   * Time on the current card so far, pauses left out, or null when the run doesn't time answers.
+   * Capped like the session clock's gaps: walking away from a card says nothing about it.
+   */
+  private timeOnCard(): number | null {
+    if (!this.timesAnswers) {
+      return null;
+    }
+    const now = Date.now();
+    const paused = this.log.pausedMsUntil(now) - this.pausedBeforeShown;
+    return Math.min(now - this.shownAt - paused, IDLE_LIMIT_MS);
+  }
+
+  private record(card: C, correct: boolean, responseMs: number | null): void {
     this.statsStore.record(card.key, { correct, responseMs, at: Date.now() });
     this.log.recordAnswer(correct, responseMs);
   }

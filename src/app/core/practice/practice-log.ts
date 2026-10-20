@@ -26,6 +26,9 @@ export class PracticeLog {
   /** Updated every second while a session is open, to drive the live clock. */
   private readonly now = signal(Date.now());
   private ticker: ReturnType<typeof setInterval> | undefined;
+  /** The open session's time spent paused before the current pause, if any. */
+  private pausedBeforeMs = 0;
+  private pausedSince: number | null = null;
 
   readonly current = this.open.asReadonly();
   /** Finished sessions, newest first. */
@@ -48,7 +51,11 @@ export class PracticeLog {
     inject(DestroyRef).onDestroy(() => clearInterval(this.ticker));
   }
 
-  start(module: string): void {
+  /**
+   * Opens a session. `timed` is false for a module whose answers take a set time, such as a
+   * take: the session then keeps no response times.
+   */
+  start(module: string, timed = true): void {
     this.end();
     const now = this.tick();
     this.open.set({
@@ -57,8 +64,10 @@ export class PracticeLog {
       timer: startTimer(now),
       answered: 0,
       correct: 0,
-      totalResponseMs: 0,
+      ...(timed ? { totalResponseMs: 0 } : {}),
     });
+    this.pausedBeforeMs = 0;
+    this.pausedSince = null;
     this.saveSnapshot();
     this.ticker = setInterval(() => this.tick(), 1000);
   }
@@ -69,20 +78,26 @@ export class PracticeLog {
     this.updateOpen((session) => ({ ...session, timer: touchTimer(session.timer, now) }));
   }
 
-  recordAnswer(correct: boolean, responseMs: number): void {
+  /** An answer, with its response time, or null in a session that keeps none. Ends a pause. */
+  recordAnswer(correct: boolean, responseMs: number | null): void {
     const now = this.tick();
     this.updateOpen((session) => ({
       ...session,
       timer: touchTimer(resumeTimer(session.timer, now), now),
       answered: session.answered + 1,
       correct: session.correct + (correct ? 1 : 0),
-      totalResponseMs: (session.totalResponseMs ?? 0) + responseMs,
+      totalResponseMs:
+        responseMs === null ? session.totalResponseMs : (session.totalResponseMs ?? 0) + responseMs,
     }));
+    this.endPause(now);
     this.saveSnapshot();
   }
 
   pause(): void {
     const now = this.tick();
+    if (this.open() && !this.paused()) {
+      this.pausedSince = now;
+    }
     this.updateOpen((session) => ({ ...session, timer: pauseTimer(session.timer, now) }));
     this.saveSnapshot();
   }
@@ -90,7 +105,13 @@ export class PracticeLog {
   resume(): void {
     const now = this.tick();
     this.updateOpen((session) => ({ ...session, timer: resumeTimer(session.timer, now) }));
+    this.endPause(now);
     this.saveSnapshot();
+  }
+
+  /** The open session's time spent paused up to `now`, which answer times leave out. */
+  pausedMsUntil(now: number): number {
+    return this.pausedBeforeMs + (this.pausedSince === null ? 0 : now - this.pausedSince);
   }
 
   /**
@@ -123,6 +144,13 @@ export class PracticeLog {
     if (isOpenSession(snapshot)) {
       this.keep(closeSession(snapshot, snapshot.timer.lastActivity));
       saveJson(OPEN_SESSION_KEY, null);
+    }
+  }
+
+  private endPause(now: number): void {
+    if (this.pausedSince !== null) {
+      this.pausedBeforeMs += now - this.pausedSince;
+      this.pausedSince = null;
     }
   }
 

@@ -16,6 +16,7 @@ import { PracticeLog } from '../../practice/practice-log';
 import { IDLE_LIMIT_MS, formatClock, formatDuration } from '../../practice/session-log';
 import { accuracyBand } from '../../practice/stats';
 import { Icon } from '../icon';
+import { keepScreenAwake } from '../keep-awake';
 import { capitalize, formatSeconds, percentCorrect, plural } from '../text';
 
 /**
@@ -83,9 +84,10 @@ export class PracticeFrame implements OnDestroy {
     return countdown ? [countdown] : [];
   });
 
-  protected readonly responseSeconds = computed(() => {
+  /** "Correct, 2.1 s", or just "Correct" when the module doesn't time answers. */
+  protected readonly correctText = computed(() => {
     const ms = this.run.responseMs();
-    return ms === null ? '' : formatSeconds(ms);
+    return ms === null ? 'Correct' : `Correct, ${formatSeconds(ms)}`;
   });
 
   private readonly primaryAction = viewChild<ElementRef<HTMLElement>>('primaryAction');
@@ -97,6 +99,9 @@ export class PracticeFrame implements OnDestroy {
   protected usingKeyboard = false;
 
   constructor() {
+    // Until the session goes idle: then the phone may lock as usual.
+    keepScreenAwake(computed(() => this.view() === 'running' && !this.log.idle()));
+
     // The button you used disappears when the step changes: move focus to the next one, or, for
     // keyboard users, to whatever the module marked with data-autofocus (such as answer buttons).
     afterRenderEffect(() => {

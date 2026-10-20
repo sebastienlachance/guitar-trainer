@@ -49,6 +49,21 @@ describe('stats', () => {
     expect(recentAverageMs(stats['a'])).toBe(2040);
   });
 
+  it('counts an answer without a time, leaving the times as they were', () => {
+    let stats: StatsByCard = {};
+    stats = recordResult(stats, 'a', { correct: true, responseMs: 2000, at: 1 });
+    stats = recordResult(stats, 'a', { correct: true, responseMs: null, at: 2 });
+
+    expect(stats['a']).toMatchObject({
+      attempts: 2,
+      correct: 2,
+      totalResponseMs: 2000,
+      lastSeen: 2,
+      earlyMs: [2000],
+      recentMs: [2000],
+    });
+  });
+
   it('lets cards saved before times were kept stand on their average', () => {
     const saved: StatsByCard = {
       a: { attempts: 4, correct: 4, totalResponseMs: 24000, lastSeen: 1 },
@@ -114,7 +129,7 @@ describe('stats', () => {
 describe('pickNextCard', () => {
   it('never repeats the previous card when there is a choice', () => {
     for (const value of [0, 0.3, 0.6, 0.99]) {
-      expect(pickNextCard(cards, {}, 'a', () => value).key).not.toBe('a');
+      expect(pickNextCard(cards, {}, 'a', { random: () => value }).key).not.toBe('a');
     }
   });
 
@@ -130,7 +145,7 @@ describe('pickNextCard', () => {
     const picks = { a: 0, b: 0 };
     const random = sequence(...Array.from({ length: 100 }, (_, i) => i / 100));
     for (let i = 0; i < 100; i++) {
-      picks[pickNextCard([{ key: 'a' }, { key: 'b' }] as const, stats, null, random).key]++;
+      picks[pickNextCard([{ key: 'a' }, { key: 'b' }] as const, stats, null, { random }).key]++;
     }
     expect(picks.b).toBeGreaterThan(picks.a * 5);
   });
@@ -152,11 +167,19 @@ describe('pickNextCard', () => {
     const random = sequence(...Array.from({ length: 300 }, (_, i) => i / 300));
     const deck = [{ key: 'fast' }, { key: 'usual' }, { key: 'slow' }] as const;
     for (let i = 0; i < 300; i++) {
-      picks[pickNextCard(deck, stats, null, random).key]++;
+      picks[pickNextCard(deck, stats, null, { random }).key]++;
     }
     expect(picks.slow).toBeGreaterThan(picks.usual * 5);
     // At or under your median there is no slowness: those cards weigh the same.
     expect(Math.abs(picks.usual - picks.fast)).toBeLessThanOrEqual(2);
+
+    // When answer times mean nothing (a take lasts as long as it lasts), they weigh the same too.
+    const untimed = { fast: 0, usual: 0, slow: 0 };
+    const again = sequence(...Array.from({ length: 300 }, (_, i) => i / 300));
+    for (let i = 0; i < 300; i++) {
+      untimed[pickNextCard(deck, stats, null, { random: again, bySpeed: false }).key]++;
+    }
+    expect(Math.abs(untimed.slow - untimed.usual)).toBeLessThanOrEqual(2);
   });
 
   it('measures slowness against your own median, up to a limit', () => {

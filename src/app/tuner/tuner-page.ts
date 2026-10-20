@@ -12,6 +12,7 @@ import {
 import { STRING_NAMES, STRING_NUMBERS } from '../core/fretboard/tuning';
 import { commonNoteName } from '../core/music/notes';
 import { Icon } from '../core/ui/icon';
+import { keepScreenAwake } from '../core/ui/keep-awake';
 import { MicStatus } from '../core/ui/mic-status';
 import { InputPicker } from '../core/ui/setup/input-picker';
 import { TopBar } from '../core/ui/top-bar';
@@ -104,6 +105,8 @@ export class TunerPage {
   });
 
   constructor() {
+    keepScreenAwake(signal(true));
+
     // Listens from the start, and again on the new input when you choose another one.
     effect(() => {
       this.inputs.deviceToOpen();

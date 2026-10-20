@@ -27,7 +27,7 @@ const CHARTED = 30;
           <h2 id="sessions-title">Sessions</h2>
           <span class="muted">{{ history().totals }}</span>
         </div>
-        <app-progress-chart [records]="history().charted" [unit]="unit" />
+        <app-progress-chart [records]="history().charted" [unit]="unit" [timed]="timed" />
         <div class="scroll">
           <table>
             <thead>
@@ -36,7 +36,9 @@ const CHARTED = 30;
                 <th scope="col">Time</th>
                 <th scope="col">{{ unitLabel }}</th>
                 <th scope="col">Per min</th>
-                <th scope="col">Each</th>
+                @if (timed) {
+                  <th scope="col">Each</th>
+                }
                 <th scope="col">Correct</th>
               </tr>
             </thead>
@@ -47,7 +49,9 @@ const CHARTED = 30;
                   <td>{{ row.time }}</td>
                   <td>{{ row.answered }}</td>
                   <td>{{ row.perMinute }}</td>
-                  <td>{{ row.each }}</td>
+                  @if (timed) {
+                    <td>{{ row.each }}</td>
+                  }
                   <td [class]="row.band">{{ row.accuracy }}</td>
                 </tr>
               }
@@ -107,6 +111,8 @@ export class SessionHistory {
 
   protected readonly unit = this.drill.unit;
   protected readonly unitLabel = capitalize(this.drill.unit + 's');
+  /** Whether answers are timed: a take's time is set by the take, so it says nothing. */
+  protected readonly timed = this.drill.run.timesAnswers;
 
   protected readonly history = computed(() => {
     const module = this.drill.run.module;

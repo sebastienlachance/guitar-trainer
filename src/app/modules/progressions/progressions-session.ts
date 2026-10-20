@@ -1,11 +1,12 @@
 import { Provider, Service, computed, effect, inject, signal, untracked } from '@angular/core';
 import { matchesStrum } from '../../core/audio/matchers';
 import { Metronome, clickSchedule } from '../../core/audio/metronome';
-import { MicListener } from '../../core/audio/mic-listener';
+import { MicListener, hasStopped } from '../../core/audio/mic-listener';
 import { RhythmListener } from '../../core/audio/rhythm-listener';
 import { Drill } from '../../core/practice/drill';
 import { PracticeRun } from '../../core/practice/practice-run';
 import { loadJson, saveJson } from '../../core/practice/storage';
+import { Take } from '../../core/practice/take';
 import { Levels, isLevels, levelOf, nextLevel } from '../../core/practice/tempo-ladder';
 import { plural } from '../../core/ui/text';
 import {
@@ -37,14 +38,13 @@ export const COUNT_IN_BEATS = 4;
 /** Time between pressing Play and the first click, for the audio to be scheduled. */
 const LEAD_IN_S = 0.3;
 /**
- * Which chord a strike sounds like is read this long after it: the spectrum needs a moment to
- * let go of the chord before.
+ * Which chord a strike sounds like is read at these times after it, and any read that matches
+ * lands the chord. The spectrum takes a moment to let go of the chord before (its window is a
+ * third of a second long): the first read may still hear some of it, the last one hardly any.
  */
-export const CHORD_CHECK_MS = 150;
+export const CHORD_CHECKS_MS: readonly number[] = [150, 250, 350];
 /** How close a strum must sound to the chord: the triads module's default strictness. */
 const STRUM_THRESHOLD = 0.8;
-
-export type TakeStage = 'idle' | 'count-in' | 'playing';
 
 export interface TakeResult {
   readonly outcomes: readonly SlotOutcome[];
@@ -83,12 +83,14 @@ export class ProgressionsSession implements Drill {
     problems: this.problems,
     // The take's chords are worth a look: wait for Next even after a pass.
     advanceAfterCorrect: false,
+    // A take lasts as long as its chords, whatever you play.
+    timesAnswers: false,
     onStart: () => {
       void this.listener.start();
       void this.mic.start('spectrum');
     },
     onEnd: () => {
-      this.cancel();
+      this.take.stop();
       this.listener.stop();
       this.mic.stop();
     },
@@ -99,7 +101,13 @@ export class ProgressionsSession implements Drill {
     },
   });
 
-  readonly stage = signal<TakeStage>('idle');
+  /** count-in: a bar of clicks to listen to; playing: the take itself. */
+  private readonly take = new Take<'count-in' | 'playing'>({
+    run: this.run,
+    inputLost: computed(() => hasStopped(this.listener.status()) || hasStopped(this.mic.status())),
+    onStop: () => this.metronome.stop(),
+  });
+  readonly stage = this.take.stage.asReadonly();
   /** The chords of the take in progress, or of the last one. */
   readonly slots = signal<readonly Slot[]>([]);
   /** For each chord of the take, the strike that landed it; null until one does. */
@@ -131,18 +139,11 @@ export class ProgressionsSession implements Drill {
 
   private beat = 0.5;
   private strikesSeen = 0;
-  private timers: ReturnType<typeof setTimeout>[] = [];
 
   constructor() {
     effect(() => {
       const strikes = this.listener.strikes();
       untracked(() => this.check(strikes));
-    });
-    // Pausing drops the take: its chords would mean nothing.
-    effect(() => {
-      if (this.run.paused() && untracked(this.stage) !== 'idle') {
-        untracked(() => this.cancel());
-      }
     });
   }
 
@@ -154,16 +155,18 @@ export class ProgressionsSession implements Drill {
   /** Plays a take of the current card: a bar of count-in, then the progression twice through. */
   async play(): Promise<void> {
     const card = this.run.current();
-    if (!card || this.run.phase() !== 'prompt' || this.stage() !== 'idle') {
+    if (!card) {
       return;
     }
-    await this.listener.start();
-    this.listener.clearStrikes();
-    this.strikesSeen = 0;
-    const context = this.listener.context;
+    const context = await this.take.prepare(async () => {
+      await this.listener.start();
+      return hasStopped(this.mic.status()) ? null : this.listener.context;
+    });
     if (!context) {
       return;
     }
+    this.listener.clearStrikes();
+    this.strikesSeen = 0;
     const bpm = this.tempo();
     const beatsPerChord = this.settings().beatsPerChord;
     this.beat = 60 / bpm;
@@ -176,9 +179,9 @@ export class ProgressionsSession implements Drill {
     this.hits.set(slots.map(() => null));
     this.result.set(null);
     this.metronome.play(context, clicks, this.settings().click === 'sound');
-    this.stage.set('count-in');
+    this.take.stage.set('count-in');
     this.run.touch();
-    this.at(takeStart, () => this.stage.set('playing'));
+    this.at(takeStart, () => this.take.stage.set('playing'));
     const end = slots[slots.length - 1].time + beatsPerChord * this.beat;
     this.at(end + 0.3, () => this.finish(card, bpm));
   }
@@ -187,7 +190,8 @@ export class ProgressionsSession implements Drill {
   private check(strikes: readonly number[]): void {
     const fresh = strikes.slice(this.strikesSeen);
     this.strikesSeen = strikes.length;
-    if (this.stage() === 'idle') {
+    const stage = this.stage();
+    if (stage !== 'count-in' && stage !== 'playing') {
       return;
     }
     for (const strike of fresh) {
@@ -196,25 +200,28 @@ export class ProgressionsSession implements Drill {
         continue;
       }
       this.run.touch();
-      this.timers.push(
-        setTimeout(() => {
-          const chroma = this.mic.chroma();
-          const chord = this.slots()[index]?.chord;
-          if (
-            chord &&
-            this.hits()[index] === null &&
-            chroma !== null &&
-            matchesStrum(chroma, chord.pitchClasses, STRUM_THRESHOLD)
-          ) {
-            this.hits.update((hits) => hits.map((hit, at) => (at === index ? strike : hit)));
-          }
-        }, CHORD_CHECK_MS),
-      );
+      for (const ms of CHORD_CHECKS_MS) {
+        this.take.after(ms, () => this.land(index, strike));
+      }
+    }
+  }
+
+  /** Lands a chord with a strike, if the chord sounding now is the one it's meant for. */
+  private land(index: number, strike: number): void {
+    const chroma = this.mic.chroma();
+    const chord = this.slots()[index]?.chord;
+    if (
+      chord &&
+      this.hits()[index] === null &&
+      chroma !== null &&
+      matchesStrum(chroma, chord.pitchClasses, STRUM_THRESHOLD)
+    ) {
+      this.hits.update((hits) => hits.map((hit, at) => (at === index ? strike : hit)));
     }
   }
 
   private finish(card: ProgressionCard, bpm: number): void {
-    this.cancel();
+    this.take.stop();
     const outcomes = this.slots().map((slot, index) =>
       slotOutcome(slot, this.hits()[index], this.beat),
     );
@@ -237,17 +244,9 @@ export class ProgressionsSession implements Drill {
     this.run.resolve(passed);
   }
 
-  /** Runs an action at a time on the audio clock. */
+  /** Runs an action at a time on the audio clock, unless the take stops first. */
   private at(time: number, action: () => void): void {
-    const delay = Math.max(0, (time - this.listener.now()) * 1000);
-    this.timers.push(setTimeout(action, delay));
-  }
-
-  private cancel(): void {
-    this.timers.forEach(clearTimeout);
-    this.timers = [];
-    this.metronome.stop();
-    this.stage.set('idle');
+    this.take.after((time - this.listener.now()) * 1000, action);
   }
 }
 

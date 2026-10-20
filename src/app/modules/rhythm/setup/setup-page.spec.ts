@@ -7,13 +7,19 @@ import { RhythmSession, provideRhythm } from '../rhythm-session';
 import { fakeRhythmAudio } from '../rhythm.testing';
 import { SetupPage } from './setup-page';
 
-async function calibrateWith(strikesAfterClicks: (clicks: number[]) => number[]) {
+/** The setup page, on fake timers. */
+async function setUp() {
   const audio = fakeRhythmAudio();
-  await render(SetupPage, {
+  const { fixture } = await render(SetupPage, {
     providers: [...provideRhythm(), provideRouter([]), ...audio.providers],
   });
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
-  await TestBed.inject(RhythmSession).calibrate();
+  return { audio, fixture, session: TestBed.inject(RhythmSession) };
+}
+
+async function calibrateWith(strikesAfterClicks: (clicks: number[]) => number[]) {
+  const { audio, session } = await setUp();
+  await session.calibrate();
   TestBed.tick();
   audio.strikes.set(strikesAfterClicks(audio.lastClicks()));
   vi.advanceTimersByTime(15_000);
@@ -61,6 +67,43 @@ describe('Rhythm SetupPage', () => {
     expect(screen.getByText('Calibrated: 42 ms. Your strikes varied by 0 ms.')).toBeInTheDocument();
     const saved = JSON.parse(localStorage.getItem(STORAGE_PREFIX + 'rhythm:settings') ?? '{}');
     expect(saved.latencyMs).toBe(42);
+    expect(audio.listener.stop).toHaveBeenCalled();
+  });
+
+  it('remembers whether it was calibrated with the tick or the light only', async () => {
+    localStorage.setItem(STORAGE_PREFIX + 'rhythm:settings', JSON.stringify({ click: 'light' }));
+    await calibrateWith((clicks) => clicks.slice(4).map((click) => click + 0.042));
+
+    const saved = JSON.parse(localStorage.getItem(STORAGE_PREFIX + 'rhythm:settings') ?? '{}');
+    expect(saved.latencyClick).toBe('light');
+  });
+
+  it('stops a calibration when a session starts, so it can be run again', async () => {
+    localStorage.setItem(
+      STORAGE_PREFIX + 'rhythm:settings',
+      JSON.stringify({ latencyMs: 30, latencyInput: 'default' }),
+    );
+    const { audio, session } = await setUp();
+    await session.calibrate();
+    TestBed.tick();
+    expect(screen.getByRole('button', { name: 'Calibrate again' })).toBeDisabled();
+
+    session.run.start();
+    TestBed.tick();
+
+    expect(audio.metronome.stop).toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Calibrate again' })).toBeEnabled();
+  });
+
+  it('stops a calibration when you leave setup', async () => {
+    const { audio, fixture, session } = await setUp();
+    await session.calibrate();
+
+    fixture.destroy();
+    vi.advanceTimersByTime(15_000);
+
+    expect(session.calibration()).toEqual({ stage: 'idle' });
+    expect(audio.metronome.stop).toHaveBeenCalled();
     expect(audio.listener.stop).toHaveBeenCalled();
   });
 

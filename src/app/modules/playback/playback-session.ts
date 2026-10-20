@@ -57,6 +57,7 @@ export class PlaybackSession implements Drill {
   readonly playing = this.player.playing;
   /** The phrase has been heard to the end: what you play from now on is your answer. */
   private readonly answering = signal(false);
+  private wasPaused = false;
 
   readonly tags = computed(() => {
     const { kinds, direction, melodyLength, answer } = this.settings();
@@ -93,10 +94,23 @@ export class PlaybackSession implements Drill {
         untracked(() => this.run.touch());
       }
     });
+    // Pausing stops the phrase and the answer; resuming plays the phrase again, so noodling during
+    // the break can't answer it, and the answer starts from a clean slate.
     effect(() => {
-      if (this.run.paused()) {
-        untracked(() => this.player.stop());
-      }
+      const paused = this.run.paused();
+      untracked(() => {
+        if (paused) {
+          this.player.stop();
+          this.answering.set(false);
+        } else if (
+          this.wasPaused &&
+          this.run.view() === 'running' &&
+          this.run.phase() === 'prompt'
+        ) {
+          this.hear();
+        }
+        this.wasPaused = paused;
+      });
     });
   }
 

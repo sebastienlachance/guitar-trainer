@@ -46,6 +46,10 @@ routing, storage, focus or the microphone changed.
     - stats, the session log (`PracticeLog`), storage, `saved-settings.ts`
     - `tempo-ladder.ts`: a tempo per card that climbs with passed takes (play along,
       progressions)
+    - `take.ts`: `Take`, a take's stage and timers (play along, chord changes, progressions). It
+      drops the take when the session pauses or the microphone stops, and ignores a second Play
+      while the microphone opens. Take modules set `timesAnswers: false` on their `PracticeRun`:
+      a take lasts as long as it lasts, so it records no response time
   - `audio/`: `MicListener` (played notes, a live spectrum plus a strum count, or the exact pitch
     for the tuner), pitch and chord matching, `tuner.ts` (cents, string advice, smoothing),
     `OnsetDetector` (string strikes: counts strums, and lets a re-picked note count again),
@@ -62,7 +66,8 @@ routing, storage, focus or the microphone changed.
     - `setup/` (including `input-picker.ts`), `stats/` (including the progress chart) and
       `answer/` (multiple-choice buttons) building blocks
     - `mic-status.ts`, `icon.ts`, `text.ts`, `update-banner.ts` (offers a reload for a new version),
-      `take-strip.ts` (a rhythm take, hit by hit)
+      `take-strip.ts` (a rhythm take, hit by hit), `keep-awake.ts` (keeps a phone's screen on
+      during a session and on the tuner)
   - `build-info.ts`: the deployed commit, set at build time through `define`
 - `src/app/modules/<name>/`: one practice module each, registered in `modules/registry.ts` with
   its home screen group, icon and whether it listens.
@@ -104,6 +109,9 @@ routing, storage, focus or the microphone changed.
   - must not become a root singleton: the shared screens find the module by injecting `Drill`
     from the route
 - App-wide singletons (`PracticeLog`, `MicListener`) are `@Service()`.
+- Leaving a module destroys its services (`withAutoCleanupInjectors()` in `app.config.ts`), which
+  runs their `DestroyRef` hooks: `PracticeRun` ends the session there. Clean up anything a service
+  starts (timers, the metronome, listeners) in `onEnd` or on destroy.
 - Settings are plain readonly objects:
   - rebuilt from storage with `core/practice/saved-settings.ts`
   - changed through the service's `updateSettings()`
@@ -198,6 +206,9 @@ routing, storage, focus or the microphone changed.
   skips the picks heard while the target plays, and play along and progressions time strikes
   with `RhythmListener`, which filters the tick out by frequency. `MicListener`'s own attacks
   (`strums`) aren't filtered: never time a strike against the metronome with them.
+- **A lost input:** unplugging a cable ends its track. Both listeners then stop with an error
+  (`INPUT_ENDED_MESSAGE`) and Try again opens what is connected now; `Take` drops a take under
+  way.
 - **Microphone:** `getUserMedia` needs https or localhost. Keep echo cancellation, noise
   suppression and auto gain off (`core/audio/microphone.ts`); they distort instrument notes.
 - **Fretboard cursor:** pass `cursorStart` as a new object for each question, or the keyboard
@@ -235,9 +246,13 @@ routing, storage, focus or the microphone changed.
     worker through `ngsw-config.json`); keep its logic in TypeScript, in `AttackTimer`.
   - A calibration only holds for the input it was measured on: the rhythm settings record it
     (`latencyInput`), and a change of input asks for a new calibration.
+  - A calibration also only holds for the metronome it was made with (`latencyClick`): you strike
+    later after a tick from the speakers than after the light alone.
   - The fake microphone's recording starts at a random moment relative to the metronome: e2e tests
     can check steadiness (spread) but not being on time. Calibration averages offsets as positions
-    within the beat, so a constant offset near half a beat doesn't split in two.
+    within the beat, so a constant offset near half a beat doesn't split in two. It reads a delay
+    between a quarter of a beat early and three quarters late (-190 to 560 ms at its 80 bpm),
+    since speakers and Bluetooth only ever add delay.
 - **One-off crashes:** a build or test run occasionally dies with a V8 "Fatal error … unreachable
   code" or a Vitest worker crash. Run it again before investigating.
 - **Line endings:** on Windows, `prettier --check` can also flag files whose only difference is CRLF
@@ -258,6 +273,8 @@ routing, storage, focus or the microphone changed.
   times (`earlyMs`, `recentMs`) and each session's total response time, and the scheduler adds
   _slowness_ to the miss rate: how much slower than your own median a card is, capped at +1.
   Relative, so no per-module thresholds. Unseen cards weigh 2 so the deck still gets covered.
+  Response times leave pauses out and are capped at the idle limit. Modules that play takes
+  (`timesAnswers: false`) keep no times at all: a take's length is set by the take.
 - **Stored data only grows backwards-compatibly:** new fields are optional, the `is…` checks
   accept data without them, and code falls back (a card's average stands in for its first times).
   Never change a stored shape in a way that makes older saved data fail its check.
@@ -290,6 +307,12 @@ routing, storage, focus or the microphone changed.
     fake mic with generated recordings; not yet tried by the owner on a real guitar
   - the home screen redesigned (2026-10-20): grouped tiles with icons, the tuner in the header,
     "pick up where you left off" and this week's practice from the session log
+  - fixes from a code review (2026-10-20): pauses no longer count as answer time, take modules
+    keep no answer times, a paused or unplugged take is dropped (play along recorded it before),
+    a second Play while the mic opens does nothing, calibration can't get stuck and stops when
+    you leave setup, calibration reads up to 560 ms and records the metronome mode, the screen
+    stays on during a session, Play it back replays the phrase after a pause, progressions reads
+    a strike's chord three times. Section 2 onwards of the review is in `docs/ideas.md`
 - **Tested by the owner:** triads in strum mode, on a computer. Not yet confirmed on a real guitar:
   single-note detection (fretboard notes, intervals, triads arpeggio), phones, iPhone Safari.
   On a real guitar (2026-10-16), triads missed D at the 12th fret of the 4th string: nothing was

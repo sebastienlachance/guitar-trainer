@@ -12,6 +12,7 @@ import {
 } from '../../core/audio/timing';
 import { Drill } from '../../core/practice/drill';
 import { PracticeRun } from '../../core/practice/practice-run';
+import { Take } from '../../core/practice/take';
 import { Level, Levels, isLevels, levelOf, nextLevel } from '../../core/practice/tempo-ladder';
 import { loadJson, saveJson } from '../../core/practice/storage';
 import { plural } from '../../core/ui/text';
@@ -46,9 +47,6 @@ const CALIBRATION_MIN_HEARD = 6;
 /** Time between pressing Play and the first click, for the audio to be scheduled. */
 const LEAD_IN_S = 0.3;
 
-/** count-in: a bar of clicks to listen to; playing: the take itself. */
-export type TakeStage = 'idle' | 'count-in' | 'playing';
-
 export interface TakeResult {
   readonly score: TakeScore;
   readonly passed: boolean;
@@ -58,8 +56,9 @@ export interface TakeResult {
   readonly leak: boolean;
 }
 
+/** starting: the microphone is opening; count-in: clicks to listen to; playing: strike along. */
 export type CalibrationState =
-  | { readonly stage: 'idle' | 'count-in' | 'playing' }
+  | { readonly stage: 'idle' | 'starting' | 'count-in' | 'playing' }
   | { readonly stage: 'done'; readonly result: Calibration; readonly leak: boolean }
   | { readonly stage: 'failed'; readonly heard: number };
 
@@ -94,17 +93,30 @@ export class RhythmSession implements Drill {
     problems: this.problems,
     // The timing of a take is worth reading: wait for Next even after a pass.
     advanceAfterCorrect: false,
+    // A take lasts as long as its bars, whatever you play.
+    timesAnswers: false,
     onStart: () => void this.listener.start(),
     onEnd: () => {
-      this.cancel();
+      this.take.stop();
+      this.cancelCalibration();
       this.listener.stop();
     },
     onNext: () => this.result.set(null),
   });
 
-  readonly stage = signal<TakeStage>('idle');
+  /** count-in: a bar of clicks to listen to; playing: the take itself. */
+  private readonly take = new Take<'count-in' | 'playing'>({
+    run: this.run,
+    inputLost: computed(() => this.listener.status() !== 'listening'),
+    onStop: () => this.metronome.stop(),
+  });
+  readonly stage = this.take.stage.asReadonly();
   readonly result = signal<TakeResult | null>(null);
   readonly calibration = signal<CalibrationState>({ stage: 'idle' });
+  readonly calibrating = computed(() => {
+    const stage = this.calibration().stage;
+    return stage === 'starting' || stage === 'count-in' || stage === 'playing';
+  });
 
   /** The current card's tempo, where its ladder stands. */
   readonly tempo = computed(() => {
@@ -122,7 +134,7 @@ export class RhythmSession implements Drill {
     ];
   });
 
-  private timers: ReturnType<typeof setTimeout>[] = [];
+  private calibrationTimers: ReturnType<typeof setTimeout>[] = [];
 
   updateSettings(changes: Partial<RhythmSettings>): void {
     this.settings.update((settings) => ({ ...settings, ...changes }));
@@ -132,10 +144,10 @@ export class RhythmSession implements Drill {
   /** Plays a take of the current card: a bar of count-in, then the bars to strike along with. */
   async play(): Promise<void> {
     const card = this.run.current();
-    if (!card || this.run.phase() !== 'prompt' || this.stage() !== 'idle') {
+    if (!card) {
       return;
     }
-    const context = await this.listen();
+    const context = await this.take.prepare(() => this.listen());
     if (!context) {
       return;
     }
@@ -145,34 +157,40 @@ export class RhythmSession implements Drill {
     const takeStart = countIn[0].time + (4 * 60) / bpm;
     const take = clickSchedule(takeStart, bpm, perBeat, this.settings().bars);
     this.metronome.play(context, [...countIn, ...take], this.settings().click === 'sound');
-    this.stage.set('count-in');
+    this.take.stage.set('count-in');
     this.run.touch();
-    this.at(takeStart, () => this.stage.set('playing'));
+    this.take.after(this.msUntil(takeStart), () => this.take.stage.set('playing'));
     const gap = hitGap(bpm, perBeat);
-    this.at(this.settleTime(take, gap), () => this.finishTake(card, bpm, countIn, take, gap));
+    this.take.after(this.msUntil(this.settleTime(take, gap)), () =>
+      this.finishTake(card, bpm, countIn, take, gap),
+    );
   }
 
   /** Measures the delay from the metronome to your strikes, and saves it. */
   async calibrate(): Promise<void> {
-    if (this.calibration().stage === 'count-in' || this.calibration().stage === 'playing') {
+    if (this.calibrating() || this.run.current()) {
       return;
     }
+    this.calibration.set({ stage: 'starting' });
     const context = await this.listen();
+    if (this.calibration().stage !== 'starting') {
+      // Cancelled while the microphone opened.
+      return;
+    }
     if (!context) {
+      this.calibration.set({ stage: 'idle' });
       return;
     }
     const clicks = clickSchedule(this.listener.now() + LEAD_IN_S, CALIBRATION_BPM, 1, 3);
     const countIn = clicks.slice(0, 4);
     const played = clicks.slice(4, 4 + CALIBRATION_BEATS);
-    this.metronome.play(
-      context,
-      clicks.slice(0, 4 + CALIBRATION_BEATS),
-      this.settings().click === 'sound',
-    );
+    const click = this.settings().click;
+    this.metronome.play(context, clicks.slice(0, 4 + CALIBRATION_BEATS), click === 'sound');
     this.calibration.set({ stage: 'count-in' });
-    this.at(played[0].time, () => this.calibration.set({ stage: 'playing' }));
+    this.calibrationAt(played[0].time, () => this.calibration.set({ stage: 'playing' }));
     const gap = hitGap(CALIBRATION_BPM, 1);
-    this.at(this.settleTime(played, gap), () => {
+    this.calibrationAt(this.settleTime(played, gap), () => {
+      this.calibrationTimers = [];
       const strikes = this.listener.strikes();
       const result = estimateLatency(
         played.map((click) => click.time),
@@ -184,6 +202,7 @@ export class RhythmSession implements Drill {
         this.updateSettings({
           latencyMs: Math.round(result.latencyMs),
           latencyInput: this.input(),
+          latencyClick: click,
         });
         this.calibration.set({
           stage: 'done',
@@ -195,10 +214,22 @@ export class RhythmSession implements Drill {
         });
       }
       // Calibration happens in setup, outside a session: let the microphone go.
-      if (!this.run.current()) {
-        this.listener.stop();
-      }
+      this.listener.stop();
     });
+  }
+
+  /** Stops a calibration under way, as when leaving setup or starting a session. */
+  cancelCalibration(): void {
+    if (!this.calibrating()) {
+      return;
+    }
+    this.calibrationTimers.forEach(clearTimeout);
+    this.calibrationTimers = [];
+    this.metronome.stop();
+    this.calibration.set({ stage: 'idle' });
+    if (!this.run.current()) {
+      this.listener.stop();
+    }
   }
 
   private finishTake(
@@ -239,7 +270,7 @@ export class RhythmSession implements Drill {
         strikes.filter((strike) => strike < takeBegins),
       ),
     });
-    this.stage.set('idle');
+    this.take.stop();
     this.run.resolve(passed);
   }
 
@@ -263,17 +294,13 @@ export class RhythmSession implements Drill {
     return clicks[clicks.length - 1].time + gap / 2 + latency + 0.1;
   }
 
-  /** Runs an action at a time on the audio clock. */
-  private at(time: number, action: () => void): void {
-    const delay = Math.max(0, (time - this.listener.now()) * 1000);
-    this.timers.push(setTimeout(action, delay));
+  /** Milliseconds from now to a time on the audio clock. */
+  private msUntil(time: number): number {
+    return Math.max(0, (time - this.listener.now()) * 1000);
   }
 
-  private cancel(): void {
-    this.timers.forEach(clearTimeout);
-    this.timers = [];
-    this.metronome.stop();
-    this.stage.set('idle');
+  private calibrationAt(time: number, action: () => void): void {
+    this.calibrationTimers.push(setTimeout(action, this.msUntil(time)));
   }
 }
 

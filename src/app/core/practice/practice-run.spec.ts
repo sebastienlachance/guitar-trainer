@@ -2,6 +2,7 @@ import { Signal, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { PracticeLog } from './practice-log';
 import { AUTO_ADVANCE_MS, PracticeRun } from './practice-run';
+import { IDLE_LIMIT_MS } from './session-log';
 
 const deck = [{ key: 'a' }, { key: 'b' }, { key: 'c' }];
 
@@ -13,6 +14,7 @@ function createRun(
     timeLimitMs?: Signal<number | null>;
     deck?: { key: string }[];
     advanceAfterCorrect?: boolean;
+    timesAnswers?: boolean;
   } = {},
 ) {
   return TestBed.runInInjectionContext(
@@ -26,6 +28,7 @@ function createRun(
         onEnd: options.onEnd,
         timeLimitMs: options.timeLimitMs,
         advanceAfterCorrect: options.advanceAfterCorrect,
+        timesAnswers: options.timesAnswers,
       }),
   );
 }
@@ -149,6 +152,63 @@ describe('PracticeRun', () => {
     run.resolve(true);
     run.selfCheck(true);
     expect(run.stats()[card.key]).toMatchObject({ attempts: 1, correct: 0 });
+  });
+
+  it('leaves pauses out of the time to answer', () => {
+    const run = createRun();
+    const log = TestBed.inject(PracticeLog);
+    run.start();
+    vi.advanceTimersByTime(2000);
+    log.pause();
+    vi.advanceTimersByTime(5 * 60_000);
+    log.resume();
+    vi.advanceTimersByTime(1000);
+
+    run.resolve(true);
+
+    expect(run.responseMs()).toBe(3000);
+    expect(log.current()?.totalResponseMs).toBe(3000);
+  });
+
+  it('counts a card shown during a pause from the resume', () => {
+    const run = createRun();
+    const log = TestBed.inject(PracticeLog);
+    run.start();
+    run.resolve(true);
+    log.pause();
+    // The next card comes up by itself while paused.
+    vi.advanceTimersByTime(AUTO_ADVANCE_MS + 60_000);
+    log.resume();
+    vi.advanceTimersByTime(1500);
+
+    run.resolve(true);
+
+    expect(run.responseMs()).toBe(1500);
+  });
+
+  it('caps the time to answer when you walk away from a card', () => {
+    const run = createRun();
+    run.start();
+    vi.advanceTimersByTime(30 * 60_000);
+
+    run.resolve(true);
+
+    expect(run.responseMs()).toBe(IDLE_LIMIT_MS);
+  });
+
+  it('records no time when answers take a set time, like a take', () => {
+    const run = createRun({ timesAnswers: false });
+    run.start();
+    const card = run.current()!;
+    vi.advanceTimersByTime(60_000);
+
+    run.resolve(true);
+
+    expect(run.responseMs()).toBeNull();
+    expect(run.stats()[card.key]).toMatchObject({ attempts: 1, correct: 1, totalResponseMs: 0 });
+    expect(run.stats()[card.key].recentMs).toEqual([]);
+    run.end();
+    expect(run.lastSession()?.totalResponseMs).toBeUndefined();
   });
 
   it('ends with a summary of the session', () => {

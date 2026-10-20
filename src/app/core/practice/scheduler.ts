@@ -42,6 +42,12 @@ export function cardWeight(
   return card ? smoothedMissRate(card) + slowness(card, medianMs) : UNSEEN_WEIGHT;
 }
 
+export interface PickOptions {
+  /** Favour the cards you answer slowly too (the default); off when answer times mean nothing. */
+  readonly bySpeed?: boolean;
+  readonly random?: () => number;
+}
+
 /**
  * Weighted random pick that favors cards you miss or answer slowly. Never returns the previous
  * card twice in a row unless it is the only one.
@@ -50,16 +56,18 @@ export function pickNextCard<T extends { readonly key: string }>(
   cards: readonly T[],
   stats: StatsByCard,
   previousKey: string | null,
-  random: () => number = Math.random,
+  { bySpeed = true, random = Math.random }: PickOptions = {},
 ): T {
   if (cards.length === 0) {
     throw new Error('Cannot pick from an empty deck');
   }
   const candidates = cards.length > 1 ? cards.filter((card) => card.key !== previousKey) : cards;
-  const medianMs = medianResponseMs(
-    stats,
-    cards.map((card) => card.key),
-  );
+  const medianMs = bySpeed
+    ? medianResponseMs(
+        stats,
+        cards.map((card) => card.key),
+      )
+    : null;
   const weights = candidates.map((card) => cardWeight(stats, card.key, medianMs));
   let remaining = random() * weights.reduce((sum, weight) => sum + weight, 0);
   for (let index = 0; index < candidates.length; index++) {

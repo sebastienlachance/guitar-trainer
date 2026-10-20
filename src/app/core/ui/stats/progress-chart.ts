@@ -26,13 +26,15 @@ export function progressPoints(
   template: `
     <div class="head">
       <p class="muted caption">{{ caption() }}</p>
-      <app-segmented-choice
-        label="Progress measure"
-        [hideLabel]="true"
-        [options]="metrics"
-        [value]="metric()"
-        (valueChange)="metric.set($event)"
-      />
+      @if (timed()) {
+        <app-segmented-choice
+          label="Progress measure"
+          [hideLabel]="true"
+          [options]="metrics"
+          [value]="metric()"
+          (valueChange)="chosenMetric.set($event)"
+        />
+      }
     </div>
     <app-trend-chart
       [points]="points()"
@@ -63,8 +65,11 @@ export class ProgressChart {
   readonly records = input.required<readonly SessionRecord[]>();
   /** What an answer is called, e.g. "chord". */
   readonly unit = input.required<string>();
+  /** Whether answers are timed; without times, only the pace is charted. */
+  readonly timed = input(true);
 
-  protected readonly metric = signal<ProgressMetric>('rate');
+  protected readonly chosenMetric = signal<ProgressMetric>('rate');
+  protected readonly metric = computed(() => (this.timed() ? this.chosenMetric() : 'rate'));
   protected readonly metrics: Choice<ProgressMetric>[] = [
     { value: 'rate', label: 'Per minute' },
     { value: 'time', label: 'Time each' },

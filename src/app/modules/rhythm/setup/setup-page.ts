@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, DestroyRef, computed, inject } from '@angular/core';
 import { RhythmListener } from '../../../core/audio/rhythm-listener';
 import { ChipOption, ChipToggles } from '../../../core/ui/setup/chip-toggles';
 import { InputPicker } from '../../../core/ui/setup/input-picker';
@@ -67,10 +67,11 @@ export class SetupPage {
     },
   ];
 
-  protected readonly calibrating = computed(() => {
-    const stage = this.calibration().stage;
-    return stage === 'count-in' || stage === 'playing';
-  });
+  protected readonly calibrating = this.session.calibrating;
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => this.session.cancelCalibration());
+  }
 
   /** What calibration is doing or found, and anything to fix. */
   protected readonly calibrationMessage = computed(
@@ -79,6 +80,8 @@ export class SetupPage {
       const latency = this.settings().latencyMs;
       const micError = this.listener.errorMessage();
       switch (calibration.stage) {
+        case 'starting':
+          return { status: 'Opening the microphone…', warning: null };
         case 'count-in':
           return { status: 'Listen: 1 2 3 4…', warning: null };
         case 'playing':

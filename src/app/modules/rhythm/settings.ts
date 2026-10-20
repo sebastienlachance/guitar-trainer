@@ -22,6 +22,11 @@ export interface RhythmSettings {
   readonly latencyMs: number | null;
   /** The input calibration measured ('default' or an input id): another one has another delay. */
   readonly latencyInput: string | null;
+  /**
+   * The metronome calibration played: you strike later after a tick from the speakers than
+   * after the light alone. Null for calibrations made before it was kept, with the tick.
+   */
+  readonly latencyClick: ClickMode | null;
 }
 
 export const DEFAULT_SETTINGS: RhythmSettings = {
@@ -32,6 +37,7 @@ export const DEFAULT_SETTINGS: RhythmSettings = {
   click: 'sound',
   latencyMs: null,
   latencyInput: null,
+  latencyClick: null,
 };
 
 /** Calibration results outside this range mean something went wrong, not a real delay. */
@@ -54,5 +60,6 @@ export function sanitizeSettings(saved: unknown): RhythmSettings {
         ? latency
         : null,
     latencyInput: typeof latencyInput === 'string' ? latencyInput : null,
+    latencyClick: pickOne<ClickMode | null>(raw['latencyClick'], ['sound', 'light'], null),
   };
 }

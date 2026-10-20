@@ -87,6 +87,12 @@ describe('calibration', () => {
     expect(calibration.spreadMs).toBeLessThan(3);
   });
 
+  it('reads a long delay, like Bluetooth headphones, as late rather than early', () => {
+    const strikes = clicks.map((click) => click + 0.45);
+
+    expect(estimateLatency(clicks, strikes).latencyMs).toBeCloseTo(450);
+  });
+
   it('notices when the count-in clicks come back through the microphone', () => {
     const countIn = gridTimes(5, 0.75, 4);
 

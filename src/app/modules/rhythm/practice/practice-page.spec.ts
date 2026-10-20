@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { render, screen } from '@testing-library/angular';
+import { PracticeLog } from '../../../core/practice/practice-log';
 import { STORAGE_PREFIX } from '../../../core/practice/storage';
 import { RhythmSession, provideRhythm } from '../rhythm-session';
 import { fakeRhythmAudio, saveRhythmSettings } from '../rhythm.testing';
@@ -15,10 +16,8 @@ const QUARTERS_AT_60 = {
   latencyMs: 30,
 };
 
-async function playTake(
-  strikesAfterClicks: (clicks: number[]) => number[],
-  settings: object = QUARTERS_AT_60,
-) {
+/** The practice page with a session started, on fake timers. */
+async function startSession(settings: object = QUARTERS_AT_60) {
   saveRhythmSettings(settings);
   const audio = fakeRhythmAudio();
   await render(PracticePage, {
@@ -27,6 +26,14 @@ async function playTake(
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
   const session = TestBed.inject(RhythmSession);
   session.run.start();
+  return { audio, session };
+}
+
+async function playTake(
+  strikesAfterClicks: (clicks: number[]) => number[],
+  settings: object = QUARTERS_AT_60,
+) {
+  const { audio, session } = await startSession(settings);
   await session.play();
   TestBed.tick();
   audio.strikes.set(strikesAfterClicks(audio.lastClicks()));
@@ -51,6 +58,38 @@ describe('Rhythm PracticePage', () => {
     expect(screen.getByRole('img', { name: /^On time 100%/ })).toBeInTheDocument();
     const levels = JSON.parse(localStorage.getItem(STORAGE_PREFIX + 'rhythm:levels') ?? '{}');
     expect(levels).toEqual({ quarter: { bpm: 64, failStreak: 0 } });
+  });
+
+  it('drops the take when the session pauses: nothing is scored or saved', async () => {
+    const { audio, session } = await startSession();
+    await session.play();
+    TestBed.tick();
+
+    TestBed.inject(PracticeLog).pause();
+    TestBed.tick();
+    vi.advanceTimersByTime(15_000);
+    TestBed.tick();
+
+    expect(session.stage()).toBe('idle');
+    expect(audio.metronome.stop).toHaveBeenCalled();
+    expect(session.result()).toBeNull();
+    expect(localStorage.getItem(STORAGE_PREFIX + 'rhythm:takes')).toBeNull();
+    expect(session.run.paused()).toBe(true);
+  });
+
+  it('plays one take when Play is pressed twice while the microphone opens', async () => {
+    const { audio, session } = await startSession();
+    let opened!: () => void;
+    audio.listener.start.mockImplementation(
+      () => new Promise((done) => (opened = () => done(undefined))),
+    );
+
+    const first = session.play();
+    const second = session.play();
+    opened();
+    await Promise.all([first, second]);
+
+    expect(audio.metronome.play).toHaveBeenCalledOnce();
   });
 
   it('counts missed hits and keeps the tempo after a first failed take', async () => {

@@ -38,6 +38,24 @@ describe('Chord changes StatsPage', () => {
     ).toBeInTheDocument();
   });
 
+  it('charts its sessions by takes a minute, without a time per take', async () => {
+    const session = {
+      id: 'changes-1',
+      module: 'changes',
+      startedAt: DAY,
+      endedAt: DAY + 5 * 60_000,
+      activeMs: 5 * 60_000,
+      answered: 4,
+      correct: 3,
+    };
+    localStorage.setItem(STORAGE_PREFIX + 'sessions', JSON.stringify([session]));
+    await render(StatsPage, { providers: [...provideChanges(), provideRouter([])] });
+
+    expect(screen.getByText('Takes per minute of practice')).toBeInTheDocument();
+    expect(screen.queryByRole('radiogroup', { name: 'Progress measure' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'Each' })).not.toBeInTheDocument();
+  });
+
   it('invites you to play before there is anything to show', async () => {
     await render(StatsPage, { providers: [...provideChanges(), provideRouter([])] });
 

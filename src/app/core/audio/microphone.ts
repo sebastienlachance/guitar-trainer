@@ -3,8 +3,14 @@ export interface MicrophoneInput {
   readonly context: AudioContext;
   readonly source: MediaStreamAudioSourceNode;
   readonly sampleRate: number;
+  /** Calls `listener` if the input stops by itself, as when its cable is unplugged. */
+  onEnded(listener: () => void): void;
   close(): void;
 }
+
+/** What a listener says when its input stops by itself. */
+export const INPUT_ENDED_MESSAGE =
+  'The sound input stopped: was it unplugged? Try again to listen to what is connected now.';
 
 /**
  * Large enough for ~3 Hz frequency bins, which separates neighbouring semitones down to the low
@@ -40,17 +46,32 @@ export async function openMicrophone(deviceId: string | null = null): Promise<Mi
   } catch (error) {
     throw new MicrophoneError(describeAccessError(error));
   }
-  const context = new AudioContext();
-  await context.resume();
-  return {
-    context,
-    source: context.createMediaStreamSource(stream),
-    sampleRate: context.sampleRate,
-    close: () => {
-      stream.getTracks().forEach((track) => track.stop());
-      void context.close();
-    },
-  };
+  const stopTracks = () => stream.getTracks().forEach((track) => track.stop());
+  let context: AudioContext | null = null;
+  try {
+    context = new AudioContext();
+    await context.resume();
+    const source = context.createMediaStreamSource(stream);
+    const opened = context;
+    return {
+      context: opened,
+      source,
+      sampleRate: opened.sampleRate,
+      onEnded: (listener) =>
+        stream.getAudioTracks().forEach((track) => track.addEventListener('ended', listener)),
+      close: () => {
+        stopTracks();
+        void opened.close();
+      },
+    };
+  } catch (error) {
+    // Let the microphone go: the browser would show it as in use until the page closes.
+    stopTracks();
+    void context?.close();
+    throw new MicrophoneError(
+      `The sound could not be started${error instanceof Error ? `: ${error.message}` : '.'}`,
+    );
+  }
 }
 
 async function requestAudio(deviceId: string | null): Promise<MediaStream> {

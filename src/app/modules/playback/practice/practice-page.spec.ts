@@ -118,6 +118,25 @@ describe('Play it back PracticePage', () => {
     expect(screen.queryByText(/Correct/)).not.toBeInTheDocument();
   });
 
+  it('plays the phrase again after a pause, and only takes an answer played after it', async () => {
+    const { mic, player, phraseEnds, user, hear } = await practise({
+      ...MAJOR_THIRD_UP,
+      answer: 'mic',
+    });
+    await phraseEnds();
+
+    await user.click(screen.getByRole('button', { name: /pause/i }));
+    hear([E2, G_SHARP2]); // noodling during the break
+    await user.click(screen.getByRole('button', { name: /resume/i }));
+
+    expect(screen.queryByText(/Correct/)).not.toBeInTheDocument();
+    expect(player.play).toHaveBeenCalledTimes(2);
+    await phraseEnds();
+    expect(mic.heard()).toEqual([]);
+    hear([E2, G_SHARP2]);
+    expect(screen.getByText(/Correct/)).toBeInTheDocument();
+  });
+
   it('plays the phrase again with R', async () => {
     const { player, phraseEnds, user } = await practise({ ...MAJOR_THIRD_UP, answer: 'mic' });
     await phraseEnds();

@@ -79,6 +79,21 @@ describe('rhythm deck', () => {
     expect(settingsProblems({ ...calibrated, latencyInput: null }, 'default')).toEqual([]);
   });
 
+  it('asks to calibrate again after switching between the tick and the light', () => {
+    const withTick = { ...DEFAULT_SETTINGS, latencyMs: 40, latencyClick: 'sound' as const };
+
+    expect(settingsProblems({ ...withTick, click: 'light' }, 'default')).toEqual([
+      'You calibrated with the tick: calibrate again with the light only, in setup.',
+    ]);
+    expect(
+      settingsProblems({ ...withTick, latencyClick: 'light', click: 'light' }, 'default'),
+    ).toEqual([]);
+    // Saved before the metronome was kept: measured with the tick, the default.
+    expect(settingsProblems({ ...withTick, latencyClick: null }, 'default')).toEqual([]);
+    expect(sanitizeSettings({ latencyClick: 'light' }).latencyClick).toBe('light');
+    expect(sanitizeSettings({ latencyClick: 'drum' }).latencyClick).toBeNull();
+  });
+
   it('keeps a saved latency only when it is plausible', () => {
     expect(sanitizeSettings({ latencyMs: 42 }).latencyMs).toBe(42);
     expect(sanitizeSettings({ latencyMs: 5000 }).latencyMs).toBeNull();

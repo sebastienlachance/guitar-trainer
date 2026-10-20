@@ -2,7 +2,12 @@ import { Service, inject, signal } from '@angular/core';
 import { PitchDetector } from 'pitchy';
 import { chromaFromSpectrum } from './chroma';
 import { AudioInputs } from './audio-inputs';
-import { MicrophoneError, MicrophoneInput, createAnalyser } from './microphone';
+import {
+  INPUT_ENDED_MESSAGE,
+  MicrophoneError,
+  MicrophoneInput,
+  createAnalyser,
+} from './microphone';
 import { DEFAULT_NOTE_STREAM_OPTIONS, NoteStream } from './note-stream';
 import { OnsetDetector } from './onsets';
 import { PitchSmoother, TunerPitch } from './tuner';
@@ -13,6 +18,11 @@ import { PitchSmoother, TunerPitch } from './tuner';
  */
 export type ListenMode = 'notes' | 'spectrum' | 'pitch';
 export type ListenerStatus = 'off' | 'starting' | 'listening' | 'error';
+
+/** Whether a listener is off or failed, rather than listening or still opening. */
+export function hasStopped(status: ListenerStatus): boolean {
+  return status === 'off' || status === 'error';
+}
 
 /** About 85 ms at 48 kHz: several periods of the low E string, short enough to follow a melody. */
 const PITCH_WINDOW = 4096;
@@ -66,10 +76,15 @@ export class MicListener {
       this.input = input;
       this.status.set('listening');
       this.listen(input, mode);
+      input.onEnded(() => {
+        if (session === this.session) {
+          this.stop();
+          this.fail(INPUT_ENDED_MESSAGE);
+        }
+      });
     } catch (error) {
       if (session === this.session) {
-        this.status.set('error');
-        this.errorMessage.set(
+        this.fail(
           error instanceof MicrophoneError ? error.message : 'The microphone could not be opened.',
         );
       }
@@ -95,6 +110,11 @@ export class MicListener {
   /** Forgets earlier notes, so the next prompt starts from a clean slate. */
   clearHeard(): void {
     this.heard.set([]);
+  }
+
+  private fail(message: string): void {
+    this.status.set('error');
+    this.errorMessage.set(message);
   }
 
   private listen(input: MicrophoneInput, mode: ListenMode): void {

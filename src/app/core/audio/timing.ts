@@ -121,6 +121,11 @@ function wrap(value: number, cycle: number): number {
   return value - cycle * Math.round(value / cycle);
 }
 
+/** A delay brought into [-¼, ¾) of a cycle: sound arrives late, never early. */
+function wrapLate(value: number, cycle: number): number {
+  return value - cycle * Math.floor(value / cycle + 0.25);
+}
+
 /**
  * Measures the delay between the clicks you played along to and your strikes.
  *
@@ -128,7 +133,9 @@ function wrap(value: number, cycle: number): number {
  * late is as close to the next click as to its own. The offsets are therefore averaged as
  * positions on that cycle, then measured around that average, which keeps a group of strikes
  * near the half beat together instead of splitting it in two. The median keeps one stray strike
- * from moving the result.
+ * from moving the result. The delay comes out between a quarter of a beat early and three
+ * quarters late, since speakers, Bluetooth and sound cards only ever add delay: up to 560 ms at
+ * 80 bpm.
  */
 export function estimateLatency(
   clicks: readonly number[],
@@ -154,7 +161,7 @@ export function estimateLatency(
   const deviations = offsets.map((offset) => wrap(offset - center, gapMs));
   const middle = median(deviations);
   return {
-    latencyMs: wrap(center + middle, gapMs),
+    latencyMs: wrapLate(center + middle, gapMs),
     spreadMs: Math.sqrt(mean(deviations.map((deviation) => (deviation - middle) ** 2))),
     matched: offsets.length,
   };

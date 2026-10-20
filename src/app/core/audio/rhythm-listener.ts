@@ -2,7 +2,7 @@ import { Service, inject, signal } from '@angular/core';
 import { AttackTimer } from './attack-timer';
 import { AudioInputs } from './audio-inputs';
 import { ListenerStatus } from './mic-listener';
-import { MicrophoneError, MicrophoneInput } from './microphone';
+import { INPUT_ENDED_MESSAGE, MicrophoneError, MicrophoneInput } from './microphone';
 
 /** Strikes kept: enough for a take of 4 bars of sixteenths with room to spare. */
 const STRIKES_KEPT = 400;
@@ -50,7 +50,15 @@ export class RhythmListener {
     if (this.status() === 'listening') {
       return Promise.resolve();
     }
-    this.starting ??= this.open().finally(() => (this.starting = null));
+    if (!this.starting) {
+      const starting = this.open().finally(() => {
+        // A stop meanwhile already let it go, and a start after that may have begun another.
+        if (this.starting === starting) {
+          this.starting = null;
+        }
+      });
+      this.starting = starting;
+    }
     return this.starting;
   }
 
@@ -58,27 +66,48 @@ export class RhythmListener {
     const session = ++this.session;
     this.status.set('starting');
     this.errorMessage.set(null);
+    let input: MicrophoneInput;
     try {
-      const input = await this.inputs.open();
-      await this.listen(input);
-      if (session !== this.session) {
-        input.close();
-        return;
-      }
-      this.input = input;
-      this.status.set('listening');
+      input = await this.inputs.open();
     } catch (error) {
       if (session === this.session) {
-        this.status.set('error');
-        this.errorMessage.set(
+        this.fail(
           error instanceof MicrophoneError ? error.message : 'The microphone could not be opened.',
         );
       }
+      return;
     }
+    try {
+      await this.listen(input);
+    } catch {
+      input.close();
+      if (session === this.session) {
+        this.fail('Strike timing could not be started in this browser.');
+      }
+      return;
+    }
+    if (session !== this.session) {
+      input.close();
+      return;
+    }
+    this.input = input;
+    this.status.set('listening');
+    input.onEnded(() => {
+      if (session === this.session) {
+        this.stop();
+        this.fail(INPUT_ENDED_MESSAGE);
+      }
+    });
+  }
+
+  private fail(message: string): void {
+    this.status.set('error');
+    this.errorMessage.set(message);
   }
 
   stop(): void {
     this.session++;
+    this.starting = null;
     this.input?.close();
     this.input = null;
     this.status.set('off');

@@ -152,9 +152,7 @@
 
 <ng-template #result>
   @if (run.lastCorrect()) {
-    <p class="result correct" role="status">
-      <app-icon name="check" /> Correct, {{ responseSeconds() }}
-    </p>
+    <p class="result correct" role="status"><app-icon name="check" /> {{ correctText() }}</p>
   } @else {
     <p class="result wrong" role="status">
       <app-icon name="x" /> {{ run.timedOut() ? "Time's up" : 'Not quite' }}

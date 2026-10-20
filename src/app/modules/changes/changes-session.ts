@@ -1,9 +1,10 @@
 import { Provider, Service, computed, effect, inject, signal, untracked } from '@angular/core';
 import { matchesStrum } from '../../core/audio/matchers';
-import { MicListener } from '../../core/audio/mic-listener';
+import { MicListener, hasStopped } from '../../core/audio/mic-listener';
 import { Drill } from '../../core/practice/drill';
 import { PracticeRun } from '../../core/practice/practice-run';
 import { loadJson, saveJson } from '../../core/practice/storage';
+import { Take } from '../../core/practice/take';
 import {
   OpenChord,
   PairCard,
@@ -34,9 +35,6 @@ const STRUM_THRESHOLD = 0.8;
 
 /** How often the time left is updated on screen. */
 const TICK_MS = 100;
-
-/** count-in: 3, 2, 1; running: the take, while changes are counted. */
-export type TakeStage = 'idle' | 'count-in' | 'running';
 
 export interface TakeResult {
   readonly changes: number;
@@ -72,19 +70,30 @@ export class ChangesSession implements Drill {
     problems: this.problems,
     // The count is worth a look: wait for Next even after a new best.
     advanceAfterCorrect: false,
+    // A take lasts as long as set in setup, whatever you play.
+    timesAnswers: false,
     onStart: () => {
       if (this.settings().count === 'mic') {
         void this.mic.start('spectrum');
       }
     },
     onEnd: () => {
-      this.cancel();
+      this.take.stop();
       this.mic.stop();
     },
     onNext: () => this.result.set(null),
   });
 
-  readonly stage = signal<TakeStage>('idle');
+  /** count-in: 3, 2, 1; running: the take, while changes are counted. */
+  private readonly take = new Take<'count-in' | 'running'>({
+    run: this.run,
+    inputLost: computed(() => this.settings().count === 'mic' && hasStopped(this.mic.status())),
+    onStop: () => {
+      clearInterval(this.ticker);
+      this.target.set(null);
+    },
+  });
+  readonly stage = this.take.stage.asReadonly();
   /** The number shown during the count-in: 3, 2, 1. */
   readonly countIn = signal(0);
   readonly remainingMs = signal(0);
@@ -108,7 +117,6 @@ export class ChangesSession implements Drill {
   private landedFirst = false;
   /** The strum count when the target last changed: only a later strum can land the next chord. */
   private strumsBefore = 0;
-  private timers: ReturnType<typeof setTimeout>[] = [];
   private ticker: ReturnType<typeof setInterval> | undefined;
 
   constructor() {
@@ -129,12 +137,6 @@ export class ChangesSession implements Drill {
         untracked(() => this.land());
       }
     });
-    // Pausing drops the take: the count would mean nothing.
-    effect(() => {
-      if (this.run.paused() && untracked(this.stage) !== 'idle') {
-        untracked(() => this.cancel());
-      }
-    });
   }
 
   updateSettings(changes: Partial<ChangesSettings>): void {
@@ -145,19 +147,19 @@ export class ChangesSession implements Drill {
   /** Counts down, then runs a take of the current pair. */
   start(): void {
     const card = this.run.current();
-    if (!card || this.run.phase() !== 'prompt' || this.stage() !== 'idle') {
+    if (!card || !this.take.canStart()) {
       return;
     }
     this.changes.set(0);
     this.landedFirst = false;
     this.target.set(card.first);
-    this.stage.set('count-in');
+    this.take.stage.set('count-in');
     this.countIn.set(COUNT_IN);
     this.run.touch();
     for (let left = COUNT_IN - 1; left >= 1; left--) {
-      this.after((COUNT_IN - left) * 1000, () => this.countIn.set(left));
+      this.take.after((COUNT_IN - left) * 1000, () => this.countIn.set(left));
     }
-    this.after(COUNT_IN * 1000, () => this.begin(card));
+    this.take.after(COUNT_IN * 1000, () => this.begin(card));
   }
 
   /** A tap: you've landed the chord shown. */
@@ -171,14 +173,14 @@ export class ChangesSession implements Drill {
     const seconds = this.settings().seconds;
     const endsAt = Date.now() + seconds * 1000;
     this.strumsBefore = this.mic.strums();
-    this.stage.set('running');
+    this.take.stage.set('running');
     this.remainingMs.set(seconds * 1000);
     this.run.touch();
     this.ticker = setInterval(
       () => this.remainingMs.set(Math.max(0, endsAt - Date.now())),
       TICK_MS,
     );
-    this.after(seconds * 1000, () => this.finish(card, seconds));
+    this.take.after(seconds * 1000, () => this.finish(card, seconds));
   }
 
   /** The chord shown was played: the first one starts the count, each later one is a change. */
@@ -197,7 +199,7 @@ export class ChangesSession implements Drill {
   }
 
   private finish(card: PairCard, seconds: number): void {
-    this.cancel();
+    this.take.stop();
     const bestBefore = bestPerMinute(this.takes(), card.key);
     const take: TakeRecord = {
       pair: card.key,
@@ -212,18 +214,6 @@ export class ChangesSession implements Drill {
     saveJson(TAKES_KEY, this.takes());
     this.result.set({ changes: take.changes, seconds, perMinute: rate, bestBefore, passed });
     this.run.resolve(passed);
-  }
-
-  private after(ms: number, action: () => void): void {
-    this.timers.push(setTimeout(action, ms));
-  }
-
-  private cancel(): void {
-    this.timers.forEach(clearTimeout);
-    this.timers = [];
-    clearInterval(this.ticker);
-    this.stage.set('idle');
-    this.target.set(null);
   }
 }
 

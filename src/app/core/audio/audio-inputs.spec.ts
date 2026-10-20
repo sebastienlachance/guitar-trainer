@@ -14,10 +14,15 @@ function device(deviceId: string, label: string, kind: MediaDeviceKind = 'audioi
 const ROCKSMITH = device('rocksmith', 'Rocksmith Guitar Adapter Mono');
 const LAPTOP = device('laptop', 'Microphone Array (Realtek)');
 
-/** Replaces navigator.mediaDevices; returns the mocks to steer it. */
+/** Replaces navigator.mediaDevices; returns the mocks to steer it, and the stream's track. */
 function fakeMediaDevices(devices: MediaDeviceInfo[]) {
-  const stream = { getTracks: () => [{ stop: vi.fn() }] } as unknown as MediaStream;
+  const track = Object.assign(new EventTarget(), { stop: vi.fn() });
+  const stream = {
+    getTracks: () => [track],
+    getAudioTracks: () => [track],
+  } as unknown as MediaStream;
   const fake = {
+    track,
     devices,
     enumerateDevices: vi.fn(async () => fake.devices),
     getUserMedia: vi.fn<(constraints: MediaStreamConstraints) => Promise<MediaStream>>(
@@ -29,17 +34,19 @@ function fakeMediaDevices(devices: MediaDeviceInfo[]) {
   return fake;
 }
 
-/** Just enough of an AudioContext for `openMicrophone()`. */
-function stubAudioContext(): void {
+/** Just enough of an AudioContext for `openMicrophone()`; returns its `close`. */
+function stubAudioContext(resume = async () => undefined) {
+  const close = vi.fn(async () => undefined);
   vi.stubGlobal(
     'AudioContext',
     class {
       sampleRate = 48_000;
-      resume = async () => undefined;
+      resume = resume;
       createMediaStreamSource = () => ({});
-      close = async () => undefined;
+      close = close;
     },
   );
+  return close;
 }
 
 afterEach(() => {
@@ -171,5 +178,29 @@ describe('openMicrophone', () => {
     const [first, second] = media.getUserMedia.mock.calls.map(([constraints]) => constraints.audio);
     expect(first).toMatchObject({ deviceId: { exact: 'rocksmith' }, echoCancellation: false });
     expect(second).not.toHaveProperty('deviceId');
+  });
+
+  it('lets the microphone go when the sound cannot start', async () => {
+    const media = fakeMediaDevices([LAPTOP]);
+    const close = stubAudioContext(async () => {
+      throw new Error('Audio is blocked');
+    });
+
+    await expect(openMicrophone()).rejects.toThrow('The sound could not be started');
+
+    expect(media.track.stop).toHaveBeenCalled();
+    expect(close).toHaveBeenCalled();
+  });
+
+  it('tells when the input stops by itself, as when its cable is unplugged', async () => {
+    const media = fakeMediaDevices([LAPTOP]);
+    stubAudioContext();
+    const input = await openMicrophone();
+    const ended = vi.fn();
+    input.onEnded(ended);
+
+    media.track.dispatchEvent(new Event('ended'));
+
+    expect(ended).toHaveBeenCalledOnce();
   });
 });

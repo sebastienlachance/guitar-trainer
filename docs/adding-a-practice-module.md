@@ -184,6 +184,7 @@ export function provideScales(): Provider[] {
 | `touch()`                              | Marks activity, for example a played note, so the idle timer doesn't stop |
 | `paused()`, `lastCorrect()`, `stats()` | For your templates and checks                                             |
 | `onStart` / `onEnd` / `onNext` options | Start and stop the mic, reset per-card state                              |
+| `timesAnswers: false` option           | Answers take a set time (a take): no response times, cards by misses only |
 
 ## 6. Routes and registry
 
@@ -313,8 +314,9 @@ Build grid cells with `accuracyCell(id, totals(stats, (key) => …))`.
 | Listen to the guitar                      | `MicListener.start('notes')`, then `heard()`; `<app-mic-status>`                                     |
 | The exact pitch sounding (as the tuner)   | `MicListener.start('pitch')`, `pitch()`; `readPitch()`, `tuneAdvice()` in `core/audio/tuner.ts`      |
 | Play notes through the speakers           | `PhrasePlayer.play(notes)`, `playing()` while it sounds, in `core/audio/phrase-player.ts`            |
-| Let people choose the input (mic, cable)  | `<app-input-picker>` in the setup's microphone section; listeners open `AudioInputs.deviceToOpen()`  |
+| Let people choose the input (mic, cable)  | `<app-input-picker>` in the setup's microphone section; listeners open it with `AudioInputs.open()`  |
 | Time strikes, play a metronome            | `RhythmListener` (`strikes()`, `now()`), `Metronome.play()`, `scoreTake()` in `core/audio/timing.ts` |
+| Run takes (count-in, timers, Play)        | `Take` in `core/practice/take.ts`: drops a take on pause or a lost input, ignores a second Play      |
 | Show a rhythm take, chart a value         | `<app-take-strip>`; `<app-trend-chart>` in `core/ui/stats/`                                          |
 | Keep a result on screen after a pass      | `PracticeRun` option `advanceAfterCorrect: false`                                                    |
 | A tempo that climbs with passed takes     | `nextLevel()`, `levelOf()` in `core/practice/tempo-ladder.ts`                                        |

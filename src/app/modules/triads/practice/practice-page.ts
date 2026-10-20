@@ -37,9 +37,11 @@ export class PracticePage {
   /** "Csus4, 0.8 s": the chord the microphone just heard, shown while the next one is asked. */
   protected readonly heardLast = computed(() => {
     const movedOn = this.session.run.movedOn();
-    return movedOn && this.session.run.phase() === 'prompt'
-      ? `${cardTitle(movedOn.card)}, ${formatSeconds(movedOn.responseMs)}`
-      : '';
+    if (!movedOn || this.session.run.phase() !== 'prompt') {
+      return '';
+    }
+    const title = cardTitle(movedOn.card);
+    return movedOn.responseMs === null ? title : `${title}, ${formatSeconds(movedOn.responseMs)}`;
   });
 
   /** The chord's pitch classes, highlighted in the live spectrum while strumming. */
