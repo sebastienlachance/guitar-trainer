@@ -4,21 +4,14 @@ import { Drill } from '../practice/drill';
 import { accuracy, totals } from '../practice/stats';
 import { Icon } from './icon';
 import { plural } from './text';
+import { TopBar } from './top-bar';
 
 /** Top bar and pages of a practice module: setup at the module root, practice and stats below. */
 @Component({
   selector: 'app-module-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icon],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icon, TopBar],
   template: `
-    <header class="bar">
-      <div class="brand">
-        <a routerLink="/" class="home" aria-label="Guitar trainer home">
-          <app-icon name="pick" class="pick" />
-          <span class="app-name">Guitar trainer</span>
-        </a>
-        <span class="separator" aria-hidden="true">/</span>
-        <span class="module">{{ title }}</span>
-      </div>
+    <app-top-bar [title]="title">
       <nav [attr.aria-label]="title">
         @if (summary(); as s) {
           <span class="summary muted">{{ s }}</span>
@@ -39,44 +32,12 @@ import { plural } from './text';
           <app-icon name="sliders" />
         </a>
       </nav>
-    </header>
+    </app-top-bar>
     <router-outlet />
   `,
   styles: `
     :host {
       display: block;
-    }
-    .bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 16px;
-      font-size: 14px;
-    }
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--text-muted);
-    }
-    .home {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 0;
-      color: inherit;
-      text-decoration: none;
-    }
-    .pick {
-      color: var(--accent);
-    }
-    .separator {
-      color: var(--border-strong);
-    }
-    .module {
-      color: var(--text);
-      white-space: nowrap;
     }
     nav {
       display: flex;
@@ -98,9 +59,7 @@ import { plural } from './text';
       background: var(--control);
     }
     @media (max-width: 480px) {
-      .summary,
-      .app-name,
-      .separator {
+      .summary {
         display: none;
       }
     }

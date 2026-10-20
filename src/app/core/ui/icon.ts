@@ -11,6 +11,8 @@ const ICON_PATHS = {
   x: 'M18 6l-12 12M6 6l12 12',
   'arrow-left': 'M5 12h14M5 12l6 6M5 12l6 -6',
   'arrow-right': 'M5 12h14M13 18l6 -6M13 6l6 6',
+  'arrow-up': 'M12 19v-14M6 11l6 -6l6 6',
+  'arrow-down': 'M12 5v14M6 13l6 6l6 -6',
   play: 'M7 4v16l13 -8z',
   pause: 'M7 5h3v14h-3zM14 5h3v14h-3z',
   clock: 'M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0M12 7v5l3 3',

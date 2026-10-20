@@ -2,7 +2,7 @@ import { Service, inject, signal } from '@angular/core';
 import { AttackTimer } from './attack-timer';
 import { AudioInputs } from './audio-inputs';
 import { ListenerStatus } from './mic-listener';
-import { MicrophoneError, MicrophoneInput, openMicrophone } from './microphone';
+import { MicrophoneError, MicrophoneInput } from './microphone';
 
 /** Strikes kept: enough for a take of 4 bars of sixteenths with room to spare. */
 const STRIKES_KEPT = 400;
@@ -49,7 +49,7 @@ export class RhythmListener {
     this.status.set('starting');
     this.errorMessage.set(null);
     try {
-      const input = await openMicrophone(this.inputs.deviceToOpen());
+      const input = await this.inputs.open();
       await this.listen(input);
       if (session !== this.session) {
         input.close();

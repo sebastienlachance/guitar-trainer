@@ -13,6 +13,13 @@ import { MODULES } from '../modules/registry';
       <p class="muted">Pick something to practise.</p>
     </header>
     <ul class="modules">
+      <li>
+        <a class="panel module tool" routerLink="/tuner">
+          <span class="title">Tuner <span class="tag">Tool</span></span>
+          <span class="muted">Tune each string, with the microphone or a guitar cable.</span>
+          <app-icon name="arrow-right" class="go" />
+        </a>
+      </li>
       @for (module of modules; track module.path) {
         <li>
           <a class="panel module" [routerLink]="['/', module.path]">
@@ -64,6 +71,9 @@ import { MODULES } from '../modules/registry';
     }
     .module:hover {
       border-color: var(--border-strong);
+    }
+    .tool {
+      border-style: dashed;
     }
     .title {
       font-size: 18px;

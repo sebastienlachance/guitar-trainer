@@ -14,6 +14,8 @@ export const TONES = {
   e3: 164.81,
   /** A3, fret 2 on the G string. */
   a3: 220.0,
+  /** The open A string 20 cents flat (in tune is 110 Hz). */
+  flatA2: 108.74,
   /** Csus4 strummed: C3, F3 and G3 together. */
   cSus4: [130.81, 174.61, 196.0],
 } as const;

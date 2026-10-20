@@ -2,12 +2,16 @@ import { Service, inject, signal } from '@angular/core';
 import { PitchDetector } from 'pitchy';
 import { chromaFromSpectrum } from './chroma';
 import { AudioInputs } from './audio-inputs';
-import { MicrophoneError, MicrophoneInput, createAnalyser, openMicrophone } from './microphone';
+import { MicrophoneError, MicrophoneInput, createAnalyser } from './microphone';
 import { DEFAULT_NOTE_STREAM_OPTIONS, NoteStream } from './note-stream';
 import { OnsetDetector } from './onsets';
+import { PitchSmoother, TunerPitch } from './tuner';
 
-/** notes: played notes one at a time; spectrum: a live chroma vector of everything sounding. */
-export type ListenMode = 'notes' | 'spectrum';
+/**
+ * notes: played notes one at a time; spectrum: a live chroma vector of everything sounding;
+ * pitch: the exact frequency sounding, for the tuner.
+ */
+export type ListenMode = 'notes' | 'spectrum' | 'pitch';
 export type ListenerStatus = 'off' | 'starting' | 'listening' | 'error';
 
 /** About 85 ms at 48 kHz: several periods of the low E string, short enough to follow a melody. */
@@ -38,6 +42,8 @@ export class MicListener {
    * with a count taken earlier to know whether you strummed since, which a ringing chord doesn't.
    */
   readonly strums = signal(0);
+  /** The steadied pitch sounding now, or the last one while it fades. Pitch mode only. */
+  readonly pitch = signal<TunerPitch | null>(null);
 
   private input: MicrophoneInput | null = null;
   private mode: ListenMode = 'notes';
@@ -51,7 +57,7 @@ export class MicListener {
     this.status.set('starting');
     this.errorMessage.set(null);
     try {
-      const input = await openMicrophone(this.inputs.deviceToOpen());
+      const input = await this.inputs.open();
       if (session !== this.session) {
         input.close();
         return;
@@ -82,6 +88,7 @@ export class MicListener {
     this.status.set('off');
     this.heard.set([]);
     this.chroma.set(null);
+    this.pitch.set(null);
   }
 
   /** Forgets earlier notes, so the next prompt starts from a clean slate. */
@@ -97,6 +104,7 @@ export class MicListener {
     const detector = PitchDetector.forFloat32Array(PITCH_WINDOW);
     const notes = new NoteStream();
     const onsets = new OnsetDetector();
+    const smoother = new PitchSmoother();
 
     const onFrame = () => {
       const time = performance.now();
@@ -104,6 +112,10 @@ export class MicListener {
       const window = samples.subarray(samples.length - PITCH_WINDOW);
       const level = rootMeanSquare(window);
       const [frequency, clarity] = detector.findPitch(window, sampleRate);
+      if (mode === 'pitch') {
+        this.pitch.set(smoother.push({ frequency, clarity, level, time }));
+        return;
+      }
       const attack = onsets.push({ level, time });
       if (attack) {
         notes.rearm();

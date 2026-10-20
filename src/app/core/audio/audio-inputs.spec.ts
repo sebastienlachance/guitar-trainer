@@ -29,8 +29,22 @@ function fakeMediaDevices(devices: MediaDeviceInfo[]) {
   return fake;
 }
 
+/** Just enough of an AudioContext for `openMicrophone()`. */
+function stubAudioContext(): void {
+  vi.stubGlobal(
+    'AudioContext',
+    class {
+      sampleRate = 48_000;
+      resume = async () => undefined;
+      createMediaStreamSource = () => ({});
+      close = async () => undefined;
+    },
+  );
+}
+
 afterEach(() => {
   Object.defineProperty(navigator, 'mediaDevices', { value: undefined, configurable: true });
+  vi.unstubAllGlobals();
   localStorage.clear();
 });
 
@@ -94,6 +108,16 @@ describe('AudioInputs', () => {
     expect(media.getUserMedia).toHaveBeenCalledOnce();
     expect(inputs.named()).toBe(true);
   });
+
+  it('names the inputs once a listener has opened the microphone', async () => {
+    stubAudioContext();
+    const { inputs, media } = await inputsWith([device('laptop', ''), device('rocksmith', '')]);
+
+    media.devices = [LAPTOP, ROCKSMITH];
+    await inputs.open();
+
+    await vi.waitFor(() => expect(inputs.named()).toBe(true));
+  });
 });
 
 describe('InputPicker', () => {
@@ -140,21 +164,12 @@ describe('openMicrophone', () => {
     media.getUserMedia.mockImplementationOnce(async () => {
       throw new DOMException('No such device', 'OverconstrainedError');
     });
-    vi.stubGlobal(
-      'AudioContext',
-      class {
-        sampleRate = 48_000;
-        resume = async () => undefined;
-        createMediaStreamSource = () => ({});
-        close = async () => undefined;
-      },
-    );
+    stubAudioContext();
 
     await openMicrophone('rocksmith');
 
     const [first, second] = media.getUserMedia.mock.calls.map(([constraints]) => constraints.audio);
     expect(first).toMatchObject({ deviceId: { exact: 'rocksmith' }, echoCancellation: false });
     expect(second).not.toHaveProperty('deviceId');
-    vi.unstubAllGlobals();
   });
 });

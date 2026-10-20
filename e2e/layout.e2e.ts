@@ -1,6 +1,7 @@
-import { Page, expect, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import {
   correctResult,
+  expectFitsWidth,
   pickFirstCard,
   seedSettings,
   seedStorage,
@@ -14,15 +15,6 @@ import {
   MAJOR_OR_MINOR_PENTATONIC,
   MINOR_THIRD_IN_F_SHARP,
 } from './support/decks';
-
-/** Fails when the page is wider than the screen, i.e. it scrolls sideways. */
-async function expectFitsWidth(page: Page, where: string): Promise<void> {
-  const { scrollWidth, clientWidth } = await page.evaluate(() => ({
-    scrollWidth: document.documentElement.scrollWidth,
-    clientWidth: document.documentElement.clientWidth,
-  }));
-  expect(scrollWidth, `${where} is wider than the screen`).toBeLessThanOrEqual(clientWidth);
-}
 
 test.describe('Phone width', () => {
   test.use({ viewport: { width: 375, height: 812 } });

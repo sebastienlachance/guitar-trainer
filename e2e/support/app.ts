@@ -59,3 +59,12 @@ export async function tapFret(page: Page, string: number, fret: number): Promise
 export function correctResult(page: Page): Locator {
   return page.getByText(/Correct, \d/);
 }
+
+/** Fails when the page is wider than the screen, i.e. it scrolls sideways. */
+export async function expectFitsWidth(page: Page, where: string): Promise<void> {
+  const { scrollWidth, clientWidth } = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    clientWidth: document.documentElement.clientWidth,
+  }));
+  expect(scrollWidth, `${where} is wider than the screen`).toBeLessThanOrEqual(clientWidth);
+}

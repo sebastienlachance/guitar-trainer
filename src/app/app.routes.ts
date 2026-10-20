@@ -7,6 +7,11 @@ export const routes: Routes = [
     title: 'Guitar trainer',
     loadComponent: () => import('./home/home').then((m) => m.Home),
   },
+  {
+    path: 'tuner',
+    title: 'Tuner · Guitar trainer',
+    loadComponent: () => import('./tuner/tuner-page').then((m) => m.TunerPage),
+  },
   ...MODULES.map((module) => ({ path: module.path, loadChildren: module.loadRoutes })),
   { path: '**', redirectTo: '' },
 ];

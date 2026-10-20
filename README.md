@@ -15,6 +15,8 @@ Practise guitar until the fretboard is automatic. Each kind of exercise is a **m
 - **Play along:** rhythm. Strike every subdivision with the metronome, and see how early or late
   each hit was; the tempo climbs as you get steadier.
 
+There's also a **tuner**, on the home screen.
+
 Adding a module is documented in
 [docs/adding-a-practice-module.md](docs/adding-a-practice-module.md).
 
@@ -97,6 +99,17 @@ Progress is saved in each browser, so a phone and a computer keep separate stats
   filtered out of what the microphone times, and the app warns you if it still gets through
 - Stats: each subdivision's tempo now and best, and a chart of tempo or timing take after take
 
+**Tuner**
+
+- The note you play, how many cents it's off (A = 440), and which way to turn the peg of its
+  string in standard tuning: "Tune up", "Tune down to A", "In tune"
+- Reads any note, so other tunings work too; only the row of strings assumes standard tuning
+- Each string gets a tick once it stays within 5 cents for a second
+- A steady needle: the middle of the last 7 readings, so a click or a slip of the pick doesn't
+  move it; the start of each note is skipped while its attack settles. The last reading stays,
+  greyed, for a second after the note fades, so you can read it while turning the peg
+- Uses the chosen input, such as a guitar cable
+
 **Every module**
 
 - **Sessions:** start a timed session and see the clock, the answers and your accuracy as you go.
@@ -144,8 +157,8 @@ src/app/
     fretboard/            tuning, note and shape positions, the SVG fretboard (also answers taps)
     practice/             card flow (PracticeRun), the Drill contract, stats, session log, storage
     audio/                microphone, pitch detection, chord matching
-    ui/                   practice frame, module top bar, setup controls, answer buttons, stats
-                          blocks, icons
+    ui/                   practice frame, top bar, setup controls, answer buttons, stats blocks,
+                          icons
   modules/
     registry.ts           the modules on the home screen
     notes/                fretboard notes: the smallest complete module, a template for new ones
@@ -155,6 +168,7 @@ src/app/
     intervals/            intervals in a scale: tap, play or multiple choice in one module
     rhythm/               play along: a metronome, timed strikes, a tempo ladder
   home/                   home screen
+  tuner/                  the tuner page
 docs/
   adding-a-practice-module.md
 e2e/                      Playwright smoke tests

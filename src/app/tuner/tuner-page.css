@@ -1,0 +1,173 @@
+.meter.fading .note,
+.meter.fading .hz,
+.meter.fading .gauge,
+.meter.fading .reading {
+  opacity: 0.45;
+}
+
+.note {
+  margin: 4px 0 0;
+  text-align: center;
+  font-size: 72px;
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.note.on {
+  color: var(--success);
+}
+
+.note.idle {
+  color: var(--border-strong);
+}
+
+.octave {
+  margin-left: 2px;
+  font-size: 24px;
+  color: var(--text-muted);
+  vertical-align: super;
+}
+
+.hz {
+  margin: 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* The scale runs from −50 to +50 cents; positions are percentages of its width. */
+.gauge {
+  position: relative;
+  height: 48px;
+  margin: 18px 6px 0;
+  border-bottom: 2px solid var(--border-strong);
+}
+
+.zone {
+  position: absolute;
+  left: 45%;
+  width: 10%;
+  top: 8px;
+  bottom: 0;
+  border-radius: 4px 4px 0 0;
+  background: var(--success-surface);
+}
+
+.tick {
+  position: absolute;
+  bottom: 0;
+  width: 1px;
+  height: 12px;
+  background: var(--border-strong);
+}
+
+.tick.major {
+  height: 22px;
+  background: var(--text-muted);
+}
+
+.needle {
+  position: absolute;
+  bottom: 0;
+  width: 4px;
+  height: 44px;
+  margin-left: -2px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.needle.on {
+  background: var(--success);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .needle {
+    transition: left 80ms linear;
+  }
+}
+
+.scale {
+  display: flex;
+  justify-content: space-between;
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.reading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px 14px;
+  margin: 14px 0 0;
+  font-size: 18px;
+}
+
+.cents {
+  font-variant-numeric: tabular-nums;
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+.action.in-tune {
+  color: var(--success);
+}
+
+.action.none {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.strings {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.strings li {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+
+.name {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  max-width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--control);
+  font-weight: 500;
+}
+
+.nearest .name {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.tuned .name {
+  border-color: var(--success);
+  color: var(--success);
+  background: var(--success-surface);
+}
+
+.number {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.check {
+  color: var(--success);
+}

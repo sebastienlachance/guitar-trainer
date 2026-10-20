@@ -43,17 +43,18 @@ routing, storage, focus or the microphone changed.
     - `PracticeRun`: the card flow
     - `Drill`: the contract a module provides
     - stats, the session log (`PracticeLog`), storage, `saved-settings.ts`
-  - `audio/`: `MicListener` (played notes or a live spectrum, plus a strum count), pitch and chord
-    matching, `OnsetDetector` (string strikes: counts strums, and lets a re-picked note count again),
+  - `audio/`: `MicListener` (played notes, a live spectrum plus a strum count, or the exact pitch
+    for the tuner), pitch and chord matching, `tuner.ts` (cents, string advice, smoothing),
+    `OnsetDetector` (string strikes: counts strums, and lets a re-picked note count again),
     `AudioInputs` (the chosen sound input, such as a guitar cable, shared by every module and
-    saved under `audio:input`; both listeners open it)
+    saved under `audio:input`; both listeners open it through `AudioInputs.open()`)
   - `audio/` for rhythm: `RhythmListener` (strike times on the audio clock, through
     `public/worklets/block-forwarder.js` and `AttackTimer`), `Metronome`, `timing.ts` (grid,
     scoring, calibration, leak check)
   - `ui/`:
     - `practice-frame/`: session bar, start/pause/summary screens, answer buttons, keys, focus, the
       time-limit bar
-    - `module-shell.ts`
+    - `module-shell.ts`, built on `top-bar.ts` (also used by pages outside a module)
     - `setup/` (including `input-picker.ts`), `stats/` (including the progress chart) and
       `answer/` (multiple-choice buttons) building blocks
     - `mic-status.ts`, `icon.ts`, `text.ts`, `update-banner.ts` (offers a reload for a new version),
@@ -65,6 +66,8 @@ routing, storage, focus or the microphone changed.
   tap, mic and multiple-choice questions in one module, and gives a card a new root each time it
   comes up (picked in `onNext`). `rhythm/` plays along with a metronome; it keeps extra storage
   (`rhythm:levels`, `rhythm:takes`) next to its stats.
+- `src/app/tuner/`: the tuner, a page of its own (no sessions or stats, so not a module), linked
+  from the home page.
 - `docs/adding-a-practice-module.md`: how to add a module. Follow it.
 - `e2e/`: Playwright smoke tests. `support/` holds the helpers, the one-card decks, the
   generator for the fake microphone's recordings and the static server for the Pages-style build.
@@ -139,14 +142,15 @@ routing, storage, focus or the microphone changed.
 - Effects (in services and `PracticeRun`) run during change detection: after setting a signal by
   hand in a test, call `TestBed.tick()` before checking the result.
 - The microphone in component tests: provide `{ provide: MicListener, useValue: fake }`, where the
-  fake has `status`, `errorMessage`, `heard`, `chroma` and `strums` signals plus `start`, `retry`,
-  `stop` and `clearHeard` mocks; set `heard` (MIDI numbers) or `chroma` and `strums` to "play".
-  See `modules/triads/practice/practice-page.spec.ts`.
+  fake has `status`, `errorMessage`, `heard`, `chroma`, `strums` and `pitch` signals plus `start`,
+  `retry`, `stop` and `clearHeard` mocks; set `heard` (MIDI numbers), `chroma` and `strums`, or
+  `pitch` to "play". See `modules/triads/practice/practice-page.spec.ts` and
+  `tuner/tuner-page.spec.ts`.
 - Prefer one-card decks set through settings. When settings can't narrow the deck to one card
   (like identify scales), fix `Math.random` at 0 so the deck's first card comes up:
   `vi.spyOn(Math, 'random').mockReturnValue(0)` in component tests, `pickFirstCard()` in e2e.
-- Microphone logic (`note-stream.ts`, `matchers.ts`, `chroma.ts`, `attack-timer.ts`, `timing.ts`)
-  is pure: test it with synthetic input, not audio.
+- Microphone logic (`note-stream.ts`, `matchers.ts`, `chroma.ts`, `attack-timer.ts`, `timing.ts`,
+  `tuner.ts`) is pure: test it with synthetic input, not audio.
 - Test-only helpers shared by several specs go in `*.testing.ts` files (like
   `modules/rhythm/rhythm.testing.ts`): the app build leaves them out, the spec build takes them in.
 - End-to-end tests (`e2e/*.e2e.ts`) are only for what jsdom can't check:
@@ -240,7 +244,7 @@ routing, storage, focus or the microphone changed.
   `playwright install --with-deps` without warning. Move to a newer image on purpose, in its own
   commit, once Playwright supports it.
 
-## Where things stand (2026-10-16)
+## Where things stand (2026-10-20)
 
 - **Modules:** triads, fretboard notes, identify notes, identify scales, intervals in a scale,
   play along (rhythm). Live
@@ -254,6 +258,8 @@ routing, storage, focus or the microphone changed.
     a tempo ladder per subdivision; not yet tried by the owner with a real guitar and speakers
   - an input picker in every listening module's setup, for a guitar cable such as the Rocksmith
     Real Tone cable; not yet tried by the owner with the cable
+  - a tuner (home page): reads an A2 20 cents flat as −20 through the fake mic, steady within a
+    cent; not yet tried by the owner on a real guitar
 - **Tested by the owner:** triads in strum mode, on a computer. Not yet confirmed on a real guitar:
   single-note detection (fretboard notes, intervals, triads arpeggio), phones, iPhone Safari.
   On a real guitar (2026-10-16), triads missed D at the 12th fret of the 4th string: nothing was

@@ -1,5 +1,6 @@
 import { Service, computed, signal } from '@angular/core';
 import { loadJson, saveJson } from '../practice/storage';
+import { MicrophoneInput, openMicrophone } from './microphone';
 
 /** One sound input the browser offers, such as a microphone or a guitar cable. */
 export interface AudioInput {
@@ -46,6 +47,15 @@ export class AudioInputs {
   /** The input to open: the chosen one if it's connected (or not known yet), else the default. */
   deviceToOpen(): string | null {
     return this.missing() ? null : this.chosenId();
+  }
+
+  /** Opens the input to listen to. Once it's open, the browser names the inputs: list them. */
+  async open(): Promise<MicrophoneInput> {
+    const input = await openMicrophone(this.deviceToOpen());
+    if (!this.named()) {
+      void this.refresh();
+    }
+    return input;
   }
 
   choose(input: AudioInput | null): void {

@@ -1,0 +1,85 @@
+<app-top-bar title="Tuner" />
+
+<div class="page">
+  <h1 class="visually-hidden">Tuner</h1>
+
+  <section class="panel meter" [class.fading]="pitch()?.fading">
+    @if (reading(); as reading) {
+      <p class="note" [class.on]="reading.onNote">
+        {{ reading.note }}<span class="octave">{{ reading.octave }}</span>
+      </p>
+      <p class="hz">{{ reading.hz }} Hz · A = {{ referenceHz }}</p>
+    } @else {
+      <p class="note idle">–</p>
+      <p class="hz">Play one string · A = {{ referenceHz }}</p>
+    }
+
+    <div class="gauge" aria-hidden="true">
+      <span class="zone"></span>
+      @for (tick of ticks; track tick) {
+        <span class="tick" [class.major]="tick % 50 === 0" [style.left.%]="tick + 50"></span>
+      }
+      @if (reading(); as reading) {
+        <span class="needle" [class.on]="reading.onNote" [style.left.%]="reading.cents + 50"></span>
+      }
+    </div>
+    <div class="scale" aria-hidden="true">
+      <span>♭ −50</span>
+      <span>0</span>
+      <span>+50 ♯</span>
+    </div>
+
+    @if (reading(); as reading) {
+      <p class="reading">
+        <span class="cents">{{ reading.centsText }}</span>
+        @if (action(); as action) {
+          <span
+            class="action"
+            [class.in-tune]="action.direction === 'in-tune'"
+            [class.none]="action.direction === null"
+          >
+            {{ action.text }}
+            @switch (action.direction) {
+              @case ('up') {
+                <app-icon name="arrow-up" />
+              }
+              @case ('down') {
+                <app-icon name="arrow-down" />
+              }
+              @case ('in-tune') {
+                <app-icon name="check" />
+              }
+            }
+          </span>
+        }
+      </p>
+    }
+    <p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>
+
+    <app-mic-status hint="play one string at a time" [showHeard]="false" />
+  </section>
+
+  <section class="panel">
+    <h2>Standard tuning</h2>
+    <ol class="strings" aria-label="Strings">
+      @for (string of strings(); track string.number) {
+        <li [class.nearest]="string.nearest" [class.tuned]="string.tuned">
+          <span class="visually-hidden">String {{ string.number }}:{{ ' ' }}</span>
+          <span class="name">{{ string.name }}</span>
+          <span class="number" aria-hidden="true">{{ string.number }}</span>
+          @if (string.tuned) {
+            <app-icon name="check" class="check" />
+            <span class="visually-hidden">, in tune</span>
+          } @else if (string.nearest) {
+            <span class="visually-hidden">, playing now</span>
+          }
+        </li>
+      }
+    </ol>
+    <p class="hint">A string gets a tick once it stays in tune for a second.</p>
+  </section>
+
+  <section class="panel">
+    <app-input-picker />
+  </section>
+</div>

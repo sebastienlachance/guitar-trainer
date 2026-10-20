@@ -18,6 +18,12 @@ describe('Home', () => {
     );
   });
 
+  it('links to the tuner', async () => {
+    await render(Home, { providers: [provideRouter([])] });
+
+    expect(screen.getByRole('link', { name: /Tuner/ })).toHaveAttribute('href', '/tuner');
+  });
+
   it('says a local build is a development build', async () => {
     await render(Home, { providers: [provideRouter([])] });
 
