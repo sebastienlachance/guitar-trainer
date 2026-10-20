@@ -58,4 +58,10 @@ export const MODULES: readonly TrainerModule[] = [
     description: 'Two chords, one minute: the microphone counts every clean change.',
     loadRoutes: () => import('./changes/changes.routes').then((m) => m.CHANGES_ROUTES),
   },
+  {
+    path: 'playback',
+    title: 'Play it back',
+    description: 'Hear an interval or a short melody, then find it on the guitar and play it.',
+    loadRoutes: () => import('./playback/playback.routes').then((m) => m.PLAYBACK_ROUTES),
+  },
 ];

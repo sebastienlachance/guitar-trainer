@@ -1,0 +1,47 @@
+<app-practice-frame [prompt]="prompt" [answer]="answer" />
+
+<ng-template #prompt>
+  @if (phrase()) {
+    <div class="question" aria-live="polite">
+      <p class="ask muted">{{ kind() }}</p>
+      <h1>Starts on {{ first() }}</h1>
+      <p class="where muted">{{ where() }}</p>
+    </div>
+
+    <app-fretboard [dots]="startDots()" [description]="startDescription()" />
+
+    <p class="notes" aria-hidden="true">
+      <span class="given">{{ first() }}</span>
+      @for (blank of blanks(); track blank) {
+        <span class="arrow">→</span><span class="blank">?</span>
+      }
+    </p>
+
+    <div class="actions">
+      <button type="button" class="btn" [disabled]="session.playing()" (click)="session.hear()">
+        <app-icon name="play" /> {{ session.playing() ? 'Playing…' : 'Hear again' }}
+        <kbd>R</kbd>
+      </button>
+    </div>
+
+    @if (settings().answer === 'mic' && run.phase() === 'prompt') {
+      <app-mic-status hint="play the phrase back" />
+    }
+  }
+</ng-template>
+
+<ng-template #answer>
+  @if (phrase()) {
+    <p class="answer-head">{{ answerTitle() }}</p>
+    <p class="notes">
+      @for (name of names(); track $index) {
+        @if (!$first) {
+          <span class="arrow" aria-hidden="true">→</span>
+        }
+        <span>{{ name }}</span>
+      }
+    </p>
+    <app-fretboard [dots]="answerDots()" [description]="answerDescription()" />
+    <p class="hint center">One way to play it: the microphone hears pitch, so any string counts.</p>
+  }
+</ng-template>

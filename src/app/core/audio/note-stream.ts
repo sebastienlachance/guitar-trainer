@@ -42,6 +42,11 @@ export function frequencyToMidi(frequency: number): number {
   return Math.round(69 + 12 * Math.log2(frequency / 440));
 }
 
+/** The frequency of a MIDI note in Hz, with A4 (69) at 440. */
+export function midiToFrequency(midi: number): number {
+  return 440 * 2 ** ((midi - 69) / 12);
+}
+
 /**
  * Turns a stream of pitch frames into discrete played notes. A note is reported once when its
  * pitch has held steady for `stableMs`; it can be reported again after silence, another note, or

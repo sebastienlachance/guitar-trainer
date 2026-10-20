@@ -24,14 +24,17 @@ export interface FretWindow {
 
 const MIN_SLOTS = 5;
 
-/** A window with a fret of margin around the fretted notes, starting at the nut when close to it. */
+/**
+ * A window with a fret of margin around the fretted notes, starting at the nut when close to it,
+ * or when a note is on an open string: those are drawn beside the nut.
+ */
 export function fretWindowFor(frets: readonly number[]): FretWindow {
   const fretted = frets.filter((fret) => fret > 0);
   if (fretted.length === 0) {
     return { first: 1, last: MIN_SLOTS };
   }
   const lowest = Math.min(...fretted);
-  const first = lowest <= 2 ? 1 : lowest - 1;
+  const first = lowest <= 2 || frets.includes(0) ? 1 : lowest - 1;
   return { first, last: Math.max(first + MIN_SLOTS - 1, Math.max(...fretted) + 1) };
 }
 

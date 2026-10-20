@@ -48,6 +48,7 @@ routing, storage, focus or the microphone changed.
     `OnsetDetector` (string strikes: counts strums, and lets a re-picked note count again),
     `AudioInputs` (the chosen sound input, such as a guitar cable, shared by every module and
     saved under `audio:input`; both listeners open it through `AudioInputs.open()`)
+  - `audio/` for sound out: `PhrasePlayer` (plays phrases of plucked notes, made by `pluck.ts`)
   - `audio/` for rhythm: `RhythmListener` (strike times on the audio clock, through
     `public/worklets/block-forwarder.js` and `AttackTimer`), `Metronome`, `timing.ts` (grid,
     scoring, calibration, leak check)
@@ -68,6 +69,8 @@ routing, storage, focus or the microphone changed.
   (`rhythm:levels`, `rhythm:takes`) next to its stats. `changes/` counts chord changes in a timed
   take (strum matching from the mic's spectrum mode, or a tap per change), keeps its takes in
   `changes:takes`, and shows its own result (`ownResult`, so the frame leaves out "Correct").
+  `playback/` plays a phrase through the speakers and checks it played back; it is self-check,
+  with the mic resolving a card like triads, and picks new notes for a card in `onNext`.
 - `src/app/tuner/`: the tuner, a page of its own (no sessions or stats, so not a module), linked
   from the home page.
 - `docs/adding-a-practice-module.md`: how to add a module. Follow it. `docs/ideas.md`: features
@@ -180,6 +183,9 @@ routing, storage, focus or the microphone changed.
   them.
 - **Covered windows:** browsers pause `requestAnimationFrame` while the window is covered.
   Anything that must keep running, like mic analysis, uses a timer.
+- **Sound and the microphone:** the mic hears the speakers. A module that plays sound must ignore
+  what the mic hears meanwhile: Play it back clears the heard notes when its phrase ends; play
+  along filters the tick out by frequency and warns of a leak.
 - **Microphone:** `getUserMedia` needs https or localhost. Keep echo cancellation, noise
   suppression and auto gain off (`core/audio/microphone.ts`); they distort instrument notes.
 - **Fretboard cursor:** pass `cursorStart` as a new object for each question, or the keyboard
@@ -250,7 +256,7 @@ routing, storage, focus or the microphone changed.
 ## Where things stand (2026-10-20)
 
 - **Modules:** triads, fretboard notes, identify notes, identify scales, intervals in a scale,
-  play along (rhythm), chord changes. Live
+  play along (rhythm), chord changes, play it back. Live
   at https://sebastienlachance.github.io/guitar-trainer/ as an installable PWA.
 - **Recently added:**
   - stats measure progress by speed (progress chart, speed grid, slow cards come up more)
@@ -265,11 +271,12 @@ routing, storage, focus or the microphone changed.
     cent; not yet tried by the owner on a real guitar
   - chord changes: counts every change of a synthetic C/G strum recording through the fake mic;
     not yet tried by the owner on a real guitar
+  - play it back: the plucked sound is in tune within a cent (unit test through the pitch
+    detector); answering through the fake mic works; not yet tried by the owner with speakers
 - **Tested by the owner:** triads in strum mode, on a computer. Not yet confirmed on a real guitar:
   single-note detection (fretboard notes, intervals, triads arpeggio), phones, iPhone Safari.
   On a real guitar (2026-10-16), triads missed D at the 12th fret of the 4th string: nothing was
   heard. `NoteStream` was loosened in response (a 45 ms grace for an unclear frame or an octave
   slip, clarity 0.85, 70 ms steady, level 0.006); not yet rechecked by the owner.
-- **In progress:** Play it back (ear training on the guitar), plan agreed 2026-10-20 (see
-  `docs/ideas.md`).
+- **No task in progress.**
 - **Ideas** worth building, and small follow-ups: `docs/ideas.md`.

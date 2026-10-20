@@ -1,0 +1,71 @@
+<h1 class="visually-hidden">Set up play it back</h1>
+
+<section class="panel">
+  <h2>Phrases</h2>
+  <app-chip-toggles
+    label="Phrases"
+    [hideLabel]="true"
+    [options]="kindChips"
+    [selected]="settings().kinds"
+    (selectedChange)="update({ kinds: $event })"
+  />
+  <p class="hint">
+    The app plays a phrase and tells you its first note; you find the rest on the guitar.
+  </p>
+</section>
+
+@if (settings().kinds.includes('interval')) {
+  <section class="panel">
+    <h2>Intervals</h2>
+    <app-chip-toggles
+      label="Intervals"
+      [hideLabel]="true"
+      [options]="intervalChips"
+      [selected]="settings().intervals"
+      (selectedChange)="update({ intervals: $event })"
+    />
+    <app-segmented-choice
+      label="Direction"
+      [options]="directionChoices"
+      [value]="settings().direction"
+      (valueChange)="update({ direction: $event })"
+    />
+  </section>
+}
+
+@if (settings().kinds.includes('melody')) {
+  <section class="panel">
+    <h2>Melodies</h2>
+    <app-chip-toggles
+      label="Scales"
+      [options]="scaleChips"
+      [selected]="settings().scales"
+      (selectedChange)="update({ scales: $event })"
+    />
+    <app-segmented-choice
+      label="Length"
+      [options]="lengthChoices"
+      [value]="settings().melodyLength"
+      (valueChange)="update({ melodyLength: $event })"
+    />
+    <p class="hint">
+      Each melody starts on the root, in a new key each time, and stays within an octave.
+    </p>
+  </section>
+}
+
+<section class="panel">
+  <h2>Answer</h2>
+  <app-segmented-choice
+    label="Answer"
+    [hideLabel]="true"
+    [options]="answerChoices"
+    [value]="settings().answer"
+    (valueChange)="update({ answer: $event })"
+  />
+  @if (settings().answer === 'mic') {
+    <app-input-picker />
+  }
+</section>
+
+<app-setup-start />

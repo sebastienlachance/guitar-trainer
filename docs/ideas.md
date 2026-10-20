@@ -6,11 +6,7 @@ exists).
 
 ## Planned
 
-- **Play it back (ear training on the guitar).** The app plays a short phrase (an interval or a
-  3–4 note melody from a scale), giving the first note; you find it on the neck and the microphone
-  checks the notes in order. Ear training apps answer with buttons; this one answers on the
-  guitar. Reuses note detection (`MicListener`), the fretboard and the card flow; new is a plucked
-  string sound, played in the browser.
+Nothing yet: pick from below.
 
 ## Later
 
@@ -39,5 +35,7 @@ exists).
   - an adjustable reference pitch (A = 432 to 446)
   - a tuning-fork button in each module's top bar (leaving a module ends a running session)
 - **Chord changes:** open chord diagrams for the chords of a pair.
+- **Play it back:** longer melodies, more scales (minor, modes), and a choice of the start
+  position; the plucked sound could also serve the drone idea above.
 - **Packaging:** a Tauri build for a native installer or a phone app.
 - **Testing:** a WebKit microphone test, if the app gets used on an iPhone.

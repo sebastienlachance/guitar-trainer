@@ -1,0 +1,73 @@
+.question {
+  text-align: center;
+  padding: 16px 0 4px;
+}
+
+.ask {
+  font-size: 13px;
+  margin: 0 0 4px;
+}
+
+h1 {
+  font-size: clamp(28px, 8vw, 40px);
+}
+
+.where {
+  margin: 4px 0 12px;
+}
+
+.notes {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 0;
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.arrow {
+  font-size: 16px;
+  color: var(--text-muted);
+}
+
+.given {
+  color: var(--accent);
+}
+
+.blank {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 50%;
+  font-size: 16px;
+  color: var(--text-muted);
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+kbd {
+  font: inherit;
+  font-size: 12px;
+  padding: 0 5px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  opacity: 0.7;
+}
+
+.answer-head {
+  margin: 0 0 4px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.center {
+  text-align: center;
+}

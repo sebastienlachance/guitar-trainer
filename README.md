@@ -16,6 +16,8 @@ Practise guitar until the fretboard is automatic. Each kind of exercise is a **m
   each hit was; the tempo climbs as you get steadier.
 - **Chord changes:** two chords, one minute. The microphone counts every clean change, and a chart
   shows the count climbing week after week.
+- **Play it back:** ear training on the guitar. The app plays an interval or a short melody and
+  gives its first note; you find the rest on the neck and play it.
 
 There's also a **tuner**, on the home screen.
 
@@ -113,6 +115,20 @@ Progress is saved in each browser, so a phone and a computer keep separate stats
   so the pairs you aren't speeding up on come up most
 - Stats: each pair's best and last changes a minute, and its progress chart
 
+**Play it back**
+
+- **Intervals** from a minor 2nd to the octave, up, down or both, and **melodies** of 3 or 4 notes
+  from the major pentatonic, minor pentatonic or major scale: from the root, in a new key each
+  time, mostly in steps, within an octave
+- The first note is named and shown on the neck, in the first five frets; the phrase plays as the
+  card appears, and **R** plays it again (a plucked-string sound made in the browser, so it works
+  offline)
+- The microphone checks the notes in order and octave, on any string. What it hears while the
+  phrase plays is ignored, so the speakers can't answer for you. Or reveal the phrase and judge
+  yourself
+- The answer shows the notes, their scale degrees, and one way to play them
+- Stats: accuracy per interval going up and down, and the phrases to practise more
+
 **Tuner**
 
 - The note you play, how many cents it's off (A = 440), and which way to turn the peg of its
@@ -182,6 +198,7 @@ src/app/
     intervals/            intervals in a scale: tap, play or multiple choice in one module
     rhythm/               play along: a metronome, timed strikes, a tempo ladder
     changes/              chord changes: one-minute changes, counted by the microphone
+    playback/             play it back: ear training, answered on the guitar
   home/                   home screen
   tuner/                  the tuner page
 docs/

@@ -69,6 +69,21 @@ describe('Fretboard', () => {
     expect(container.querySelector('.dot.ghost')).toHaveTextContent('♭7');
   });
 
+  it('shows an open string note with notes higher up the neck', async () => {
+    const { container } = await render(Fretboard, {
+      inputs: {
+        dots: [
+          { string: 6, fret: 0, label: 'E', kind: 'root' },
+          { string: 6, fret: 4, label: 'A♭', kind: 'tone' },
+        ],
+        description: 'Fretboard',
+      },
+    });
+
+    const drawn = [...container.querySelectorAll('.dot')].map((dot) => dot.textContent?.trim());
+    expect(drawn).toEqual(['E', 'A♭']);
+  });
+
   it('draws the highlighted string in the accent colour', async () => {
     const { container } = await render(Fretboard, {
       inputs: { dots: [], description: 'Fretboard', highlightString: 5 },

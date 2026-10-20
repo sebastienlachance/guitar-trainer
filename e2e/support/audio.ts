@@ -26,7 +26,10 @@ export const PLUCK_TRAINS = {
   plucks80: { frequency: 110, intervalMs: 750, seconds: 3 },
 } as const;
 
-/** Chords struck in turn, each ringing until the next: for chord changes. */
+/**
+ * Chords, or single notes, struck in turn: each rings until the next. For chord changes, and for
+ * a phrase to play back.
+ */
 export const SEQUENCES = {
   /** An open C (C3 E3 G3 C4 E4), then an open G (G2 B2 D3 G3 B3 G4), a second apart. */
   changesCG: {
@@ -37,6 +40,8 @@ export const SEQUENCES = {
     intervalMs: 1000,
     seconds: 2,
   },
+  /** E2 then G♯2, the open low E and a major 3rd up, over and over. */
+  eToGSharp: { chords: [[82.41], [103.83]], intervalMs: 600, seconds: 1.2 },
 } as const;
 
 export type Recording = keyof typeof TONES | keyof typeof PLUCK_TRAINS | keyof typeof SEQUENCES;
