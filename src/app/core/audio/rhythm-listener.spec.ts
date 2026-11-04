@@ -24,6 +24,7 @@ function fakeInput(addModule = async () => undefined) {
     context,
     source: new FakeNode() as unknown as MediaStreamAudioSourceNode,
     sampleRate: 48_000,
+    setBoost: vi.fn(),
     onEnded: (listener: () => void) => ended.push(listener),
     close: vi.fn(),
   } satisfies MicrophoneInput;

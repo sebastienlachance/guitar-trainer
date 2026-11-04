@@ -2,6 +2,7 @@ import { Service, inject, signal } from '@angular/core';
 import { PitchDetector } from 'pitchy';
 import { chromaFromSpectrum } from './chroma';
 import { AudioInputs } from './audio-inputs';
+import { rootMeanSquare } from './level';
 import {
   INPUT_ENDED_MESSAGE,
   MicrophoneError,
@@ -159,12 +160,4 @@ export class MicListener {
     };
     this.frameTimer = setInterval(onFrame, FRAME_MS);
   }
-}
-
-function rootMeanSquare(samples: Float32Array): number {
-  let sum = 0;
-  for (const sample of samples) {
-    sum += sample * sample;
-  }
-  return Math.sqrt(sum / samples.length);
 }

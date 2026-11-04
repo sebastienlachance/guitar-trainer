@@ -9,13 +9,21 @@ export interface AudioInput {
 }
 
 const STORAGE_KEY = 'audio:input';
+const BOOST_KEY = 'audio:boost';
+
+/** How much a quiet input can be turned up: each step doubles it. 1 leaves it as it comes in. */
+export const BOOSTS: readonly number[] = [1, 2, 4, 8, 16];
+
+/** Where the default microphone's boost is kept: the system default's id, never a chosen one. */
+const DEFAULT_BOOST_KEY = 'default';
 
 /** Ids browsers use for "whatever the system default is", already covered by our default. */
 const SYSTEM_ALIASES = ['default', 'communications'];
 
 /**
  * The sound inputs you can practise with, and the one you chose: the default microphone, or
- * something like a Rocksmith Real Tone cable. Both the pitch and the rhythm listeners open it.
+ * something like a Rocksmith Real Tone cable. Both the pitch and the rhythm listeners open it,
+ * turned up by the boost kept for it.
  */
 @Service()
 export class AudioInputs {
@@ -35,6 +43,14 @@ export class AudioInputs {
     return id !== null && this.named() && !this.inputs().some((input) => input.id === id);
   });
 
+  /** Each input's boost, by id; inputs never boosted are left out. */
+  private readonly boosts = signal<Readonly<Record<string, number>>>(loadBoosts());
+  private readonly boostKey = computed(() => this.deviceToOpen() ?? DEFAULT_BOOST_KEY);
+  /** How much the input to open is turned up. */
+  readonly boost = computed(() => this.boosts()[this.boostKey()] ?? 1);
+  /** The inputs open now, with whose boost they follow. */
+  private readonly opened = new Set<{ readonly key: string; readonly input: MicrophoneInput }>();
+
   constructor() {
     const devices = typeof navigator === 'undefined' ? undefined : navigator.mediaDevices;
     if (devices?.enumerateDevices) {
@@ -49,13 +65,39 @@ export class AudioInputs {
     return this.missing() ? null : this.chosenId();
   }
 
-  /** Opens the input to listen to. Once it's open, the browser names the inputs: list them. */
+  /**
+   * Opens the input to listen to, turned up by its boost; a change of boost reaches it while it's
+   * open. Once it's open, the browser names the inputs: list them.
+   */
   async open(): Promise<MicrophoneInput> {
-    const input = await openMicrophone(this.deviceToOpen());
+    const deviceId = this.deviceToOpen();
+    const input = await openMicrophone(deviceId);
+    const opened = { key: deviceId ?? DEFAULT_BOOST_KEY, input };
+    // Read after opening, so a boost chosen meanwhile isn't missed.
+    input.setBoost(this.boosts()[opened.key] ?? 1);
+    this.opened.add(opened);
     if (!this.named()) {
       void this.refresh();
     }
-    return input;
+    return {
+      ...input,
+      close: () => {
+        this.opened.delete(opened);
+        input.close();
+      },
+    };
+  }
+
+  /** Turns the input to open up by `boost`, and keeps it for that input. */
+  setBoost(boost: number): void {
+    const key = this.boostKey();
+    this.boosts.update((boosts) => ({ ...boosts, [key]: boost }));
+    saveJson(BOOST_KEY, this.boosts());
+    for (const { key: inputKey, input } of this.opened) {
+      if (inputKey === key) {
+        input.setBoost(boost);
+      }
+    }
   }
 
   choose(input: AudioInput | null): void {
@@ -95,6 +137,19 @@ function loadSaved(): Record<string, unknown> | null {
 function loadChosen(): string | null {
   const id = loadSaved()?.['id'];
   return typeof id === 'string' && id !== '' ? id : null;
+}
+
+function loadBoosts(): Record<string, number> {
+  const saved = loadJson(BOOST_KEY);
+  if (typeof saved !== 'object' || saved === null) {
+    return {};
+  }
+  return Object.fromEntries(
+    Object.entries(saved).filter(
+      (entry): entry is [string, number] =>
+        typeof entry[1] === 'number' && BOOSTS.includes(entry[1]),
+    ),
+  );
 }
 
 function loadChosenLabel(): string | null {

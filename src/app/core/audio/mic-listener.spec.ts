@@ -17,6 +17,7 @@ function fakeInput() {
     context,
     source: { connect: () => undefined } as unknown as MediaStreamAudioSourceNode,
     sampleRate: 48_000,
+    setBoost: vi.fn(),
     onEnded: (listener: () => void) => ended.push(listener),
     close: vi.fn(),
   } satisfies MicrophoneInput;

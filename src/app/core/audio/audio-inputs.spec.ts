@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { STORAGE_PREFIX } from '../practice/storage';
 import { InputPicker } from '../ui/setup/input-picker';
 import { AudioInputs } from './audio-inputs';
-import { openMicrophone } from './microphone';
+import { MicrophoneInput, openMicrophone } from './microphone';
 
 /** What the browser reports: names only once the microphone has been allowed. */
 function device(deviceId: string, label: string, kind: MediaDeviceKind = 'audioinput') {
@@ -13,6 +13,7 @@ function device(deviceId: string, label: string, kind: MediaDeviceKind = 'audioi
 
 const ROCKSMITH = device('rocksmith', 'Rocksmith Guitar Adapter Mono');
 const LAPTOP = device('laptop', 'Microphone Array (Realtek)');
+const ROCKSMITH_INPUT = { id: 'rocksmith', label: 'Rocksmith Guitar Adapter Mono' };
 
 /** Replaces navigator.mediaDevices; returns the mocks to steer it, and the stream's track. */
 function fakeMediaDevices(devices: MediaDeviceInfo[]) {
@@ -34,19 +35,36 @@ function fakeMediaDevices(devices: MediaDeviceInfo[]) {
   return fake;
 }
 
-/** Just enough of an AudioContext for `openMicrophone()`; returns its `close`. */
-function stubAudioContext(resume = async () => undefined) {
+/**
+ * Just enough of an AudioContext for `openMicrophone()` and the level check: the input plays a
+ * steady sound at `amplitude`, turned up by its boost. Returns the context's `close`.
+ */
+function stubAudioContext({ resume = async () => undefined, amplitude = 0 } = {}) {
   const close = vi.fn(async () => undefined);
   vi.stubGlobal(
     'AudioContext',
     class {
       sampleRate = 48_000;
       resume = resume;
-      createMediaStreamSource = () => ({});
       close = close;
+      boost = { gain: { value: 1 }, connect: (next: unknown) => next };
+      createMediaStreamSource = () => ({ connect: (next: unknown) => next });
+      createGain = () => this.boost;
+      createAnalyser = () => ({
+        fftSize: 2048,
+        getFloatTimeDomainData: (samples: Float32Array) =>
+          samples.fill(amplitude * this.boost.gain.value),
+      });
     },
   );
   return close;
+}
+
+/** The sound coming out of an open input, as the listeners read it. */
+function soundOf(input: MicrophoneInput): number {
+  const samples = new Float32Array(1);
+  input.context.createAnalyser().getFloatTimeDomainData(samples);
+  return samples[0];
 }
 
 afterEach(() => {
@@ -116,6 +134,46 @@ describe('AudioInputs', () => {
     expect(inputs.named()).toBe(true);
   });
 
+  it('keeps a boost for each input, and opens each turned up by its own', async () => {
+    stubAudioContext({ amplitude: 0.001 });
+    const { inputs } = await inputsWith([LAPTOP, ROCKSMITH]);
+
+    inputs.choose(ROCKSMITH_INPUT);
+    inputs.setBoost(8);
+    inputs.choose(null);
+    expect(inputs.boost()).toBe(1);
+    expect(soundOf(await inputs.open())).toBeCloseTo(0.001);
+
+    inputs.choose(ROCKSMITH_INPUT);
+    expect(soundOf(await inputs.open())).toBeCloseTo(0.008);
+    expect(JSON.parse(localStorage.getItem(STORAGE_PREFIX + 'audio:boost')!)).toEqual({
+      rocksmith: 8,
+    });
+  });
+
+  it('turns up an input already open when its boost changes', async () => {
+    stubAudioContext({ amplitude: 0.001 });
+    const { inputs } = await inputsWith([LAPTOP]);
+    const input = await inputs.open();
+
+    inputs.setBoost(4);
+
+    expect(soundOf(input)).toBeCloseTo(0.004);
+  });
+
+  it('brings back the saved boosts, leaving out ones it does not offer', async () => {
+    localStorage.setItem(
+      STORAGE_PREFIX + 'audio:boost',
+      JSON.stringify({ rocksmith: 8, laptop: 3 }),
+    );
+    const { inputs } = await inputsWith([LAPTOP, ROCKSMITH]);
+
+    inputs.choose(ROCKSMITH_INPUT);
+    expect(inputs.boost()).toBe(8);
+    inputs.choose({ id: 'laptop', label: 'Microphone Array (Realtek)' });
+    expect(inputs.boost()).toBe(1);
+  });
+
   it('names the inputs once a listener has opened the microphone', async () => {
     stubAudioContext();
     const { inputs, media } = await inputsWith([device('laptop', ''), device('rocksmith', '')]);
@@ -150,6 +208,41 @@ describe('InputPicker', () => {
     expect(TestBed.inject(AudioInputs).chosenId()).toBe('rocksmith');
   });
 
+  it('offers a boost, kept for the input chosen', async () => {
+    fakeMediaDevices([LAPTOP, ROCKSMITH]);
+    const user = userEvent.setup();
+    await render(InputPicker);
+    await TestBed.inject(AudioInputs).refresh();
+    const select = await screen.findByRole('combobox', { name: 'Input' });
+
+    const option = (name: string) => screen.getByRole('option', { name });
+
+    await user.selectOptions(select, option('Rocksmith Guitar Adapter Mono'));
+    await user.click(screen.getByRole('radio', { name: '×8' }));
+    await user.selectOptions(select, option('Default microphone'));
+    expect(screen.getByRole('radio', { name: 'Off' })).toBeChecked();
+
+    await user.selectOptions(select, option('Rocksmith Guitar Adapter Mono'));
+    expect(screen.getByRole('radio', { name: '×8' })).toBeChecked();
+  });
+
+  it('checks the level: a quiet input is too quiet until it is boosted', async () => {
+    const media = fakeMediaDevices([LAPTOP]);
+    stubAudioContext({ amplitude: 0.002 });
+    const user = userEvent.setup();
+    await render(InputPicker);
+
+    await user.click(screen.getByRole('button', { name: 'Check the level' }));
+    expect(await screen.findByText(/Too quiet: pluck a string/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('radio', { name: '×4' }));
+    expect(await screen.findByText(/Heard: notes from this input/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Stop checking' }));
+    expect(media.track.stop).toHaveBeenCalled();
+    expect(screen.getByText(/Check the level to see/)).toBeInTheDocument();
+  });
+
   it('says when the chosen input is not connected', async () => {
     localStorage.setItem(
       STORAGE_PREFIX + 'audio:input',
@@ -182,8 +275,10 @@ describe('openMicrophone', () => {
 
   it('lets the microphone go when the sound cannot start', async () => {
     const media = fakeMediaDevices([LAPTOP]);
-    const close = stubAudioContext(async () => {
-      throw new Error('Audio is blocked');
+    const close = stubAudioContext({
+      resume: async () => {
+        throw new Error('Audio is blocked');
+      },
     });
 
     await expect(openMicrophone()).rejects.toThrow('The sound could not be started');

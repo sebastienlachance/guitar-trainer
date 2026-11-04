@@ -295,6 +295,10 @@ fretboard and stats follow from the intervals.
   first. The choice holds for every module; while the chosen input is unplugged, the default
   microphone is used. Play along asks you to calibrate again after a change of input. Unplug the
   input mid-session and the app says so; Try again listens to what is connected then.
+- **Boost a quiet input:** a guitar cable can come in too quiet for the app to hear a note, since
+  the browser's automatic gain stays off (it distorts notes). Choose a boost (up to ×16) in the
+  input picker; each input keeps its own. **Check the level** shows a meter while you pluck: the
+  line marks what a note must reach to be heard.
 - Single notes (triads arpeggio mode, fretboard notes) use the McLeod pitch method
   ([pitchy](https://github.com/ianprime0509/pitchy)). A note counts once it holds steady for about
   70 ms; a moment where the pitch blurs or slips an octave doesn't restart it. Striking the string

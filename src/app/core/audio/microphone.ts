@@ -1,8 +1,11 @@
 /** The open microphone, on its own audio clock: nodes added to `context` share its timing. */
 export interface MicrophoneInput {
   readonly context: AudioContext;
-  readonly source: MediaStreamAudioSourceNode;
+  /** The input's sound, turned up by its boost: what to analyse. */
+  readonly source: AudioNode;
   readonly sampleRate: number;
+  /** Turns the sound up by this factor (1 leaves it as it comes in), straight away. */
+  setBoost(boost: number): void;
   /** Calls `listener` if the input stops by itself, as when its cable is unplugged. */
   onEnded(listener: () => void): void;
   close(): void;
@@ -51,12 +54,18 @@ export async function openMicrophone(deviceId: string | null = null): Promise<Mi
   try {
     context = new AudioContext();
     await context.resume();
-    const source = context.createMediaStreamSource(stream);
+    // A boost turns up a quiet input such as a guitar cable. The sound stays in floating point
+    // here, so it can't clip, and the listeners' thresholds keep working as they were tuned.
+    const boosted = context.createGain();
+    context.createMediaStreamSource(stream).connect(boosted);
     const opened = context;
     return {
       context: opened,
-      source,
+      source: boosted,
       sampleRate: opened.sampleRate,
+      setBoost: (boost) => {
+        boosted.gain.value = boost;
+      },
       onEnded: (listener) =>
         stream.getAudioTracks().forEach((track) => track.addEventListener('ended', listener)),
       close: () => {

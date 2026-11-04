@@ -54,7 +54,9 @@ routing, storage, focus or the microphone changed.
     for the tuner), pitch and chord matching, `tuner.ts` (cents, string advice, smoothing),
     `OnsetDetector` (string strikes: counts strums, and lets a re-picked note count again),
     `AudioInputs` (the chosen sound input, such as a guitar cable, shared by every module and
-    saved under `audio:input`; both listeners open it through `AudioInputs.open()`)
+    saved under `audio:input`; both listeners open it through `AudioInputs.open()`, turned up by
+    the input's boost, saved under `audio:boost`), `LevelCheck` and `level.ts` (the input
+    picker's level meter)
   - `audio/` for sound out: `PhrasePlayer` (plays phrases of plucked notes, made by `pluck.ts`)
   - `audio/` for rhythm: `RhythmListener` (strike times on the audio clock, through
     `public/worklets/block-forwarder.js` and `AttackTimer`), `Metronome`, `timing.ts` (grid,
@@ -120,7 +122,7 @@ routing, storage, focus or the microphone changed.
 - Storage:
   - go through `loadJson()` / `saveJson()` only
   - keys are `<module>:settings` and `<module>:stats`, under the `guitar-trainer:v1:` prefix;
-    `audio:input` holds the input every module listens to
+    `audio:input` holds the input every module listens to, `audio:boost` each input's boost
   - stats are keyed by card key: never change a module's key format without migrating saved data
 - Keep the app self-contained, since the PWA's offline cache and a later Tauri build depend on it:
   - hash routing (`withHashLocation()`)
@@ -210,7 +212,10 @@ routing, storage, focus or the microphone changed.
   (`INPUT_ENDED_MESSAGE`) and Try again opens what is connected now; `Take` drops a take under
   way.
 - **Microphone:** `getUserMedia` needs https or localhost. Keep echo cancellation, noise
-  suppression and auto gain off (`core/audio/microphone.ts`); they distort instrument notes.
+  suppression and auto gain off (`core/audio/microphone.ts`); they distort instrument notes. A
+  quiet input such as a guitar cable is turned up by its boost instead: a gain node right after
+  the source, so the listeners' level thresholds (0.006 RMS) stay as they were tuned. The
+  picker's level check shows that threshold as the line on its meter.
 - **Fretboard cursor:** pass `cursorStart` as a new object for each question, or the keyboard
   cursor stays where the last answer was.
 - **Keys in module controls:** a control that handles keys itself must call `preventDefault()`, so
@@ -297,6 +302,9 @@ routing, storage, focus or the microphone changed.
     a tempo ladder per subdivision; not yet tried by the owner with a real guitar and speakers
   - an input picker in every listening module's setup, for a guitar cable such as the Rocksmith
     Real Tone cable; not yet tried by the owner with the cable
+  - a boost per input and a level check in the input picker (2026-11-04): the owner's tuner heard
+    nothing through a USB input (the Rocksmith cable, and another) that other apps hear, which
+    points to a signal below the 0.006 threshold. Not yet tried by the owner
   - a tuner (home page): reads an A2 20 cents flat as −20 through the fake mic, steady within a
     cent; not yet tried by the owner on a real guitar
   - chord changes: counts every change of a synthetic C/G strum recording through the fake mic;
