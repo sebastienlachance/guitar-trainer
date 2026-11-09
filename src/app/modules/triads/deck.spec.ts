@@ -9,6 +9,7 @@ import {
   shapeKindsFor,
   shapeLabel,
   shapesFor,
+  stringSetOf,
 } from './deck';
 import { DEFAULT_SETTINGS, TriadSettings, sanitizeSettings } from './settings';
 
@@ -25,6 +26,22 @@ describe('catalog', () => {
     expect(shellIntervals(quality('6'))).toEqual(['1', '3', '6']);
     expect(shellIntervals(quality('m7b5'))).toBeNull();
     expect(shellIntervals(quality('sus4'))).toBeNull();
+  });
+});
+
+describe('stringSetOf', () => {
+  it("is the shape's strings, or the only set the settings leave for a chord in any shape", () => {
+    const [shaped] = buildDeck(
+      settings({ qualities: ['sus4'], roots: ['C'], promptDetail: 'shape', stringSets: ['3-4-5'] }),
+    );
+    expect(stringSetOf(shaped, settings({}))).toBe('3-4-5');
+
+    const [chord] = buildDeck(
+      settings({ qualities: ['sus4'], roots: ['C'], promptDetail: 'chord' }),
+    );
+    // A sus4 triad takes three strings: the four-string set doesn't count.
+    expect(stringSetOf(chord, settings({ stringSets: ['2-3-4', '1-2-3-4'] }))).toBe('2-3-4');
+    expect(stringSetOf(chord, settings({ stringSets: ['1-2-3', '2-3-4'] }))).toBeNull();
   });
 });
 

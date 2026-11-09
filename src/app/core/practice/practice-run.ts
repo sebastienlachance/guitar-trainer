@@ -1,7 +1,7 @@
 import { DestroyRef, Signal, computed, effect, inject, signal, untracked } from '@angular/core';
 import { PracticeLog } from './practice-log';
 import { pickNextCard } from './scheduler';
-import { IDLE_LIMIT_MS, SessionRecord } from './session-log';
+import { IDLE_LIMIT_MS, SessionAnswer, SessionRecord } from './session-log';
 import { StatsStore } from './stats-store';
 
 export interface PracticeCard {
@@ -49,6 +49,11 @@ export interface PracticeRunOptions<C extends PracticeCard> {
    * their misses alone.
    */
   readonly timesAnswers?: boolean;
+  /**
+   * The group an answer to this card falls in, such as the string set it's played on, or null
+   * when that isn't known. Sessions then keep each group's times.
+   */
+  groupOf?(card: C): string | null;
 }
 
 /** A running countdown for the current card, for drawing it. */
@@ -92,6 +97,8 @@ export class PracticeRun<C extends PracticeCard> {
   readonly countdown = signal<Countdown | null>(null);
   /** The session that just ended, for the summary; cleared when a new one starts. */
   readonly lastSession = signal<SessionRecord | null>(null);
+  /** The answers of the session, oldest first, for its summary; cleared when a new one starts. */
+  readonly answers = signal<readonly SessionAnswer[]>([]);
   readonly paused: Signal<boolean> = this.log.paused;
 
   readonly view = computed((): PracticeView => {
@@ -152,6 +159,7 @@ export class PracticeRun<C extends PracticeCard> {
   start(): boolean {
     this.end();
     this.lastSession.set(null);
+    this.answers.set([]);
     if (this.options.problems().length > 0) {
       return false;
     }
@@ -273,6 +281,7 @@ export class PracticeRun<C extends PracticeCard> {
 
   private record(card: C, correct: boolean, responseMs: number | null): void {
     this.statsStore.record(card.key, { correct, responseMs, at: Date.now() });
-    this.log.recordAnswer(correct, responseMs);
+    this.log.recordAnswer(correct, responseMs, this.options.groupOf?.(card) ?? null);
+    this.answers.update((answers) => [...answers, { key: card.key, correct, responseMs }]);
   }
 }

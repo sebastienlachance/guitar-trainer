@@ -15,6 +15,7 @@ function createRun(
     deck?: { key: string }[];
     advanceAfterCorrect?: boolean;
     timesAnswers?: boolean;
+    groupOf?: (card: { key: string }) => string | null;
   } = {},
 ) {
   return TestBed.runInInjectionContext(
@@ -29,6 +30,7 @@ function createRun(
         timeLimitMs: options.timeLimitMs,
         advanceAfterCorrect: options.advanceAfterCorrect,
         timesAnswers: options.timesAnswers,
+        groupOf: options.groupOf,
       }),
   );
 }
@@ -225,6 +227,43 @@ describe('PracticeRun', () => {
     expect(onEnd).toHaveBeenCalled();
     expect(run.view()).toBe('ended');
     expect(run.lastSession()).toMatchObject({ module: 'test', answered: 2, correct: 2 });
+  });
+
+  it('keeps the answers of the session for its summary, until the next one starts', () => {
+    const run = createRun();
+    run.start();
+    const first = run.current()!.key;
+    vi.advanceTimersByTime(1200);
+    run.resolve(true);
+    vi.advanceTimersByTime(AUTO_ADVANCE_MS);
+    const second = run.current()!.key;
+    run.reveal();
+    run.selfCheck(false);
+
+    run.end();
+
+    expect(run.answers()).toEqual([
+      { key: first, correct: true, responseMs: 1200 },
+      { key: second, correct: false, responseMs: 0 },
+    ]);
+    run.start();
+    expect(run.answers()).toEqual([]);
+  });
+
+  it('sorts the answers into the groups the module gives', () => {
+    const run = createRun({
+      deck: [{ key: 'a' }],
+      groupOf: (card) => (card.key === 'a' ? 'strings 1-2-3' : null),
+    });
+    run.start();
+    vi.advanceTimersByTime(1500);
+    run.resolve(true);
+
+    run.end();
+
+    expect(run.lastSession()?.groups).toEqual({
+      'strings 1-2-3': { answered: 1, totalResponseMs: 1500 },
+    });
   });
 
   describe('with a time limit', () => {

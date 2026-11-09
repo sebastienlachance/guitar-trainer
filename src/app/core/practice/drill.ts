@@ -1,6 +1,22 @@
 import { Signal } from '@angular/core';
 import { PracticeCard, PracticeRun } from './practice-run';
 
+/** A card in words, from its stats key. */
+export interface CardDescription {
+  readonly title: string;
+  readonly detail: string;
+}
+
+/** How a module groups its answers (triads: by string set), for the summary and the stats. */
+export interface AnswerGroups {
+  /** What one group is called: "string set" gives "By string set" and "3 string sets". */
+  readonly name: string;
+  /** Column heading for a group's key, "Strings"; in lower case before it: "on strings 2-3-4". */
+  readonly heading: string;
+  /** Every group's key, in the order to list them. */
+  readonly keys: readonly string[];
+}
+
 /**
  * What a practice module gives the shared screens (top bar, practice frame, setup and stats
  * blocks). A module's service implements this and is provided under this token in its routes:
@@ -22,4 +38,14 @@ export abstract class Drill {
    * the practice frame then leaves out its "Correct" / "Not quite" line.
    */
   readonly ownResult?: boolean;
+  /** Set when the run's `groupOf` option sorts answers into groups. */
+  readonly answerGroups?: AnswerGroups;
+  /** Names a card for the summary's slowest cards; without it, the summary leaves them out. */
+  readonly describeCard?: (key: string) => CardDescription | undefined;
+  /**
+   * True when the app waits for the right answer rather than marking a wrong one, as triads does
+   * with the microphone and no time limit. A 100% then says nothing, so the summary leaves
+   * "Correct" out unless something was missed.
+   */
+  readonly waitsForRightAnswer?: Signal<boolean>;
 }

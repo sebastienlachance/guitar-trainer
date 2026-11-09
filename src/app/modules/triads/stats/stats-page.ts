@@ -1,13 +1,15 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { CardDescription } from '../../../core/practice/drill';
 import { displayNoteName, parseNote } from '../../../core/music/notes';
 import { totals } from '../../../core/practice/stats';
 import { Choice, SegmentedChoice } from '../../../core/ui/setup/segmented-choice';
 import { AccuracyGrid, accuracyCell, speedCell } from '../../../core/ui/stats/accuracy-grid';
+import { GroupProgress } from '../../../core/ui/stats/group-progress';
 import { ResetStats } from '../../../core/ui/stats/reset-stats';
 import { SessionHistory } from '../../../core/ui/stats/session-history';
 import { StatsOverview } from '../../../core/ui/stats/stats-overview';
-import { CardDescription, WeakestCards } from '../../../core/ui/stats/weakest-cards';
+import { WeakestCards } from '../../../core/ui/stats/weakest-cards';
 import { CHORD_QUALITIES, ROOTS } from '../catalog';
 import { cardFromKey, cardTitle, shapeLabel } from '../deck';
 import { TriadsSession } from '../triads-session';
@@ -29,6 +31,7 @@ function describeCard(key: string): CardDescription | undefined {
   imports: [
     RouterLink,
     StatsOverview,
+    GroupProgress,
     SessionHistory,
     SegmentedChoice,
     AccuracyGrid,

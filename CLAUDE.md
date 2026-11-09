@@ -41,9 +41,12 @@ routing, storage, focus or the microphone changed.
     `parseChordSymbol`), voicings, the scale catalog (`SCALE_TYPES`), fret positions and scale
     positions (pure TS)
   - `practice/`:
-    - `PracticeRun`: the card flow
+    - `PracticeRun`: the card flow. Its `groupOf` option sorts answers into groups (triads: by
+      string set), and each session keeps the times of each group (`groups`)
     - `Drill`: the contract a module provides
     - stats, the session log (`PracticeLog`), storage, `saved-settings.ts`
+    - `session-compare.ts`: a session against your usual time (your last sessions on the same
+      groups), each group's progress, the slowest cards of a session
     - `tempo-ladder.ts`: a tempo per card that climbs with passed takes (play along,
       progressions)
     - `take.ts`: `Take`, a take's stage and timers (play along, chord changes, progressions). It
@@ -62,11 +65,12 @@ routing, storage, focus or the microphone changed.
     `public/worklets/block-forwarder.js` and `AttackTimer`), `Metronome`, `timing.ts` (grid,
     scoring, calibration, leak check)
   - `ui/`:
-    - `practice-frame/`: session bar, start/pause/summary screens, answer buttons, keys, focus, the
-      time-limit bar
+    - `practice-frame/`: session bar, start/pause screens, answer buttons, keys, focus, the
+      time-limit bar, and `session-summary.ts` (the end of a session: time per answer against your
+      usual, by group, the slowest cards)
     - `module-shell.ts`, built on `top-bar.ts` (also used by pages outside a module)
-    - `setup/` (including `input-picker.ts`), `stats/` (including the progress chart) and
-      `answer/` (multiple-choice buttons) building blocks
+    - `setup/` (including `input-picker.ts`), `stats/` (including the progress chart and
+      `group-progress.ts`, times by group) and `answer/` (multiple-choice buttons) building blocks
     - `mic-status.ts`, `icon.ts`, `text.ts`, `update-banner.ts` (offers a reload for a new version),
       `take-strip.ts` (a rhythm take, hit by hit), `keep-awake.ts` (keeps a phone's screen on
       during a session and on the tuner)
@@ -279,7 +283,13 @@ routing, storage, focus or the microphone changed.
   _slowness_ to the miss rate: how much slower than your own median a card is, capped at +1.
   Relative, so no per-module thresholds. Unseen cards weigh 2 so the deck still gets covered.
   Response times leave pauses out and are capped at the idle limit. Modules that play takes
-  (`timesAnswers: false`) keep no times at all: a take's length is set by the take.
+  (`timesAnswers: false`) keep no times at all: a take's length is set by the take. The session
+  summary leads with the time per answer, against your last 5 sessions on the same groups, and
+  leaves out a 100% "Correct" when the app waits for the right answer (`waitsForRightAnswer`).
+- **Triads' string set:** known from the shape asked for, or, in Chord only, when the settings
+  leave one string set for the chord. Several sets in Chord only: unknown (the mic can't tell
+  strings apart). Card keys stay as they were, so the "By chord" grid and the scheduler still mix
+  string sets in Chord only; sessions keep the times by string set instead.
 - **Stored data only grows backwards-compatibly:** new fields are optional, the `is…` checks
   accept data without them, and code falls back (a card's average stands in for its first times).
   Never change a stored shape in a way that makes older saved data fail its check.
@@ -305,6 +315,10 @@ routing, storage, focus or the microphone changed.
   - a boost per input and a level check in the input picker (2026-11-04): the owner's tuner heard
     nothing through a USB input (the Rocksmith cable, and another) that other apps hear, which
     points to a signal below the 0.006 threshold. Not yet tried by the owner
+  - a session summary that leads with the time per answer (2026-11-09), against your last
+    sessions on the same strings, with triads' times by string set and the slowest chords; the
+    triads stats show each string set at first and lately. Asked for by the owner: the summary
+    said 100% every time
   - a tuner (home page): reads an A2 20 cents flat as −20 through the fake mic, steady within a
     cent; not yet tried by the owner on a real guitar
   - chord changes: counts every change of a synthetic C/G strum recording through the fake mic;

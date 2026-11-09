@@ -13,11 +13,12 @@ import {
 import { RouterLink } from '@angular/router';
 import { Drill } from '../../practice/drill';
 import { PracticeLog } from '../../practice/practice-log';
-import { IDLE_LIMIT_MS, formatClock, formatDuration } from '../../practice/session-log';
+import { IDLE_LIMIT_MS, formatClock } from '../../practice/session-log';
 import { accuracyBand } from '../../practice/stats';
 import { Icon } from '../icon';
 import { keepScreenAwake } from '../keep-awake';
-import { capitalize, formatSeconds, percentCorrect, plural } from '../text';
+import { formatSeconds, percentCorrect, plural } from '../text';
+import { SessionSummary } from './session-summary';
 
 /**
  * Everything around a practice prompt: the session bar, the start, pause and summary screens,
@@ -27,7 +28,7 @@ import { capitalize, formatSeconds, percentCorrect, plural } from '../text';
  */
 @Component({
   selector: 'app-practice-frame',
-  imports: [NgTemplateOutlet, RouterLink, Icon],
+  imports: [NgTemplateOutlet, RouterLink, Icon, SessionSummary],
   templateUrl: './practice-frame.html',
   styleUrl: './practice-frame.css',
   host: {
@@ -52,7 +53,6 @@ export class PracticeFrame implements OnDestroy {
   protected readonly view = this.run.view;
   protected readonly phase = this.run.phase;
   protected readonly idleMinutes = IDLE_LIMIT_MS / 60_000;
-  protected readonly unitLabel = capitalize(this.drill.unit + 's');
 
   /** Live figures for the session bar. */
   protected readonly progress = computed(() => {
@@ -64,18 +64,6 @@ export class PracticeFrame implements OnDestroy {
       accuracy: percentCorrect(open?.correct ?? 0, answered),
       band: accuracyBand({ attempts: answered, correct: open?.correct ?? 0 }),
     };
-  });
-
-  protected readonly summary = computed(() => {
-    const record = this.run.lastSession();
-    return record
-      ? {
-          logged: record.answered > 0,
-          time: formatDuration(record.activeMs),
-          answered: String(record.answered),
-          accuracy: percentCorrect(record.correct, record.answered),
-        }
-      : null;
   });
 
   /** The countdown as a list of zero or one, so the template can restart its bar for each one. */

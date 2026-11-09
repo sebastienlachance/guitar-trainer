@@ -1,13 +1,8 @@
 import { Component, computed, inject, input } from '@angular/core';
-import { Drill } from '../../practice/drill';
+import { CardDescription, Drill } from '../../practice/drill';
 import { cardWeight, medianResponseMs, slowness } from '../../practice/scheduler';
 import { earlyAverageMs, recentAverageMs } from '../../practice/stats';
 import { formatSeconds } from '../text';
-
-export interface CardDescription {
-  readonly title: string;
-  readonly detail: string;
-}
 
 const SHOWN = 8;
 

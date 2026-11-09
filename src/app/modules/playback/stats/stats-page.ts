@@ -1,11 +1,12 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { CardDescription } from '../../../core/practice/drill';
 import { totals } from '../../../core/practice/stats';
 import { AccuracyGrid, AccuracyRow, accuracyCell } from '../../../core/ui/stats/accuracy-grid';
 import { ResetStats } from '../../../core/ui/stats/reset-stats';
 import { SessionHistory } from '../../../core/ui/stats/session-history';
 import { StatsOverview } from '../../../core/ui/stats/stats-overview';
-import { CardDescription, WeakestCards } from '../../../core/ui/stats/weakest-cards';
+import { WeakestCards } from '../../../core/ui/stats/weakest-cards';
 import { EAR_INTERVALS, cardFromKey, describeCard } from '../deck';
 import { PlaybackSession } from '../playback-session';
 

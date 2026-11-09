@@ -46,6 +46,29 @@ describe('PracticeLog', () => {
     expect(savedHistory()).toEqual([record]);
   });
 
+  it('keeps the times of each group, leaving out answers with no group or no time', () => {
+    const log = createLog();
+    log.start('triads');
+    log.recordAnswer(true, 2 * SECOND, '1-2-3');
+    log.recordAnswer(true, 3 * SECOND, '2-3-4');
+    log.recordAnswer(false, 4 * SECOND, '1-2-3');
+    log.recordAnswer(true, 5 * SECOND);
+    log.recordAnswer(true, null, '2-3-4');
+
+    expect(log.end()?.groups).toEqual({
+      '1-2-3': { answered: 2, totalResponseMs: 6 * SECOND },
+      '2-3-4': { answered: 1, totalResponseMs: 3 * SECOND },
+    });
+  });
+
+  it("keeps no groups for a module that doesn't group answers", () => {
+    const log = createLog();
+    log.start('notes');
+    log.recordAnswer(true, 2 * SECOND);
+
+    expect(log.end()).not.toHaveProperty('groups');
+  });
+
   it('keeps the clock still while paused', () => {
     const log = createLog();
     log.start('triads');

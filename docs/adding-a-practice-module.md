@@ -185,6 +185,7 @@ export function provideScales(): Provider[] {
 | `paused()`, `lastCorrect()`, `stats()` | For your templates and checks                                             |
 | `onStart` / `onEnd` / `onNext` options | Start and stop the mic, reset per-card state                              |
 | `timesAnswers: false` option           | Answers take a set time (a take): no response times, cards by misses only |
+| `groupOf` option                       | Sorts answers into groups (string sets in triads), timed per session      |
 
 ## 6. Routes and registry
 
@@ -322,6 +323,9 @@ Build grid cells with `accuracyCell(id, totals(stats, (key) => …))`.
 | A tempo that climbs with passed takes     | `nextLevel()`, `levelOf()` in `core/practice/tempo-ladder.ts`                                        |
 | Chords typed as symbols ("F#m7")          | `parseChordSymbol()` in `core/music/chords.ts`                                                       |
 | Show your own result instead of "Correct" | `ownResult = true` on the session (see `modules/changes/`)                                           |
+| Times by group in summary and stats       | `groupOf` on the run, `answerGroups` on the session, `<app-group-progress>` on the stats page        |
+| Slowest cards in the session summary      | `describeCard(key)` on the session                                                                   |
+| Leave out a 100% the app can't miss       | `waitsForRightAnswer` on the session: true while the app waits for the right answer (triads' mic)    |
 | Words                                     | `plural()`, `percentCorrect()`, `capitalize()` in `core/ui/text.ts`                                  |
 | Save something                            | `loadJson()` / `saveJson()` in `core/practice/storage.ts`                                            |
 

@@ -3,11 +3,21 @@ import { MicListener } from '../../core/audio/mic-listener';
 import { matchesArpeggio, matchesStrum, targetPitchClasses } from '../../core/audio/matchers';
 import { STRING_SETS } from '../../core/fretboard/tuning';
 import { ChordQuality } from '../../core/music/chords';
-import { Drill } from '../../core/practice/drill';
+import { AnswerGroups, CardDescription, Drill } from '../../core/practice/drill';
 import { PracticeRun } from '../../core/practice/practice-run';
 import { loadJson, saveJson } from '../../core/practice/storage';
 import { CHORD_QUALITIES } from './catalog';
-import { TriadCard, buildDeck, chordTarget, settingsProblems, shapesFor } from './deck';
+import {
+  TriadCard,
+  buildDeck,
+  cardFromKey,
+  cardTitle,
+  chordTarget,
+  settingsProblems,
+  shapeLabel,
+  shapesFor,
+  stringSetOf,
+} from './deck';
 import { INVERSIONS, TriadSettings, sanitizeSettings } from './settings';
 
 /** Tags this module's sessions in the shared practice log. */
@@ -30,6 +40,11 @@ export class TriadsSession implements Drill {
   readonly title = 'Triads';
   readonly unit = 'chord';
   readonly selfCheck = true;
+  readonly answerGroups: AnswerGroups = {
+    name: 'string set',
+    heading: 'Strings',
+    keys: STRING_SETS.map((set) => set.id),
+  };
 
   readonly settings = signal<TriadSettings>(sanitizeSettings(loadJson(SETTINGS_KEY)));
   readonly deck = computed(() => buildDeck(this.settings()));
@@ -44,12 +59,18 @@ export class TriadsSession implements Drill {
     return micMode !== 'off' && timeLimit > 0 ? timeLimit * 1000 : null;
   });
 
+  /** The microphone waits for the chord, so only the time limit or giving up makes a miss. */
+  readonly waitsForRightAnswer = computed(
+    () => this.settings().micMode !== 'off' && this.timeLimitMs() === null,
+  );
+
   readonly run = new PracticeRun<TriadCard>({
     module: TRIADS_MODULE,
     statsKey: STATS_KEY,
     deck: this.deck,
     problems: this.problems,
     timeLimitMs: this.timeLimitMs,
+    groupOf: (card) => stringSetOf(card, this.settings()),
     onStart: () => {
       const { micMode } = this.settings();
       if (micMode !== 'off') {
@@ -68,13 +89,16 @@ export class TriadsSession implements Drill {
     const tags = CHORD_QUALITIES.filter((quality) => settings.qualities.includes(quality.id)).map(
       qualityTag,
     );
+    const sets = settings.stringSets;
+    const allSets = sets.length === STRING_SETS.length;
     if (settings.promptDetail === 'chord') {
       tags.push('Any shape');
+      // The chosen strings narrow the shapes shown, and tell which strings a chord was played on.
+      if (!allSets) {
+        tags.push(`Strings ${sets.join(', ')}`);
+      }
     } else {
-      const sets = settings.stringSets;
-      tags.push(
-        sets.length === STRING_SETS.length ? 'All string sets' : `Strings ${sets.join(', ')}`,
-      );
+      tags.push(allSets ? 'All string sets' : `Strings ${sets.join(', ')}`);
       tags.push(
         settings.inversions.length === INVERSIONS.length
           ? 'All inversions'
@@ -129,6 +153,13 @@ export class TriadsSession implements Drill {
       }
     });
   }
+
+  readonly describeCard = (key: string): CardDescription | undefined => {
+    const card = cardFromKey(key);
+    return card
+      ? { title: cardTitle(card), detail: card.shape ? shapeLabel(card.shape) : '' }
+      : undefined;
+  };
 
   updateSettings(changes: Partial<TriadSettings>): void {
     this.settings.update((settings) => ({ ...settings, ...changes }));

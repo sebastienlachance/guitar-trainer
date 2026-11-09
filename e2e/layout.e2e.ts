@@ -20,7 +20,8 @@ test.describe('Phone width', () => {
   test.use({ viewport: { width: 375, height: 812 } });
 
   test('home and triads pages fit the screen', async ({ page }) => {
-    await seedSettings(page, 'triads', CSUS4_ONLY);
+    // On one string set, so the session is timed by string set.
+    await seedSettings(page, 'triads', { ...CSUS4_ONLY, stringSets: ['2-3-4'] });
 
     await page.goto('/#/');
     await expectFitsWidth(page, 'Home');
@@ -32,9 +33,13 @@ test.describe('Phone width', () => {
     await expect(page.getByRole('list', { name: 'Chord tones' })).toBeVisible();
     await expectFitsWidth(page, 'Triads answer');
     await page.getByRole('button', { name: /Got it/ }).click();
+    await page.getByRole('button', { name: 'End session' }).click();
+    await expect(page.getByText('per chord')).toBeVisible();
+    await expectFitsWidth(page, 'Triads summary');
 
     await page.goto('/#/triads/stats');
     await expect(page.getByRole('heading', { name: 'By chord' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'By string set' })).toBeVisible();
     await expectFitsWidth(page, 'Triads stats');
   });
 

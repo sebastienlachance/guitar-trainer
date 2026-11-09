@@ -84,9 +84,11 @@ the rest, most useful first in each group.
   `StatsStore`, not takes or tempo levels, and changes, play along and progressions don't offer it.
 - **Stats keys leave out difficulty.** Notes' `"G|neck"` is one card for 3 strings to fret 5 and
   for 6 strings to fret 15; identify uses one key for 4 and for 12 choices. Speed progress then
-  compares unlike tasks.
-- **Session history** is the one store without a cap (about 160 bytes a session, years from the
-  quota). If capped, keep a rolled-up total for the history totals and the home week summary.
+  compares unlike tasks. Triads' Chord only keys (`"C|sus4"`) leave out the string set too: the
+  "By chord" grid and the scheduler mix every string set. Sessions keep times by string set
+  (`groups`), so a split could start from those.
+- **Session history** is the one store without a cap (about 160 bytes a session, plus about 50
+  for each string set in triads, years from the quota). If capped, keep a rolled-up total for the history totals and the home week summary.
 - `chip-toggles.ts` adds picks in click order, so tags read "on strings 5, 1, 3" until a reload
   puts them in catalog order. Emit in the options' order.
 

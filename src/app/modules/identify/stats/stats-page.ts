@@ -1,5 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { CardDescription } from '../../../core/practice/drill';
 import { STRING_NUMBERS, stringLabel } from '../../../core/fretboard/tuning';
 import { commonNoteName } from '../../../core/music/notes';
 import { totals } from '../../../core/practice/stats';
@@ -7,7 +8,7 @@ import { AccuracyGrid, AccuracyRow, accuracyCell } from '../../../core/ui/stats/
 import { ResetStats } from '../../../core/ui/stats/reset-stats';
 import { SessionHistory } from '../../../core/ui/stats/session-history';
 import { StatsOverview } from '../../../core/ui/stats/stats-overview';
-import { CardDescription, WeakestCards } from '../../../core/ui/stats/weakest-cards';
+import { WeakestCards } from '../../../core/ui/stats/weakest-cards';
 import { cardFromKey } from '../deck';
 import { IdentifySession } from '../identify-session';
 

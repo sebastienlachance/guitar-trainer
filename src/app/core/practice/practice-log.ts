@@ -2,6 +2,7 @@ import { DestroyRef, Service, computed, inject, signal } from '@angular/core';
 import {
   OpenSession,
   SessionRecord,
+  addToGroup,
   closeSession,
   elapsedMs,
   isIdle,
@@ -78,8 +79,11 @@ export class PracticeLog {
     this.updateOpen((session) => ({ ...session, timer: touchTimer(session.timer, now) }));
   }
 
-  /** An answer, with its response time, or null in a session that keeps none. Ends a pause. */
-  recordAnswer(correct: boolean, responseMs: number | null): void {
+  /**
+   * An answer, with its response time, or null in a session that keeps none, and the group it
+   * falls in (a string set, say), or null. Ends a pause.
+   */
+  recordAnswer(correct: boolean, responseMs: number | null, group: string | null = null): void {
     const now = this.tick();
     this.updateOpen((session) => ({
       ...session,
@@ -88,6 +92,9 @@ export class PracticeLog {
       correct: session.correct + (correct ? 1 : 0),
       totalResponseMs:
         responseMs === null ? session.totalResponseMs : (session.totalResponseMs ?? 0) + responseMs,
+      ...(group !== null && responseMs !== null
+        ? { groups: addToGroup(session.groups ?? {}, group, responseMs) }
+        : {}),
     }));
     this.endPause(now);
     this.saveSnapshot();

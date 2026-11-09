@@ -129,6 +129,18 @@ export function cardTitle(card: TriadCard): string {
   return chordSymbol(card.root, card.quality);
 }
 
+/**
+ * The string set a card is played on: its shape's, or, for a chord asked in any shape, the only
+ * set the settings leave for it. Null when there are several.
+ */
+export function stringSetOf(card: TriadCard, settings: TriadSettings): string | null {
+  if (card.shape) {
+    return card.shape.stringSet.id;
+  }
+  const sets = new Set(shapesFor(card.quality, settings).map((shape) => shape.stringSet.id));
+  return sets.size === 1 ? [...sets][0] : null;
+}
+
 /** E.g. "Drop 2 · 1st inversion · strings 1-2-3-4". */
 export function shapeLabel(shape: Shape): string {
   return [KIND_LABELS[shape.kind], inversionName(shape.inversion), `strings ${shape.stringSet.id}`]

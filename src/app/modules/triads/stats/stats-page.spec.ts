@@ -128,6 +128,50 @@ describe('StatsPage', () => {
     ]);
   });
 
+  it('times each string set, at first and lately, and shows the strings of each session', async () => {
+    const now = Date.now();
+    const HOUR = 60 * MINUTE;
+    const on = (key: string, eachMs: number) => ({
+      [key]: { answered: 10, totalResponseMs: 10 * eachMs },
+    });
+    const timed = (startedAt: number, eachMs: number, groups?: object) => ({
+      ...session('triads', startedAt, 5, 10, 10),
+      totalResponseMs: 10 * eachMs,
+      ...(groups ? { groups } : {}),
+    });
+    saveSessions([
+      timed(now - 10 * MINUTE, 3400, on('3-4-5', 3400)),
+      timed(now - 20 * MINUTE, 2000, { ...on('4-5-6', 2000), ...on('2-3-4', 2000) }),
+      timed(now - 30 * MINUTE, 2000),
+      ...[1600, 1600, 1600, 2900, 2900, 2900].map((eachMs, i) =>
+        timed(now - (i + 1) * HOUR, eachMs, on('1-2-3', eachMs)),
+      ),
+    ]);
+    await render(StatsPage, { providers: [...provideTriads(), provideRouter([])] });
+
+    const bySet = within(screen.getByRole('region', { name: 'By string set' }));
+    const cells = (row: HTMLElement) =>
+      within(row)
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent?.trim());
+    expect(bySet.getAllByRole('row').slice(1).map(cells)).toEqual([
+      ['1-2-3', '6', '2.9 s', '1.6 s'],
+      ['2-3-4', '1', '–', '2.0 s'],
+      ['3-4-5', '1', '–', '3.4 s'],
+      ['4-5-6', '1', '–', '2.0 s'],
+    ]);
+    expect(bySet.getByRole('cell', { name: '1.6 s' })).toHaveClass('fast');
+    expect(bySet.getByText(/counts here when you picked a single string set/)).toBeInTheDocument();
+
+    const sessions = within(screen.getByRole('region', { name: 'Sessions' }));
+    expect(sessions.getByRole('columnheader', { name: 'Strings' })).toBeInTheDocument();
+    const strings = sessions
+      .getAllByRole('row')
+      .slice(1, 4)
+      .map((row) => cells(row)[1]);
+    expect(strings).toEqual(['3-4-5', '2 string sets', '–']);
+  });
+
   it('leaves the section out before any session', async () => {
     await render(StatsPage, { providers: [...provideTriads(), provideRouter([])] });
     expect(screen.queryByRole('region', { name: 'Sessions' })).not.toBeInTheDocument();

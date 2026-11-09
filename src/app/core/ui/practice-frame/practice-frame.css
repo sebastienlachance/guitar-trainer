@@ -75,36 +75,6 @@
   font-size: 22px;
 }
 
-.saved {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin: 0;
-  color: var(--success);
-  font-size: 14px;
-}
-
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-  gap: 10px;
-  margin: 16px 0 4px;
-  text-align: left;
-}
-
-.metric {
-  padding: 10px 14px;
-  border-radius: var(--radius);
-  background: var(--raised);
-  font-size: 12px;
-}
-
-.metric strong {
-  display: block;
-  font-size: 22px;
-  font-weight: 500;
-}
-
 .actions {
   display: flex;
   justify-content: center;

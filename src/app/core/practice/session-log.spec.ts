@@ -1,6 +1,7 @@
 import {
   IDLE_LIMIT_MS,
   SessionRecord,
+  addToGroup,
   answersPerMinute,
   averageAnswerMs,
   closeSession,
@@ -74,6 +75,26 @@ describe('active timer', () => {
       totalResponseMs: 10 * SECOND,
     });
   });
+
+  it('keeps the times by group, when the module groups answers', () => {
+    const open = {
+      module: 'triads',
+      startedAt: 0,
+      timer: startTimer(0),
+      answered: 3,
+      correct: 3,
+      totalResponseMs: 6 * SECOND,
+      groups: addToGroup(
+        addToGroup(addToGroup({}, '1-2-3', SECOND), '2-3-4', 3 * SECOND),
+        '1-2-3',
+        2 * SECOND,
+      ),
+    };
+    expect(closeSession(open, 90 * SECOND).groups).toEqual({
+      '1-2-3': { answered: 2, totalResponseMs: 3 * SECOND },
+      '2-3-4': { answered: 1, totalResponseMs: 3 * SECOND },
+    });
+  });
 });
 
 describe('session pace', () => {
@@ -141,6 +162,10 @@ describe('saved data checks', () => {
     expect(isSessionRecords([{ ...record, totalResponseMs: 900 }])).toBe(true);
     expect(isSessionRecords([{ ...record, totalResponseMs: '900' }])).toBe(false);
     expect(isSessionRecords([{ ...record, answered: '1' }])).toBe(false);
+    const groups = { '1-2-3': { answered: 1, totalResponseMs: 900 } };
+    expect(isSessionRecords([{ ...record, groups }])).toBe(true);
+    expect(isSessionRecords([{ ...record, groups: { '1-2-3': { answered: 1 } } }])).toBe(false);
+    expect(isSessionRecords([{ ...record, groups: [] }])).toBe(false);
     expect(isSessionRecords({})).toBe(false);
   });
 
@@ -148,6 +173,8 @@ describe('saved data checks', () => {
     const open = { module: 'triads', startedAt: 0, timer: startTimer(0), answered: 0, correct: 0 };
     expect(isOpenSession(open)).toBe(true);
     expect(isOpenSession({ ...open, timer: null })).toBe(false);
+    expect(isOpenSession({ ...open, groups: {} })).toBe(true);
+    expect(isOpenSession({ ...open, groups: { '1-2-3': null } })).toBe(false);
     expect(isOpenSession(null)).toBe(false);
   });
 });

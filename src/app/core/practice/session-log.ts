@@ -54,6 +54,35 @@ export function isIdle(timer: ActiveTimer, now: number): boolean {
   return !timer.paused && now - timer.lastActivity >= IDLE_LIMIT_MS;
 }
 
+/** The answers in one group of a session, such as one string set, and their summed times. */
+export interface GroupTotals {
+  readonly answered: number;
+  readonly totalResponseMs: number;
+}
+
+/**
+ * A session's timed answers by the group the module put them in, such as triads' string sets.
+ * Answers with no known group are left out.
+ */
+export type SessionGroups = Readonly<Record<string, GroupTotals>>;
+
+/** Adds a timed answer to its group. */
+export function addToGroup(groups: SessionGroups, key: string, responseMs: number): SessionGroups {
+  const group = groups[key] ?? { answered: 0, totalResponseMs: 0 };
+  return {
+    ...groups,
+    [key]: { answered: group.answered + 1, totalResponseMs: group.totalResponseMs + responseMs },
+  };
+}
+
+/** One answer of a session, kept in memory for its summary. */
+export interface SessionAnswer {
+  /** The card's stats key. */
+  readonly key: string;
+  readonly correct: boolean;
+  readonly responseMs: number | null;
+}
+
 /** A session in progress. */
 export interface OpenSession {
   /** Module the session belongs to, e.g. "triads". */
@@ -64,6 +93,8 @@ export interface OpenSession {
   readonly correct: number;
   /** Sum of the answers' response times; missing in snapshots from older versions. */
   readonly totalResponseMs?: number;
+  /** Missing when the module doesn't group answers, and in snapshots from older versions. */
+  readonly groups?: SessionGroups;
 }
 
 /** A finished session as kept in the history. */
@@ -77,6 +108,8 @@ export interface SessionRecord {
   readonly correct: number;
   /** Sum of the answers' response times; missing in sessions saved by older versions. */
   readonly totalResponseMs?: number;
+  /** Missing when the module doesn't group answers, and in sessions saved by older versions. */
+  readonly groups?: SessionGroups;
 }
 
 export function closeSession(session: OpenSession, now: number): SessionRecord {
@@ -89,6 +122,7 @@ export function closeSession(session: OpenSession, now: number): SessionRecord {
     answered: session.answered,
     correct: session.correct,
     ...(session.totalResponseMs === undefined ? {} : { totalResponseMs: session.totalResponseMs }),
+    ...(session.groups === undefined ? {} : { groups: session.groups }),
   };
 }
 
@@ -120,11 +154,24 @@ function hasOptionalNumber(value: unknown, field: string): boolean {
   return found === undefined || typeof found === 'number';
 }
 
+/** Groups, added in a later version: absent in older saved data. */
+function hasOptionalGroups(value: unknown): boolean {
+  const groups = (value as Record<string, unknown>)['groups'];
+  return (
+    groups === undefined ||
+    (typeof groups === 'object' &&
+      groups !== null &&
+      !Array.isArray(groups) &&
+      Object.values(groups).every((group) => hasNumbers(group, ['answered', 'totalResponseMs'])))
+  );
+}
+
 /** Structural check for a session snapshot read back from storage. */
 export function isOpenSession(value: unknown): value is OpenSession {
   return (
     hasNumbers(value, ['startedAt', 'answered', 'correct']) &&
     hasOptionalNumber(value, 'totalResponseMs') &&
+    hasOptionalGroups(value) &&
     typeof (value as Record<string, unknown>)['module'] === 'string' &&
     hasNumbers((value as Record<string, unknown>)['timer'], ['accumulatedMs', 'lastActivity'])
   );
@@ -138,6 +185,7 @@ export function isSessionRecords(value: unknown): value is SessionRecord[] {
       (record) =>
         hasNumbers(record, ['startedAt', 'endedAt', 'activeMs', 'answered', 'correct']) &&
         hasOptionalNumber(record, 'totalResponseMs') &&
+        hasOptionalGroups(record) &&
         typeof (record as Record<string, unknown>)['id'] === 'string' &&
         typeof (record as Record<string, unknown>)['module'] === 'string',
     )

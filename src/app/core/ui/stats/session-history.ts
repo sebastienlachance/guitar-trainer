@@ -2,6 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { Drill } from '../../practice/drill';
 import { PracticeLog } from '../../practice/practice-log';
 import {
+  SessionRecord,
   answersPerMinute,
   averageAnswerMs,
   formatDuration,
@@ -33,6 +34,9 @@ const CHARTED = 30;
             <thead>
               <tr>
                 <th scope="col">When</th>
+                @if (groups) {
+                  <th scope="col">{{ groups.heading }}</th>
+                }
                 <th scope="col">Time</th>
                 <th scope="col">{{ unitLabel }}</th>
                 <th scope="col">Per min</th>
@@ -46,6 +50,9 @@ const CHARTED = 30;
               @for (row of history().rows; track row.id) {
                 <tr>
                   <td>{{ row.when }}</td>
+                  @if (groups) {
+                    <td [class.muted]="row.group === '–'">{{ row.group }}</td>
+                  }
                   <td>{{ row.time }}</td>
                   <td>{{ row.answered }}</td>
                   <td>{{ row.perMinute }}</td>
@@ -113,6 +120,8 @@ export class SessionHistory {
   protected readonly unitLabel = capitalize(this.drill.unit + 's');
   /** Whether answers are timed: a take's time is set by the take, so it says nothing. */
   protected readonly timed = this.drill.run.timesAnswers;
+  /** Sorts answers into groups, such as string sets: each session shows which it covered. */
+  protected readonly groups = this.drill.answerGroups;
 
   protected readonly history = computed(() => {
     const module = this.drill.run.module;
@@ -134,6 +143,7 @@ export class SessionHistory {
         return {
           id: record.id,
           when: formatSessionStart(record.startedAt, now),
+          group: this.groupText(record),
           time: formatDuration(record.activeMs),
           answered: record.answered,
           perMinute: perMinute === null ? '–' : perMinute.toFixed(1),
@@ -144,4 +154,13 @@ export class SessionHistory {
       }),
     };
   });
+
+  /** "2-3-4", "3 string sets", or a dash when no group is known. */
+  private groupText(record: SessionRecord): string {
+    const keys = Object.keys(record.groups ?? {});
+    if (keys.length === 0 || !this.groups) {
+      return '–';
+    }
+    return keys.length === 1 ? keys[0] : plural(keys.length, this.groups.name);
+  }
 }
