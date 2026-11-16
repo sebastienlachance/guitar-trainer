@@ -32,6 +32,9 @@ const ICON_PATHS = {
   metronome: 'M8 20l3 -16h2l3 16zM12 14l5 -7',
   ear: 'M7 9a5 5 0 0 1 10 0c0 3 -3 4 -3 7a3 3 0 0 1 -5 2M10 9a2 2 0 0 1 4 0',
   bend: 'M4 18c6 0 8 -2 9 -6s2 -6 7 -6M17 3l3 3l-3 3',
+  // Notes round a circle, with C bigger at the top.
+  circle:
+    'M10 5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M16.7 8.5a1.4 1.4 0 1 0 2.8 0a1.4 1.4 0 1 0 -2.8 0M16.7 15.5a1.4 1.4 0 1 0 2.8 0a1.4 1.4 0 1 0 -2.8 0M10.6 19a1.4 1.4 0 1 0 2.8 0a1.4 1.4 0 1 0 -2.8 0M4.5 15.5a1.4 1.4 0 1 0 2.8 0a1.4 1.4 0 1 0 -2.8 0M4.5 8.5a1.4 1.4 0 1 0 2.8 0a1.4 1.4 0 1 0 -2.8 0',
 } as const;
 
 export type IconName = keyof typeof ICON_PATHS;

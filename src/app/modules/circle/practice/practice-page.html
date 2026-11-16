@@ -1,0 +1,29 @@
+<app-practice-frame [prompt]="prompt" />
+
+<ng-template #prompt>
+  @if (card(); as card) {
+    <div class="question" aria-live="polite">
+      <p class="ask muted">What comes after</p>
+      <h1>
+        <span class="note">{{ fromLabel() }}</span
+        >{{ ' ' }}<span class="direction">{{ direction() }}</span>
+      </h1>
+    </div>
+
+    @if (session.micOn()) {
+      <app-mic-status hint="play it anywhere on the neck" />
+    }
+
+    <app-choice-buttons
+      label="Note names"
+      [options]="options"
+      [checked]="checked()"
+      [takesFocus]="true"
+      (chosen)="session.answer($event)"
+    />
+
+    @if (run.phase() === 'answered') {
+      <app-circle-diagram [from]="card.from" [to]="card.answer" [wrong]="wrongPick()" />
+    }
+  }
+</ng-template>

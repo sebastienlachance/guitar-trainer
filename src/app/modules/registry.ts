@@ -120,4 +120,13 @@ export const MODULES: readonly TrainerModule[] = [
     loadRoutes: () =>
       import('./progressions/progressions.routes').then((m) => m.PROGRESSIONS_ROUTES),
   },
+  {
+    path: 'circle',
+    title: 'Circle of fifths',
+    description: 'Name the next note round the circle',
+    group: 'chords',
+    icon: 'circle',
+    listens: true,
+    loadRoutes: () => import('./circle/circle.routes').then((m) => m.CIRCLE_ROUTES),
+  },
 ];

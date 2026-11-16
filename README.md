@@ -22,6 +22,8 @@ Practise guitar until the fretboard is automatic. Each kind of exercise is a **m
   the bend draws as you play it.
 - **Progressions:** play a chord progression with the metronome, each chord on its beat, faster as
   it gets clean.
+- **Circle of fifths:** a note, say **E♭**, and you name the next one round the circle: in fourths
+  (C F B♭ E♭ A♭ D♭ G♭ B E A D G), in fifths, or both. Tap the name or play the note.
 
 There's also a **tuner**, a button at the top of the home screen. The home screen groups the
 modules (know the neck; chords; rhythm, ear and technique), marks the ones that listen through the
@@ -165,6 +167,15 @@ Progress is saved in each browser, so a phone and a computer keep separate stats
   move it up 4 bpm, two failed takes in a row move it down 4
 - Stats: each progression's tempo now and best, and a chart of tempo take after take
 
+**Circle of fifths**
+
+- In fourths (E♭ → A♭), in fifths (E♭ → B♭), or both mixed; from every note or the ones you pick
+- Notes spelled as the circle is usually recited: flats down to G♭, then B, E, A, D, G
+- Answer with one of the twelve names (arrow keys and Enter), or play the note anywhere on the
+  neck: any octave counts, and a wrong note played isn't held against you
+- After answering, a circle shows the step, with a wrong answer marked
+- Stats: seconds or accuracy for each note, in each direction
+
 **Tuner**
 
 - The note you play, how many cents it's off (A = 440), and which way to turn the peg of its
@@ -238,6 +249,7 @@ src/app/
     playback/             play it back: ear training, answered on the guitar
     bends/                bends: pitch held in tune, read like the tuner
     progressions/         progressions: chords on the beat, with the metronome
+    circle/               circle of fifths: the next note round, tapped or played
   home/                   home screen
   tuner/                  the tuner page
 docs/

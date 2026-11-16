@@ -44,7 +44,7 @@ describe('Home', () => {
     const chords = within(screen.getByRole('region', { name: 'Chords' }));
     expect(
       chords.getAllByRole('link').map((link) => link.querySelector('.title')?.textContent),
-    ).toEqual(['Triads', 'Chord changes', 'Progressions']);
+    ).toEqual(['Triads', 'Chord changes', 'Progressions', 'Circle of fifths']);
     expect(screen.getByRole('region', { name: 'Know the neck' })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'Rhythm, ear and technique' })).toBeInTheDocument();
   });

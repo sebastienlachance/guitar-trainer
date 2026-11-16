@@ -1,0 +1,42 @@
+<h1 class="visually-hidden">Set up circle of fifths practice</h1>
+
+<section class="panel">
+  <h2>Which way round</h2>
+  <app-chip-toggles
+    label="Directions"
+    [hideLabel]="true"
+    [options]="directionChips"
+    [selected]="settings().directions"
+    (selectedChange)="update({ directions: $event })"
+  />
+</section>
+
+<section class="panel">
+  <div class="heading-row">
+    <h2>Notes to start from</h2>
+    <button type="button" class="link" (click)="selectAllNotes()">All</button>
+  </div>
+  <app-chip-toggles
+    label="Notes"
+    [hideLabel]="true"
+    [options]="noteChips"
+    [selected]="settings().notes"
+    (selectedChange)="update({ notes: $event })"
+  />
+</section>
+
+<section class="panel">
+  <h2>Microphone</h2>
+  <app-segmented-choice
+    label="Microphone mode"
+    [hideLabel]="true"
+    [options]="micChoices"
+    [value]="settings().micMode"
+    (valueChange)="update({ micMode: $event })"
+  />
+  @if (settings().micMode !== 'off') {
+    <app-input-picker />
+  }
+</section>
+
+<app-setup-start />

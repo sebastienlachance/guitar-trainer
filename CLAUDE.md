@@ -90,6 +90,8 @@ routing, storage, focus or the microphone changed.
   `bends/` follows a bend with the tuner's pitch reading and the mic's attack count (`BendJudge`,
   pure). `progressions/` times strikes with `RhythmListener` (the metronome's clock, deaf to its
   tick) and checks which chord each sounds like with `MicListener`'s spectrum, both open at once.
+  `circle/` asks the next note round the circle of fifths (`core/music/circle.ts`), answered
+  with the choice buttons or by playing the note, and shows the step on `core/ui/circle-diagram.ts`.
 - `src/app/tuner/`: the tuner, a page of its own (no sessions or stats, so not a module), linked
   from the home page's header.
 - `src/app/home/`: the home screen: the modules in groups of tiles, and "pick up where you left
@@ -297,13 +299,16 @@ routing, storage, focus or the microphone changed.
   `playwright install --with-deps` without warning. Move to a newer image on purpose, in its own
   commit, once Playwright supports it.
 
-## Where things stand (2026-10-20)
+## Where things stand (2026-11-16)
 
 - **Modules:** triads, fretboard notes, identify notes, identify scales, intervals in a scale,
   play along (rhythm, with strumming patterns), chord changes, play it back, bends,
-  progressions. Live
+  progressions, circle of fifths. Live
   at https://sebastienlachance.github.io/guitar-trainer/ as an installable PWA.
 - **Recently added:**
+  - circle of fifths (2026-11-16), asked for by the owner: name the next note in fourths (the
+    order the owner recites: C F B♭ E♭ A♭ D♭ G♭ B E A D G) or fifths, by tapping or playing it.
+    The owner chose random cards over a lap round the circle. Not yet tried by the owner
   - stats measure progress by speed (progress chart, speed grid, slow cards come up more)
   - an optional time limit in triads with the mic
   - mic successes in triads move straight to the next chord (strums must be fresh)

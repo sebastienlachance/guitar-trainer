@@ -30,6 +30,18 @@ test.describe('Microphone: playing another note', () => {
   });
 });
 
+test.describe('Microphone: playing the next note round the circle', () => {
+  test.use({ recording: 'a3' });
+
+  test('answers the card', async ({ micPage: page }) => {
+    // E in fourths: the answer is A.
+    await seedSettings(page, 'circle', { directions: ['fourths'], notes: ['E'], micMode: 'play' });
+    await startSession(page, 'circle');
+
+    await expect(correctResult(page)).toBeVisible({ timeout: 10_000 });
+  });
+});
+
 test.describe('Microphone: playing the asked interval', () => {
   test.use({ recording: 'a3' });
 

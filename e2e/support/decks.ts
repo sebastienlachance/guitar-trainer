@@ -37,3 +37,6 @@ export const MINOR_THIRD_IN_F_SHARP = {
   maxFret: 12,
   micMode: 'off',
 };
+
+/** Circle of fifths: the prompt is always E♭ in fourths, whose answer is A♭. */
+export const E_FLAT_IN_FOURTHS = { directions: ['fourths'], notes: ['Eb'], micMode: 'off' };

@@ -1,0 +1,37 @@
+.question {
+  text-align: center;
+  padding: 16px 0 10px;
+}
+
+.ask {
+  font-size: 13px;
+  margin: 0 0 4px;
+}
+
+h1 {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0 12px;
+}
+
+.note {
+  font-size: clamp(44px, 12vw, 60px);
+  line-height: 1.1;
+}
+
+/* Both directions can come up in one session, so the direction must stand out. */
+.direction {
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--accent);
+}
+
+app-mic-status {
+  margin-bottom: 12px;
+}
+
+app-circle-diagram {
+  margin-top: 16px;
+}

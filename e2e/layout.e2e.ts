@@ -10,6 +10,7 @@ import {
 } from './support/app';
 import {
   CSUS4_ONLY,
+  E_FLAT_IN_FOURTHS,
   E_ON_A_STRING,
   F_SHARP_ON_A,
   MAJOR_OR_MINOR_PENTATONIC,
@@ -106,6 +107,29 @@ test.describe('Phone width, identify scales', () => {
     await page.goto('/#/scales/stats');
     await expect(page.getByRole('heading', { name: 'Accuracy by scale' })).toBeVisible();
     await expectFitsWidth(page, 'Scales stats');
+  });
+});
+
+test.describe('Phone width, circle of fifths', () => {
+  test.use({ viewport: { width: 375, height: 812 } });
+
+  test('circle of fifths pages fit the screen', async ({ page }) => {
+    await seedSettings(page, 'circle', E_FLAT_IN_FOURTHS);
+
+    await page.goto('/#/circle');
+    await expectFitsWidth(page, 'Circle setup');
+
+    await startSession(page, 'circle');
+    await page
+      .getByRole('group', { name: 'Note names' })
+      .getByRole('button', { name: 'B♭', exact: true })
+      .click();
+    await expect(page.getByRole('img', { name: 'Circle of fifths: E♭ to A♭, not B♭' })).toBeVisible();
+    await expectFitsWidth(page, 'Circle answer');
+
+    await page.goto('/#/circle/stats');
+    await expect(page.getByRole('heading', { name: 'By note' })).toBeVisible();
+    await expectFitsWidth(page, 'Circle stats');
   });
 });
 

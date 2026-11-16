@@ -1,0 +1,40 @@
+<h1 class="visually-hidden">Circle of fifths stats</h1>
+
+<app-stats-overview />
+<app-session-history />
+
+@if (hasAnswers()) {
+  <section class="panel">
+    <div class="heading-row">
+      <h2>By note</h2>
+      <app-segmented-choice
+        label="Measure"
+        [hideLabel]="true"
+        [options]="measures"
+        [value]="measure()"
+        (valueChange)="measure.set($event)"
+      />
+    </div>
+    <app-accuracy-grid [columns]="notes" [rows]="grid()" rowHeader="Direction" />
+    <p class="hint">
+      @if (measure() === 'time') {
+        Seconds to name the next note, lately. Green under 2, amber 2 to 4, red over 4.
+      } @else {
+        Share of right answers. With the microphone, only a wrong tap is a miss.
+      }
+    </p>
+  </section>
+
+  <section class="panel">
+    <h2>Practise these more</h2>
+    <app-weakest-cards [describe]="describeCard" />
+  </section>
+
+  <app-reset-stats />
+} @else {
+  <section class="panel">
+    <h2>No answers yet</h2>
+    <p class="muted">Your time and accuracy per note show up here once you've practised.</p>
+    <a routerLink="../practice" class="btn btn-primary">Go to practice</a>
+  </section>
+}
