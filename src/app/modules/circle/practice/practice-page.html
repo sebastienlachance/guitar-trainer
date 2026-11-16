@@ -1,29 +1,57 @@
-<app-practice-frame [prompt]="prompt" />
+<app-practice-frame [prompt]="question" />
 
-<ng-template #prompt>
+<ng-template #question>
   @if (card(); as card) {
-    <div class="question" aria-live="polite">
-      <p class="ask muted">What comes after</p>
-      <h1>
-        <span class="note">{{ fromLabel() }}</span
-        >{{ ' ' }}<span class="direction">{{ direction() }}</span>
-      </h1>
-    </div>
-
-    @if (session.micOn()) {
-      <app-mic-status hint="play it anywhere on the neck" />
+    @if (prompt(); as words) {
+      <div class="question" aria-live="polite">
+        <p class="ask muted">{{ words.ask }}</p>
+        <h1>
+          <span class="subject">{{ words.subject }}</span>
+          @if (words.detail) {
+            {{ ' ' }}<span class="detail">{{ words.detail }}</span>
+          }
+        </h1>
+        @if (lapLine()) {
+          <p class="lap">{{ lapLine() }}</p>
+        }
+        @if (shapeHint()) {
+          <p class="shape">{{ shapeHint() }}</p>
+        }
+      </div>
     }
 
-    <app-choice-buttons
-      label="Note names"
-      [options]="options"
-      [checked]="checked()"
-      [takesFocus]="true"
-      (chosen)="session.answer($event)"
-    />
+    @if (session.micOn()) {
+      <app-mic-status [hint]="micHint()" />
+    }
 
-    @if (run.phase() === 'answered') {
-      <app-circle-diagram [from]="card.from" [to]="card.answer" [wrong]="wrongPick()" />
+    @if (card.kind === 'neck') {
+      <div class="board">
+        <app-fretboard
+          [dots]="dots()"
+          [window]="window()"
+          [selectable]="run.phase() === 'prompt'"
+          [cursorStart]="cursorStart()"
+          [takesFocus]="true"
+          [description]="boardDescription()"
+          (picked)="session.pick($event)"
+        />
+      </div>
+    } @else {
+      <app-choice-buttons
+        [label]="optionsLabel()"
+        [options]="options()"
+        [checked]="checked()"
+        [takesFocus]="true"
+        (chosen)="session.answer($event)"
+      />
+      @if (diagram(); as diagram) {
+        <app-circle-diagram
+          [from]="diagram.from"
+          [to]="diagram.to"
+          [clockwise]="diagram.clockwise"
+          [wrong]="diagram.wrong"
+        />
+      }
     }
   }
 </ng-template>

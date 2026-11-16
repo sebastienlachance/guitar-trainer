@@ -16,6 +16,7 @@ function createRun(
     advanceAfterCorrect?: boolean;
     timesAnswers?: boolean;
     groupOf?: (card: { key: string }) => string | null;
+    pickNext?: (previous: { key: string } | null) => { key: string } | null;
   } = {},
 ) {
   return TestBed.runInInjectionContext(
@@ -31,6 +32,7 @@ function createRun(
         advanceAfterCorrect: options.advanceAfterCorrect,
         timesAnswers: options.timesAnswers,
         groupOf: options.groupOf,
+        pickNext: options.pickNext,
       }),
   );
 }
@@ -264,6 +266,28 @@ describe('PracticeRun', () => {
     expect(run.lastSession()?.groups).toEqual({
       'strings 1-2-3': { answered: 1, totalResponseMs: 1500 },
     });
+  });
+
+  it('lets the module pick the next card, and the scheduler pick when it passes', () => {
+    // Follows a, b, c in order, then leaves the pick to the scheduler.
+    const order = ['a', 'b', 'c'];
+    const run = createRun({
+      pickNext: (previous) => {
+        const index = previous ? order.indexOf(previous.key) + 1 : 0;
+        return index < order.length ? { key: order[index] } : null;
+      },
+    });
+
+    run.start();
+    const shown = [run.current()?.key];
+    for (let card = 0; card < 3; card++) {
+      run.resolve(true);
+      vi.advanceTimersByTime(AUTO_ADVANCE_MS);
+      shown.push(run.current()?.key);
+    }
+
+    expect(shown.slice(0, 3)).toEqual(['a', 'b', 'c']);
+    expect(['a', 'b']).toContain(shown[3]);
   });
 
   describe('with a time limit', () => {

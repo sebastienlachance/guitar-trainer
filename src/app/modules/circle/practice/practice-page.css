@@ -16,16 +16,30 @@ h1 {
   gap: 0 12px;
 }
 
-.note {
+.subject {
   font-size: clamp(44px, 12vw, 60px);
   line-height: 1.1;
 }
 
 /* Both directions can come up in one session, so the direction must stand out. */
-.direction {
+.detail {
   font-size: 20px;
   font-weight: 400;
   color: var(--accent);
+}
+
+.lap,
+.shape {
+  margin: 6px 0 0;
+  font-size: 14px;
+}
+
+.lap {
+  color: var(--text-muted);
+}
+
+.shape {
+  color: var(--success);
 }
 
 app-mic-status {
@@ -34,4 +48,11 @@ app-mic-status {
 
 app-circle-diagram {
   margin-top: 16px;
+}
+
+/* A few frets only, so the board fits a phone with frets big enough to tap. */
+.board {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 4px 0;
 }

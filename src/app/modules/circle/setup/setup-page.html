@@ -1,19 +1,63 @@
 <h1 class="visually-hidden">Set up circle of fifths practice</h1>
 
 <section class="panel">
-  <h2>Which way round</h2>
-  <app-chip-toggles
-    label="Directions"
+  <h2>Exercise</h2>
+  <app-segmented-choice
+    label="Exercise"
     [hideLabel]="true"
-    [options]="directionChips"
-    [selected]="settings().directions"
-    (selectedChange)="update({ directions: $event })"
+    [options]="exerciseChoices"
+    [value]="settings().exercise"
+    (valueChange)="update({ exercise: $event })"
   />
 </section>
 
+@if (settings().exercise === 'keys') {
+  <section class="panel">
+    <h2>Questions</h2>
+    <app-chip-toggles
+      label="Questions"
+      [hideLabel]="true"
+      [options]="keyQuestionChips"
+      [selected]="settings().keyQuestions"
+      (selectedChange)="update({ keyQuestions: $event })"
+    />
+    <p class="hint">
+      How many flats in A♭ major? Which major key has 3♯? What is the relative minor of E♭?
+    </p>
+  </section>
+} @else {
+  <section class="panel">
+    <h2>Which way round</h2>
+    <app-chip-toggles
+      label="Directions"
+      [hideLabel]="true"
+      [options]="directionChips"
+      [selected]="settings().directions"
+      (selectedChange)="update({ directions: $event })"
+    />
+    @if (settings().exercise === 'next') {
+      <app-segmented-choice
+        label="Order"
+        [options]="orderChoices"
+        [value]="settings().order"
+        (valueChange)="update({ order: $event })"
+      />
+      @if (settings().order === 'random') {
+        <app-chip-toggles
+          label="Steps round"
+          [options]="stepChips"
+          [selected]="settings().steps"
+          (selectedChange)="update({ steps: $event })"
+        />
+        <p class="hint">2 steps after E♭ in fourths: A♭, then D♭.</p>
+      }
+    }
+  </section>
+}
+
 <section class="panel">
   <div class="heading-row">
-    <h2>Notes to start from</h2>
+    <h2>{{ notesHeading() }}</h2>
     <button type="button" class="link" (click)="selectAllNotes()">All</button>
   </div>
   <app-chip-toggles
@@ -30,7 +74,7 @@
   <app-segmented-choice
     label="Microphone mode"
     [hideLabel]="true"
-    [options]="micChoices"
+    [options]="micChoices()"
     [value]="settings().micMode"
     (valueChange)="update({ micMode: $event })"
   />

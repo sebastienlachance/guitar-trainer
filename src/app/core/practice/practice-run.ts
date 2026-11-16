@@ -54,6 +54,11 @@ export interface PracticeRunOptions<C extends PracticeCard> {
    * when that isn't known. Sessions then keep each group's times.
    */
   groupOf?(card: C): string | null;
+  /**
+   * Picks the next card in place of the scheduler, for cards that follow an order (a lap round
+   * the circle of fifths, where each answer is the next question). Null lets the scheduler pick.
+   */
+  pickNext?(previous: C | null): C | null;
 }
 
 /** A running countdown for the current card, for drawing it. */
@@ -237,9 +242,10 @@ export class PracticeRun<C extends PracticeCard> {
     this.timedOut.set(false);
     const previous = this.current();
     this.current.set(
-      pickNextCard(this.options.deck(), this.stats(), previous?.key ?? null, {
-        bySpeed: this.timesAnswers,
-      }),
+      this.options.pickNext?.(previous) ??
+        pickNextCard(this.options.deck(), this.stats(), previous?.key ?? null, {
+          bySpeed: this.timesAnswers,
+        }),
     );
     this.phase.set('prompt');
     this.responseMs.set(null);

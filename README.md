@@ -23,7 +23,8 @@ Practise guitar until the fretboard is automatic. Each kind of exercise is a **m
 - **Progressions:** play a chord progression with the metronome, each chord on its beat, faster as
   it gets clean.
 - **Circle of fifths:** a note, say **E♭**, and you name the next one round the circle: in fourths
-  (C F B♭ E♭ A♭ D♭ G♭ B E A D G), in fifths, or both. Tap the name or play the note.
+  (C F B♭ E♭ A♭ D♭ G♭ B E A D G), in fifths, or both. Tap the name or play the note. Also a few
+  steps round, in timed laps, about keys (signatures, relative minors), or on the neck.
 
 There's also a **tuner**, a button at the top of the home screen. The home screen groups the
 modules (know the neck; chords; rhythm, ear and technique), marks the ones that listen through the
@@ -169,12 +170,22 @@ Progress is saved in each browser, so a phone and a computer keep separate stats
 
 **Circle of fifths**
 
-- In fourths (E♭ → A♭), in fifths (E♭ → B♭), or both mixed; from every note or the ones you pick
+- Three exercises:
+  - _Next note:_ in fourths (E♭ → A♭), in fifths (E♭ → B♭), or both mixed; one, two or three
+    steps round (2 steps after E♭ in fourths: D♭). In random order, or in laps: each answer is
+    the next question, twelve to a lap, and the lap is timed
+  - _Keys:_ how many sharps or flats in a major key, which major key has a signature, and the
+    relative minor of a major key (spelled from its signature: G♯m, not A♭m)
+  - _On the neck:_ a note on the fretboard, and you find the next one round. Once answered, the
+    neck shows the shape: the same fret on the next string (thinner in fourths, thicker in
+    fifths), a fret further across the G and B strings
 - Notes spelled as the circle is usually recited: flats down to G♭, then B, E, A, D, G
-- Answer with one of the twelve names (arrow keys and Enter), or play the note anywhere on the
-  neck: any octave counts, and a wrong note played isn't held against you
-- After answering, a circle shows the step, with a wrong answer marked
-- Stats: seconds or accuracy for each note, in each direction
+- Answer with the buttons (arrow keys and Enter), on the neck, or play the note anywhere on the
+  neck: any octave counts, and a wrong note played isn't held against you. A key's root answers
+  for a key or a relative minor; signatures are tapped
+- After answering, a circle shows the step, or how far round from C a key is (its signature),
+  with a wrong answer marked
+- Stats: seconds or accuracy for each note, by kind of question; best and last laps with a chart
 
 **Tuner**
 
@@ -249,7 +260,7 @@ src/app/
     playback/             play it back: ear training, answered on the guitar
     bends/                bends: pitch held in tune, read like the tuner
     progressions/         progressions: chords on the beat, with the metronome
-    circle/               circle of fifths: the next note round, tapped or played
+    circle/               circle of fifths: the next note round, laps, keys, on the neck
   home/                   home screen
   tuner/                  the tuner page
 docs/

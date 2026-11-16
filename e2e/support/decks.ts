@@ -40,3 +40,19 @@ export const MINOR_THIRD_IN_F_SHARP = {
 
 /** Circle of fifths: the prompt is always E♭ in fourths, whose answer is A♭. */
 export const E_FLAT_IN_FOURTHS = { directions: ['fourths'], notes: ['Eb'], micMode: 'off' };
+
+/** Circle of fifths, on the neck: with pickFirstCard(), A♭ on the B string, fret 9. */
+export const A_FLAT_ON_THE_NECK = {
+  exercise: 'neck',
+  directions: ['fourths'],
+  notes: ['Ab'],
+  micMode: 'off',
+};
+
+/** Circle of fifths, keys: the prompt is always A♭ major's key signature (4♭). */
+export const A_FLAT_SIGNATURE = {
+  exercise: 'keys',
+  keyQuestions: ['signature'],
+  notes: ['Ab'],
+  micMode: 'off',
+};

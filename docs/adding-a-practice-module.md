@@ -186,6 +186,7 @@ export function provideScales(): Provider[] {
 | `onStart` / `onEnd` / `onNext` options | Start and stop the mic, reset per-card state                              |
 | `timesAnswers: false` option           | Answers take a set time (a take): no response times, cards by misses only |
 | `groupOf` option                       | Sorts answers into groups (string sets in triads), timed per session      |
+| `pickNext` option                      | Picks the next card in an order (circle laps); null leaves it to the run  |
 
 ## 6. Routes and registry
 

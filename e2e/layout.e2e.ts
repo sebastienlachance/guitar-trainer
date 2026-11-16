@@ -10,6 +10,8 @@ import {
 } from './support/app';
 import {
   CSUS4_ONLY,
+  A_FLAT_ON_THE_NECK,
+  A_FLAT_SIGNATURE,
   E_FLAT_IN_FOURTHS,
   E_ON_A_STRING,
   F_SHARP_ON_A,
@@ -130,6 +132,31 @@ test.describe('Phone width, circle of fifths', () => {
     await page.goto('/#/circle/stats');
     await expect(page.getByRole('heading', { name: 'By note' })).toBeVisible();
     await expectFitsWidth(page, 'Circle stats');
+  });
+
+  test('circle of fifths keys questions fit the screen', async ({ page }) => {
+    await seedSettings(page, 'circle', A_FLAT_SIGNATURE);
+
+    await page.goto('/#/circle');
+    await expectFitsWidth(page, 'Circle keys setup');
+
+    await startSession(page, 'circle');
+    await page
+      .getByRole('group', { name: 'Key signatures' })
+      .getByRole('button', { name: 'None' })
+      .click();
+    await expect(page.getByRole('img', { name: 'Circle of fifths: C to A♭, not C' })).toBeVisible();
+    await expectFitsWidth(page, 'Circle keys answer');
+  });
+
+  test('circle of fifths on the neck fits the screen', async ({ page }) => {
+    await seedSettings(page, 'circle', A_FLAT_ON_THE_NECK);
+    await pickFirstCard(page);
+
+    await startSession(page, 'circle');
+    await tapFret(page, 1, 8);
+    await expect(page.getByText('Same fret on the next thinner string.')).toBeVisible();
+    await expectFitsWidth(page, 'Circle neck answer');
   });
 });
 

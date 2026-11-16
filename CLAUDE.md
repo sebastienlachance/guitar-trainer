@@ -90,8 +90,10 @@ routing, storage, focus or the microphone changed.
   `bends/` follows a bend with the tuner's pitch reading and the mic's attack count (`BendJudge`,
   pure). `progressions/` times strikes with `RhythmListener` (the metronome's clock, deaf to its
   tick) and checks which chord each sounds like with `MicListener`'s spectrum, both open at once.
-  `circle/` asks the next note round the circle of fifths (`core/music/circle.ts`), answered
-  with the choice buttons or by playing the note, and shows the step on `core/ui/circle-diagram.ts`.
+  `circle/` drills the circle of fifths (`core/music/circle.ts`: steps, key signatures, relative
+  minors) in three exercises: the next note (a few steps round, or laps through `PracticeRun`'s
+  `pickNext`, kept in `circle:laps`), keys, and on the neck. It shows the step on
+  `core/ui/circle-diagram.ts`.
 - `src/app/tuner/`: the tuner, a page of its own (no sessions or stats, so not a module), linked
   from the home page's header.
 - `src/app/home/`: the home screen: the modules in groups of tiles, and "pick up where you left
@@ -308,7 +310,9 @@ routing, storage, focus or the microphone changed.
 - **Recently added:**
   - circle of fifths (2026-11-16), asked for by the owner: name the next note in fourths (the
     order the owner recites: C F B♭ E♭ A♭ D♭ G♭ B E A D G) or fifths, by tapping or playing it.
-    The owner chose random cards over a lap round the circle. Not yet tried by the owner
+    The same day, at the owner's request and kept as options: steps of 2 or 3, timed laps, key
+    questions (signatures, relative minors) and the next note on the neck. Next note, random,
+    one step stays the default. Not yet tried by the owner
   - stats measure progress by speed (progress chart, speed grid, slow cards come up more)
   - an optional time limit in triads with the mic
   - mic successes in triads move straight to the next chord (strums must be fresh)

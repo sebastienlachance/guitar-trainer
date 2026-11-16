@@ -1,6 +1,50 @@
 <h1 class="visually-hidden">Circle of fifths stats</h1>
 
 <app-stats-overview />
+
+@if (lapRows().length > 0) {
+  <section class="panel">
+    <h2>Laps</h2>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Way round</th>
+            <th scope="col">Best</th>
+            <th scope="col">Last</th>
+            <th scope="col">Laps</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of lapRows(); track row.direction) {
+            <tr>
+              <th scope="row">{{ row.label }}</th>
+              <td>{{ row.best }}</td>
+              <td>{{ row.last }}</td>
+              <td>{{ row.count }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (lapChoices().length > 1) {
+      <app-segmented-choice
+        label="Way round"
+        [hideLabel]="true"
+        [options]="lapChoices()"
+        [value]="charted()"
+        (valueChange)="charted.set($event)"
+      />
+    }
+    <app-trend-chart
+      [points]="lapPoints()"
+      [describe]="describeLap"
+      pointNoun="laps"
+      empty="A couple more laps and your lap times show here."
+    />
+  </section>
+}
+
 <app-session-history />
 
 @if (hasAnswers()) {
@@ -15,10 +59,11 @@
         (valueChange)="measure.set($event)"
       />
     </div>
-    <app-accuracy-grid [columns]="notes" [rows]="grid()" rowHeader="Direction" />
+    <app-accuracy-grid [columns]="notes" [rows]="grid()" rowHeader="Question" />
     <p class="hint">
       @if (measure() === 'time') {
-        Seconds to name the next note, lately. Green under 2, amber 2 to 4, red over 4.
+        Seconds to answer, lately, by the note (or key) asked about. Green under 2, amber 2 to 4,
+        red over 4.
       } @else {
         Share of right answers. With the microphone, only a wrong tap is a miss.
       }

@@ -40,10 +40,6 @@ Nothing yet: pick from below.
 - **Record and listen back.** Record a take and hear it straight away: the quickest way to notice
   timing and buzzing notes. `MediaRecorder` on the open microphone; recordings kept only for the
   session, or saved in IndexedDB if asked.
-- **A lap of the circle.** In circle of fifths, start on a note and go all the way round: each
-  answer becomes the next prompt, and the whole lap of 12 is timed, with a chart of lap times.
-  Offered when the module was built (2026-11-16); the owner chose random cards for now. Needs its
-  own flow next to `PracticeRun`, which picks cards rather than following an order.
 
 ## Small follow-ups
 

@@ -1,4 +1,16 @@
-import { CIRCLE_OF_FOURTHS, circleNoteName, clockPosition, nextOnCircle } from './circle';
+import {
+  CIRCLE_OF_FOURTHS,
+  KEY_SIGNATURES,
+  circleNoteName,
+  clockPosition,
+  keySignature,
+  majorKeyWith,
+  minorKeyLabel,
+  nextOnCircle,
+  relativeMinor,
+  signatureLabel,
+  signatureWords,
+} from './circle';
 import { parseNote, pitchClassOf } from './notes';
 
 const pitchClass = (name: string) => pitchClassOf(parseNote(name));
@@ -35,5 +47,36 @@ describe('circle of fifths', () => {
     expect(clockPosition(pitchClass('G'))).toBe(1);
     expect(clockPosition(pitchClass('Gb'))).toBe(6);
     expect(clockPosition(pitchClass('F'))).toBe(11);
+  });
+
+  it('jumps several steps at once', () => {
+    expect(circleNoteName(nextOnCircle(pitchClass('Eb'), 'fourths', 2))).toBe('Db');
+    expect(circleNoteName(nextOnCircle(pitchClass('Eb'), 'fourths', 3))).toBe('Gb');
+    expect(circleNoteName(nextOnCircle(pitchClass('A'), 'fifths', 3))).toBe('Gb');
+  });
+
+  it('counts the sharps and flats of each major key', () => {
+    const signatures = CIRCLE_OF_FOURTHS.map((key) => keySignature(key));
+    // C F B♭ E♭ A♭ D♭ G♭ B E A D G
+    expect(signatures).toEqual([0, -1, -2, -3, -4, -5, -6, 5, 4, 3, 2, 1]);
+    expect(KEY_SIGNATURES.map(majorKeyWith).map(keySignature)).toEqual(KEY_SIGNATURES);
+    expect(circleNoteName(majorKeyWith(3))).toBe('A');
+    expect(circleNoteName(majorKeyWith(-4))).toBe('Ab');
+  });
+
+  it('names signatures', () => {
+    expect(signatureLabel(0)).toBe('No ♯ or ♭');
+    expect(signatureLabel(3)).toBe('3♯');
+    expect(signatureLabel(-4)).toBe('4♭');
+    expect(signatureWords(0)).toBe('no sharps or flats');
+    expect(signatureWords(1)).toBe('1 sharp');
+    expect(signatureWords(-6)).toBe('6 flats');
+  });
+
+  it('finds relative minors, spelled from their signatures', () => {
+    expect(minorKeyLabel(relativeMinor(pitchClass('Eb')))).toBe('Cm');
+    expect(minorKeyLabel(relativeMinor(pitchClass('B')))).toBe('G♯m');
+    expect(minorKeyLabel(relativeMinor(pitchClass('Gb')))).toBe('E♭m');
+    expect(minorKeyLabel(relativeMinor(pitchClass('A')))).toBe('F♯m');
   });
 });

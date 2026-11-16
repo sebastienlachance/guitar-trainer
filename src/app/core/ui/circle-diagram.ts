@@ -27,17 +27,25 @@ function pointAt(angle: number, radius: number): { x: number; y: number } {
   return { x: CENTER + radius * Math.cos(angle), y: CENTER + radius * Math.sin(angle) };
 }
 
-/** An arc the short way round from one note to the other, with a head at the end. */
-function arrowPath(from: number, to: number): string {
-  const start = angleOf(from);
-  let sweep = angleOf(to) - start;
-  if (sweep > Math.PI) {
-    sweep -= 2 * Math.PI;
-  } else if (sweep <= -Math.PI) {
-    sweep += 2 * Math.PI;
+/** How far round from one angle to another, clockwise (positive) or not, in (-2π, 2π). */
+function sweepBetween(start: number, end: number, clockwise: boolean | null): number {
+  const forward = (((end - start) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+  if (clockwise === null) {
+    return forward > Math.PI ? forward - 2 * Math.PI : forward;
   }
+  return clockwise ? forward : forward - 2 * Math.PI;
+}
+
+/** An arc from one note to the other, with a head at the end; none from a note to itself. */
+function arrowPath(from: number, to: number, clockwiseWay: boolean | null): string {
+  if (from === to) {
+    return '';
+  }
+  const start = angleOf(from);
+  const sweep = sweepBetween(start, angleOf(to), clockwiseWay);
   const end = start + sweep;
   const clockwise = sweep > 0;
+  const largeArc = Math.abs(sweep) > Math.PI ? 1 : 0;
   const tail = pointAt(start, ARROW_RADIUS);
   const tip = pointAt(end, ARROW_RADIUS);
   // The head's two strokes point back along the arc, 30 degrees either side of it.
@@ -50,20 +58,23 @@ function arrowPath(from: number, to: number): string {
   const f = (value: number) => value.toFixed(1);
   return (
     `M${f(tail.x)} ${f(tail.y)}` +
-    `A${ARROW_RADIUS} ${ARROW_RADIUS} 0 0 ${clockwise ? 1 : 0} ${f(tip.x)} ${f(tip.y)}` +
+    `A${ARROW_RADIUS} ${ARROW_RADIUS} 0 ${largeArc} ${clockwise ? 1 : 0} ${f(tip.x)} ${f(tip.y)}` +
     `M${f(left.x)} ${f(left.y)}L${f(tip.x)} ${f(tip.y)}L${f(right.x)} ${f(right.y)}`
   );
 }
 
 /**
  * The circle of fifths, C at the top and fifths clockwise, with an arrow from one note to
- * another: where a step round the circle goes. A wrong answer can be marked too.
+ * another: where a step round the circle goes, or how far a key is from C. A wrong answer can be
+ * marked too.
  */
 @Component({
   selector: 'app-circle-diagram',
   template: `
     <svg viewBox="0 0 200 200" role="img" [attr.aria-label]="description()">
-      <path class="step" [attr.d]="arrow()" />
+      @if (arrow()) {
+        <path class="step" [attr.d]="arrow()" />
+      }
       @for (note of notes(); track note.pitchClass) {
         <g [attr.class]="'note ' + note.kind">
           <circle [attr.cx]="note.x" [attr.cy]="note.y" r="15" />
@@ -138,6 +149,8 @@ export class CircleDiagram {
   readonly to = input.required<number>();
   /** A wrong answer to mark, if there was one. */
   readonly wrong = input<number | null>(null);
+  /** Which way the arrow goes round, clockwise being fifths; null for the short way. */
+  readonly clockwise = input<boolean | null>(null);
 
   protected readonly notes = computed((): PlacedNote[] =>
     Array.from({ length: 12 }, (_, pitchClass) => ({
@@ -148,11 +161,14 @@ export class CircleDiagram {
     })),
   );
 
-  protected readonly arrow = computed(() => arrowPath(this.from(), this.to()));
+  protected readonly arrow = computed(() => arrowPath(this.from(), this.to(), this.clockwise()));
 
   protected readonly description = computed(() => {
     const wrong = this.wrong();
-    const step = `${circleNoteLabel(this.from())} to ${circleNoteLabel(this.to())}`;
+    const step =
+      this.from() === this.to()
+        ? circleNoteLabel(this.to())
+        : `${circleNoteLabel(this.from())} to ${circleNoteLabel(this.to())}`;
     return `Circle of fifths: ${step}` + (wrong === null ? '' : `, not ${circleNoteLabel(wrong)}`);
   });
 
